@@ -1,0 +1,93 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        The screen Playnite shows while a game starts (and behind it while it runs).
+        Kippix: just the game's background art, full screen. It fades in when the game is launched and fades
+        away once the game is running (the helper add-on does the fades: KX_LaunchArt), so it hands over to the game.
+        Playnite fills PART_TextStatus ("Starting...") and adds a Close button to PART_PanelActionButtons; both are kept small.
+    -->
+
+    <Style x:Key="ButtonGameStatusAction" BasedOn="{StaticResource {x:Type ButtonEx}}" TargetType="ButtonEx">
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="MinWidth" Value="110" />
+        <Setter Property="Padding" Value="18,8" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="Foreground" Value="#FFF4F6FA" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ButtonEx">
+                    <Border x:Name="Card" CornerRadius="12" Background="#33000000" BorderBrush="#40FFFFFF" BorderThickness="1.5" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center"
+                                          TextElement.Foreground="{TemplateBinding Foreground}" TextElement.FontSize="{TemplateBinding FontSize}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsFocused" Value="True">
+                            <Setter TargetName="Card" Property="Background" Value="#38FFFFFF" />
+                            <Setter TargetName="Card" Property="BorderBrush" Value="#E9FFFFFF" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Card" Property="Background" Value="#26FFFFFF" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type GameStatus}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type GameStatus}">
+                    <Grid x:Name="PART_ViewHost" Background="Black"
+                          KeyboardNavigation.DirectionalNavigation="Contained"
+                          KeyboardNavigation.TabNavigation="Cycle"
+                          KeyboardNavigation.ControlTabNavigation="Cycle">
+                        <Grid x:Name="KX_LaunchArt">
+                            <!-- no background art: the cover, sharp, in the middle of the screen instead (no blur) -->
+                            <!-- Playnite fills PART_ImageCover itself; it's kept hidden and the blurred copy below uses it.
+                                 The helper also sets KX_LaunchBg / KX_LaunchCover straight from the starting game's files. -->
+                            <Image x:Name="PART_ImageCover" Visibility="Collapsed" />
+                            <Image x:Name="KX_LaunchCover" Stretch="Uniform" RenderOptions.BitmapScalingMode="Fant" Margin="0,110" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Image.Source>
+                                    <PriorityBinding>
+                                        <Binding Path="CoverImageObject" />
+                                        <Binding Path="Game.CoverImageObject" />
+                                        <Binding Path="Source" ElementName="PART_ImageCover" />
+                                    </PriorityBinding>
+                                </Image.Source>
+                            </Image>
+                            <Image x:Name="KX_LaunchBg" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="Fant">
+                                <Image.Source>
+                                    <PriorityBinding>
+                                        <Binding Path="DisplayBackgroundImageObject" />
+                                        <Binding Path="Game.DisplayBackgroundImageObject" />
+                                    </PriorityBinding>
+                                </Image.Source>
+                            </Image>
+                            <!-- the background the helper sets in code (the same picture the game page shows); nothing bound here,
+                                 so Playnite swapping the screen's data can't replace it -->
+                            <Border x:Name="KX_LaunchBgArt" RenderOptions.BitmapScalingMode="Fant" />
+                            <Border>
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                        <GradientStop Color="#00000000" Offset="0.55" />
+                                        <GradientStop Color="#B3000000" Offset="1" />
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                            </Border>
+                        </Grid>
+                        <!-- what Playnite says ("Starting...", "Running"), small in the corner, and its Close button -->
+                        <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="64,0,64,56" Orientation="Horizontal">
+                            <TextBlock x:Name="PART_TextStatus" FontSize="20" Foreground="#CCF4F6FA" FontFamily="{DynamicResource FontTitilliumWeb}"
+                                       VerticalAlignment="Center" Margin="0,0,20,0" TextTrimming="CharacterEllipsis" MaxWidth="1100" />
+                            <StackPanel x:Name="PART_PanelActionButtons" Orientation="Horizontal" VerticalAlignment="Center" Opacity="0.85" />
+                        </StackPanel>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

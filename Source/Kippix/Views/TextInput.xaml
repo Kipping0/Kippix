@@ -1,0 +1,191 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Playnite's on-screen keyboard (search boxes, Discord replies...).
+        Playnite lays the window out on a 3 x 5 grid with the keys in the middle; these styles move the key panel
+        so it spans the whole bottom of the screen, and the text box up above it.
+        (Grid.Row / Column are set directly on the elements by Playnite, so they're changed with a zero-length
+        animation when the window loads; that's the only way a style can override them.)
+    -->
+
+    <Style x:Key="TextInputButton" BasedOn="{StaticResource {x:Type ButtonEx}}" TargetType="ButtonEx">
+        <Setter Property="Foreground" Value="#FFF4F6FA" />
+        <Setter Property="FontSize" Value="28" />
+        <Setter Property="MinWidth" Value="120" />
+        <Setter Property="MinHeight" Value="84" />
+        <Setter Property="Margin" Value="5" />
+        <Setter Property="Padding" Value="16,8" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ButtonEx">
+                    <Grid>
+                        <Border x:Name="Card" CornerRadius="14" Background="#17FFFFFF" BorderBrush="#1FFFFFFF" BorderThickness="1.5" />
+                        <ContentPresenter Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          TextElement.FontSize="{TemplateBinding FontSize}"
+                                          TextElement.Foreground="{TemplateBinding Foreground}" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsFocused" Value="True">
+                            <Setter TargetName="Card" Property="Background" Value="#38FFFFFF" />
+                            <Setter TargetName="Card" Property="BorderBrush" Value="#E9FFFFFF" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Card" Property="Background" Value="#26FFFFFF" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Card" Property="Background" Value="#55FFFFFF" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="TextInputCheckbox" BasedOn="{StaticResource {x:Type CheckBoxEx}}" TargetType="CheckBoxEx">
+        <Setter Property="Margin" Value="0,6,0,6" />
+    </Style>
+
+    <!-- the text being typed: moved to the upper half, above the keyboard -->
+    <Style x:Key="TextInputTextbox" BasedOn="{StaticResource {x:Type TextBox}}" TargetType="TextBox">
+        <Setter Property="MinWidth" Value="1100" />
+        <Setter Property="Height" Value="76" />
+        <Setter Property="FontSize" Value="32" />
+        <Setter Property="Foreground" Value="#FFF4F6FA" />
+        <Setter Property="CaretBrush" Value="#FFF4F6FA" />
+        <Setter Property="Padding" Value="24,8" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Top" />
+        <Setter Property="Margin" Value="0,230,0,0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Grid>
+                        <Border x:Name="Card" CornerRadius="18" Background="#F0121418" BorderBrush="#55FFFFFF" BorderThickness="1.5">
+                            <Border.Effect>
+                                <DropShadowEffect ShadowDepth="4" BlurRadius="24" Opacity="0.5" />
+                            </Border.Effect>
+                        </Border>
+                        <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center" Focusable="False" />
+                        <!-- what to type (when the prompt says): a line just above the box -->
+                        <!-- (a Canvas so it isn't clipped to the box's 76 px: it sits above it) -->
+                        <Canvas IsHitTestVisible="False" Visibility="{PluginSettings Plugin=Kippix, Path=HasKeyboardHint, FallbackValue=Collapsed}">
+                            <Border Canvas.Left="0" Canvas.Bottom="88" Width="1100" Padding="22,10" CornerRadius="14"
+                                    Background="#E6121418" BorderBrush="#40FFD54F" BorderThickness="1">
+                                <TextBlock Text="{PluginSettings Plugin=Kippix, Path=KeyboardHint, FallbackValue=''}" FontSize="22" Foreground="#FFE4E8EF"
+                                           TextWrapping="Wrap" TextAlignment="Center" />
+                            </Border>
+                        </Canvas>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                            <Setter TargetName="Card" Property="BorderBrush" Value="#E9FFFFFF" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                <BeginStoryboard>
+                    <Storyboard FillBehavior="HoldEnd">
+                        <Int32Animation Storyboard.TargetProperty="(Grid.Row)" Duration="0:0:0" To="0" />
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="VerticalAlignment" Duration="0:0:0">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static VerticalAlignment.Top}" />
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Margin" Duration="0:0:0">
+                            <DiscreteObjectKeyFrame KeyTime="0">
+                                <DiscreteObjectKeyFrame.Value>
+                                    <Thickness>0,230,0,0</Thickness>
+                                </DiscreteObjectKeyFrame.Value>
+                            </DiscreteObjectKeyFrame>
+                        </ObjectAnimationUsingKeyFrames>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- extra options under the text box (when a dialog has any): kept just below it -->
+    <Style x:Key="TextInputOptionsBorder" TargetType="Border">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="CornerRadius" Value="14" />
+        <Setter Property="VerticalAlignment" Value="Top" />
+        <Setter Property="Margin" Value="0,326,0,0" />
+        <Style.Triggers>
+            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                <BeginStoryboard>
+                    <Storyboard FillBehavior="HoldEnd">
+                        <Int32Animation Storyboard.TargetProperty="(Grid.Row)" Duration="0:0:0" To="0" />
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="VerticalAlignment" Duration="0:0:0">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static VerticalAlignment.Top}" />
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Margin" Duration="0:0:0">
+                            <DiscreteObjectKeyFrame KeyTime="0">
+                                <DiscreteObjectKeyFrame.Value>
+                                    <Thickness>0,326,0,0</Thickness>
+                                </DiscreteObjectKeyFrame.Value>
+                            </DiscreteObjectKeyFrame>
+                        </ObjectAnimationUsingKeyFrames>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- the keys: a panel docked across the whole bottom of the screen -->
+    <Style x:Key="TextInputKeysBorder" TargetType="Border">
+        <Style.Resources>
+            <!-- keep the rows of keys centred inside the full-width panel -->
+            <Style TargetType="Grid">
+                <Setter Property="HorizontalAlignment" Value="Center" />
+            </Style>
+        </Style.Resources>
+        <Setter Property="Background" Value="#F513151A" />
+        <Setter Property="BorderBrush" Value="#26FFFFFF" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+        <Setter Property="CornerRadius" Value="28,28,0,0" />
+        <Setter Property="Padding" Value="40,28,40,34" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="VerticalAlignment" Value="Bottom" />
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect ShadowDepth="0" BlurRadius="40" Opacity="0.55" />
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                <BeginStoryboard>
+                    <Storyboard FillBehavior="HoldEnd">
+                        <Int32Animation Storyboard.TargetProperty="(Grid.Row)" Duration="0:0:0" To="0" />
+                        <Int32Animation Storyboard.TargetProperty="(Grid.RowSpan)" Duration="0:0:0" To="5" />
+                        <Int32Animation Storyboard.TargetProperty="(Grid.Column)" Duration="0:0:0" To="0" />
+                        <Int32Animation Storyboard.TargetProperty="(Grid.ColumnSpan)" Duration="0:0:0" To="3" />
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="HorizontalAlignment" Duration="0:0:0">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static HorizontalAlignment.Stretch}" />
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="VerticalAlignment" Duration="0:0:0">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static VerticalAlignment.Bottom}" />
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Margin" Duration="0:0:0">
+                            <DiscreteObjectKeyFrame KeyTime="0">
+                                <DiscreteObjectKeyFrame.Value>
+                                    <Thickness>0</Thickness>
+                                </DiscreteObjectKeyFrame.Value>
+                            </DiscreteObjectKeyFrame>
+                        </ObjectAnimationUsingKeyFrames>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Style.Triggers>
+    </Style>
+</ResourceDictionary>
