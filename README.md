@@ -135,7 +135,7 @@ Discord, NVIDIA or any store. Prices are from [IsThereAnyDeal](https://istherean
 
 ## Disclosure
 
-Kippix was created with assistance from AI, future updates will also have AI to help, if you do not like AI being involved with creation of this theme or its helper then please do not use it.
+Kippix was created with assistance from AI, future updates will also have AI to help, if you do not like AI being involved with creation of this theme or its helper then please do not Kippix.
 
 ## Licence
 
