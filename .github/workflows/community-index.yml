@@ -1,0 +1,40 @@
+# Rebuilds community/index.json (the list Kippix's Community gallery reads) whenever an approved upload lands on main.
+name: Community gallery list
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "community/**"
+      - "!community/index.json"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: community-index
+  cancel-in-progress: false
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild community/index.json
+        run: python3 .github/scripts/community_index.py
+      - name: Save it
+        run: |
+          if git diff --quiet -- community/index.json; then
+            echo "The list is already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add community/index.json
+          git commit -m "Update the Community gallery list"
+          git push
+      - name: Put the files where downloads are counted
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/community_assets.py
