@@ -4,7 +4,7 @@
 
 <p align="center">
   <b>A console style Fullscreen theme for <a href="https://playnite.link">Playnite</a>, made to be played from the sofa.</b><br>
-  Controller first, highly customisable, with its own in-game overlay.
+  Controller first, highly customisable, with its own in-game overlay.</b><br>
   **This is a WIP Fullscreen, please bear with me while we fix any bugs/issues in this new release**
 </p>
 
