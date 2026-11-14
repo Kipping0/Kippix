@@ -1,0 +1,128 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- One game cover in the library row. Rounded corners, cover fills the tile,
+         the game's name shows underneath only when it has no cover art. -->
+    <Style x:Key="ListGameItemTemplate" TargetType="{x:Type GameListItem}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type GameListItem}">
+                    <Grid x:Name="Root">
+                        <Grid.OpacityMask>
+                            <VisualBrush Stretch="None" AlignmentX="Left" AlignmentY="Top">
+                                <VisualBrush.Visual>
+                                    <Border Background="Black" CornerRadius="{DynamicResource KX_CardCorner}"
+                                            Width="{Binding ActualWidth, ElementName=Root}"
+                                            Height="{Binding ActualHeight, ElementName=Root}" />
+                                </VisualBrush.Visual>
+                            </VisualBrush>
+                        </Grid.OpacityMask>
+
+                        <!-- Shown when there is no cover image -->
+                        <Border Background="#FF1E2229">
+                            <TextBlock Text="{Binding DisplayName}" Style="{DynamicResource KX_Text}"
+                                       FontSize="22" TextWrapping="Wrap" TextAlignment="Center"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" Margin="14" />
+                        </Border>
+
+                        <Image x:Name="PART_ImageCover"
+                               RenderOptions.BitmapScalingMode="Fant"
+                               Stretch="UniformToFill"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+
+                        <!-- wide tiles and the list down one side (Options > Home settings): the helper fills these in -->
+                        <Grid x:Name="KX_WideArt" Visibility="Collapsed" IsHitTestVisible="False">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="0" />
+                            </Grid.ColumnDefinitions>
+                            <Border x:Name="KX_WideBack" Background="#FF1E2229" />
+                            <TextBlock x:Name="KX_WideName" Text="{Binding DisplayName}" Style="{DynamicResource KX_Text}" FontSize="22" TextWrapping="Wrap" TextAlignment="Center"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" Margin="14" />
+                            <Image x:Name="KX_WideImage" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="Fant" />
+                            <Border x:Name="KX_WideShade" Visibility="Collapsed">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                        <GradientStop Color="#00000000" Offset="0.45" />
+                                        <GradientStop Color="#B3000000" Offset="1" />
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                            </Border>
+                            <Image x:Name="KX_WideLogo" Stretch="Uniform" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="14,0,14,12" RenderOptions.BitmapScalingMode="Fant" />
+                            <Border Grid.Column="1" Background="#E6181B21">
+                                <!-- the text is sized to the game (the helper scales it with the game's height) and shrinks to fit when there's a lot -->
+                                <Viewbox x:Name="KX_ListInfoFit" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="20,8,16,8">
+                                <StackPanel x:Name="KX_ListInfo">
+                                    <TextBlock x:Name="KX_ListName" Text="{Binding DisplayName}" Style="{DynamicResource KX_Text}" FontFamily="{DynamicResource FontTitilliumWebBold}" FontSize="24" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock x:Name="KX_ListLine1" Style="{DynamicResource KX_TextSub}" FontSize="17" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
+                                    <TextBlock x:Name="KX_ListLine2" Style="{DynamicResource KX_TextDim}" FontSize="16" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                </Viewbox>
+                            </Border>
+                        </Grid>
+
+                        <Border x:Name="BorderDarken" Background="#99000000" Visibility="Collapsed" />
+
+                        <!-- tile badges (Options > Home settings > Tile badges): New / achievements / HowLongToBeat are set by the helper -->
+                        <StackPanel x:Name="KX_BadgesTop" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8" IsHitTestVisible="False">
+                            <!-- kept in this spot (Pinned game tiles): set by the helper -->
+                            <Border x:Name="KX_BadgeSlot" CornerRadius="8" Background="#CC0D0F12" Padding="6,3" Margin="0,0,6,0" Visibility="Collapsed">
+                                <Path Data="M9,3 L15,3 L14,9 L17,12 L7,12 L10,9 Z M12,12 L12,20" Stroke="White" StrokeThickness="1.8" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                      Width="13" Height="13" Stretch="Uniform" />
+                            </Border>
+                            <Border x:Name="KX_BadgeNew" CornerRadius="8" Background="#E6FFFFFF" Padding="8,2" Margin="0,0,6,0" Visibility="Collapsed">
+                                <TextBlock Text="{DynamicResource LOC_KX_BadgeNewText}" FontSize="13" FontFamily="{DynamicResource FontTitilliumWebBold}" Foreground="#FF0D0F12" />
+                            </Border>
+                            <Border CornerRadius="8" Background="#CC0D0F12" Padding="6,3">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding IsInstalled}" Value="True" />
+                                                    <Condition Binding="{PluginSettings Plugin=Kippix, Path=BadgeInstalled}" Value="True" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </MultiDataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Path Data="M5,12.5 L10,17.5 L19,7" Stroke="#FF4ADE80" StrokeThickness="2.4" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                      Width="14" Height="14" Stretch="Uniform" />
+                            </Border>
+                            <!-- (r12) the game's store (Store logo on cards, off at first): set by the helper -->
+                            <Border x:Name="KX_BadgeStore" CornerRadius="8" Background="#CC0D0F12" Padding="8,2" Margin="6,0,0,0" Visibility="Collapsed">
+                                <TextBlock x:Name="KX_BadgeStoreText" FontSize="13" FontFamily="{DynamicResource FontTitilliumWebBold}" Foreground="White" />
+                            </Border>
+                        </StackPanel>
+                        <StackPanel x:Name="KX_BadgesBottom" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8" IsHitTestVisible="False">
+                            <Border x:Name="KX_BadgeAch" CornerRadius="8" Background="#CC0D0F12" Padding="8,2" Margin="0,0,6,0" Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="M7,3 L17,3 L17,9 C17,12.5 15,15 12,15 C9,15 7,12.5 7,9 Z M12,15 L12,20 M8,21 L16,21" Stroke="White" StrokeThickness="2" Width="11" Height="11" Stretch="Uniform" Margin="0,0,5,0" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="KX_BadgeAchText" FontSize="13" Foreground="White" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+                            <Border x:Name="KX_BadgeHltb" CornerRadius="8" Background="#CC0D0F12" Padding="8,2" Visibility="Collapsed">
+                                <TextBlock x:Name="KX_BadgeHltbText" FontSize="13" Foreground="White" />
+                            </Border>
+                            <!-- (r12) feature icons: controller, co-op, split screen, online, VR, Steam Deck (Feature badges on cards, off at first): the helper fills it -->
+                            <Border x:Name="KX_BadgeFeat" CornerRadius="8" Background="#CC0D0F12" Padding="7,4" Margin="6,0,0,0" Visibility="Collapsed">
+                                <StackPanel x:Name="KX_BadgeFeatIcons" Orientation="Horizontal" />
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding IsInstalled}" Value="False" />
+                                <Condition Binding="{Settings Fullscreen.DarkenUninstalledGamesGrid}" Value="True" />
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="Visibility" Value="Visible" TargetName="BorderDarken" />
+                        </MultiDataTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

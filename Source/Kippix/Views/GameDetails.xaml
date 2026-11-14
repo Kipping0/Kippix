@@ -1,0 +1,853 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ===================================================================
+         Kippix - Game details (opens with A on a cover)
+         Background art zooms in slightly, the info slides in from the left, the cover
+         from the right, and the description fades up last.
+         LB / RB move to the previous / next game, B goes back.
+         =================================================================== -->
+
+    <Style TargetType="{x:Type GameDetails}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type GameDetails}">
+                    <Grid x:Name="Root" Background="Black" ClipToBounds="True">
+                        <Grid.Resources>
+                            <!-- a card on the lower page: press it to open more (Settings & Customisation › Game page › Top and lower page can make one just for show) -->
+                            <Style x:Key="KX_DetCard" TargetType="ButtonEx">
+                                <Setter Property="Width" Value="548" />
+                                <Setter Property="Margin" Value="0,0,20,20" />
+                                <Setter Property="VerticalAlignment" Value="Top" />
+                                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ButtonEx">
+                                            <Border x:Name="Card" CornerRadius="20" Background="#B3111317" BorderBrush="#26FFFFFF" BorderThickness="1" Padding="24,18">
+                                                <!-- laid out at the card's own width and scaled to fit, so what's inside grows and shrinks with the card (Free move › Y) -->
+                                                <Viewbox Stretch="Uniform" StretchDirection="Both" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                                    <ContentPresenter Width="498" />
+                                                </Viewbox>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="Tag" Value="solid"><Setter TargetName="Card" Property="Background" Value="{Binding Background, RelativeSource={RelativeSource TemplatedParent}}" /></Trigger>
+                                                <Trigger Property="Tag" Value="none"><Setter TargetName="Card" Property="Background" Value="Transparent" /><Setter TargetName="Card" Property="BorderBrush" Value="Transparent" /></Trigger>
+                                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                                    <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource KX_AccentBrush}" />
+                                                    <Setter TargetName="Card" Property="BorderThickness" Value="2.5" />
+                                                    <Setter TargetName="Card" Property="Padding" Value="22.5,16.5" /><!-- the thicker ring takes its room from the padding: the inside stays the same size -->
+                                                    <Setter TargetName="Card" Property="Background" Value="#D91B1E24" />
+                                                </Trigger>
+                                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Card" Property="Background" Value="#CC1B1E24" /></Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                            <!-- (r12) a lower-page card with its own buttons inside (News, Mods): the card itself can't be pressed, its buttons can;
+                                 the ring shows while one of them has the highlight. Same look, Background and Free move sizing as the cards above -->
+                            <ControlTemplate x:Key="KX_DetCardBoxTemplate" TargetType="ContentControl">
+                                <Border x:Name="Card" CornerRadius="20" Background="#B3111317" BorderBrush="#26FFFFFF" BorderThickness="1" Padding="24,18">
+                                    <Viewbox Stretch="Uniform" StretchDirection="Both" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                        <ContentPresenter Width="498" />
+                                    </Viewbox>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="Tag" Value="solid"><Setter TargetName="Card" Property="Background" Value="{Binding Background, RelativeSource={RelativeSource TemplatedParent}}" /></Trigger>
+                                    <Trigger Property="Tag" Value="none"><Setter TargetName="Card" Property="Background" Value="Transparent" /><Setter TargetName="Card" Property="BorderBrush" Value="Transparent" /></Trigger>
+                                    <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                        <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource KX_AccentBrush}" />
+                                        <Setter TargetName="Card" Property="BorderThickness" Value="2.5" />
+                                        <Setter TargetName="Card" Property="Padding" Value="22.5,16.5" />
+                                        <Setter TargetName="Card" Property="Background" Value="#D91B1E24" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                            <!-- (the same, two cards wide: News) -->
+                            <ControlTemplate x:Key="KX_DetCardBoxWideTemplate" TargetType="ContentControl">
+                                <Border x:Name="Card" CornerRadius="20" Background="#B3111317" BorderBrush="#26FFFFFF" BorderThickness="1" Padding="24,18">
+                                    <Viewbox Stretch="Uniform" StretchDirection="Both" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                        <ContentPresenter Width="1066" />
+                                    </Viewbox>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="Tag" Value="solid"><Setter TargetName="Card" Property="Background" Value="{Binding Background, RelativeSource={RelativeSource TemplatedParent}}" /></Trigger>
+                                    <Trigger Property="Tag" Value="none"><Setter TargetName="Card" Property="Background" Value="Transparent" /><Setter TargetName="Card" Property="BorderBrush" Value="Transparent" /></Trigger>
+                                    <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                        <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource KX_AccentBrush}" />
+                                        <Setter TargetName="Card" Property="BorderThickness" Value="2.5" />
+                                        <Setter TargetName="Card" Property="Padding" Value="22.5,16.5" />
+                                        <Setter TargetName="Card" Property="Background" Value="#D91B1E24" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                            <Style x:Key="KX_DetCardBox" TargetType="ContentControl">
+                                <Setter Property="Width" Value="548" />
+                                <Setter Property="Margin" Value="0,0,20,20" />
+                                <Setter Property="VerticalAlignment" Value="Top" />
+                                <Setter Property="Focusable" Value="False" />
+                                <Setter Property="Template" Value="{StaticResource KX_DetCardBoxTemplate}" />
+                            </Style>
+                            <Style x:Key="KX_DetCardBoxWide" TargetType="ContentControl" BasedOn="{StaticResource KX_DetCardBox}">
+                                <Setter Property="Width" Value="1116" />
+                                <Setter Property="Template" Value="{StaticResource KX_DetCardBoxWideTemplate}" />
+                            </Style>
+                            <!-- a pressable line inside one of those cards (a news post) -->
+                            <Style x:Key="KX_DetCardLine" TargetType="ButtonEx">
+                                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ButtonEx">
+                                            <Border x:Name="Line" CornerRadius="12" Background="#0FFFFFFF" BorderBrush="Transparent" BorderThickness="2" Padding="14,10">
+                                                <ContentPresenter />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Line" Property="BorderBrush" Value="{DynamicResource KX_AccentBrush}" /><Setter TargetName="Line" Property="Background" Value="#1FFFFFFF" /></Trigger>
+                                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Line" Property="Background" Value="#1AFFFFFF" /></Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Grid.Resources>
+
+                        <!-- background art: the helper's already-decoded copy shows instantly (no black flash) while
+                             Playnite's own image fades in on top; the whole thing zooms in slightly when the page opens.
+                             Settings › Game page can switch it to plain black. -->
+                        <Grid x:Name="BgHost" RenderTransformOrigin="0.5,0.5"
+                              Visibility="{PluginSettings Plugin=Kippix, Path=DetShowBackground, FallbackValue=Visible}">
+                            <Grid.RenderTransform>
+                                <ScaleTransform x:Name="BgScale" ScaleX="1" ScaleY="1" />
+                            </Grid.RenderTransform>
+                            <Image Source="{PluginSettings Plugin=Kippix, Path=SelectedBackground}" Stretch="UniformToFill"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <FadeImage x:Name="PART_ImageBackground" Stretch="UniformToFill"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <!-- (0.98) BackgroundChanger's background for the game (Settings › Home settings › Background › BackgroundChanger) -->
+                            <ContentControl x:Name="BackgroundChanger_PluginBackgroundImage" Focusable="False" IsHitTestVisible="False" ClipToBounds="True"
+                                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                                            Width="{Binding ActualWidth, ElementName=BgHost}" Height="{Binding ActualHeight, ElementName=BgHost}"
+                                            Visibility="{PluginSettings Plugin=Kippix, Path=BcBgOnPage, FallbackValue=Collapsed}" />
+                        </Grid>
+
+                        <!-- dark side behind the logo / info (mirrored when the layout is flipped) -->
+                        <Border IsHitTestVisible="False" Visibility="{PluginSettings Plugin=Kippix, Path=DetShadeLeft, FallbackValue=Visible}">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="#F0000000" Offset="0" />
+                                    <GradientStop Color="#B0000000" Offset="0.45" />
+                                    <GradientStop Color="#30000000" Offset="1" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        <Border IsHitTestVisible="False" Background="#A6000000" Visibility="{PluginSettings Plugin=Kippix, Path=DetShadeCentre, FallbackValue=Collapsed}" />
+                        <Border IsHitTestVisible="False" Visibility="{PluginSettings Plugin=Kippix, Path=DetShadeRight, FallbackValue=Collapsed}">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="1,0" EndPoint="0,0">
+                                    <GradientStop Color="#F0000000" Offset="0" />
+                                    <GradientStop Color="#B0000000" Offset="0.45" />
+                                    <GradientStop Color="#30000000" Offset="1" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        <Border IsHitTestVisible="False">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#00000000" Offset="0.45" />
+                                    <GradientStop Color="#D0000000" Offset="1" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+
+                        <!-- scaled 1080p stage -->
+                        <Grid>
+                            <Grid.LayoutTransform>
+                                <ScaleTransform ScaleX="{Binding ActualHeight, ElementName=Root, Converter={StaticResource MathConverter}, ConverterParameter=x/1080}"
+                                                ScaleY="{Binding ActualHeight, ElementName=Root, Converter={StaticResource MathConverter}, ConverterParameter=x/1080}" />
+                            </Grid.LayoutTransform>
+
+                            <Grid x:Name="KX_DetScroll">
+                            <Grid x:Name="PART_ViewHost" Margin="96,90,96,70"
+                                  KeyboardNavigation.DirectionalNavigation="Contained"
+                                  KeyboardNavigation.TabNavigation="Cycle"
+                                  KeyboardNavigation.ControlTabNavigation="Cycle">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="80" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- lower-page cards moved up to the top page: they start at the very top, then Free move puts each where you want it -->
+                                <WrapPanel x:Name="KX_UpHost" Grid.ColumnSpan="3" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,-60,0,0" Panel.ZIndex="3" />
+
+                                <!-- ============ LEFT: logo + info (moved up / down by Settings › Game page › Layout) ============ -->
+                                <DockPanel x:Name="DetBlock" Grid.ColumnSpan="3"
+                                           Margin="{PluginSettings Plugin=Kippix, Path=DetInfoMargin, FallbackValue='0,320,0,0'}">
+                                    <!-- logo or name: spans the whole width, so left / centre / right use the whole screen -->
+                                    <Grid x:Name="DetLogo" DockPanel.Dock="Top" Margin="0,0,0,18" MaxHeight="170" Opacity="0"
+                                          Visibility="{PluginSettings Plugin=Kippix, Path=DetShowLogo, FallbackValue=Visible}"
+                                          HorizontalAlignment="{PluginSettings Plugin=Kippix, Path=DetLogoAlignment, FallbackValue=Left}">
+                                        <Grid.Style>
+                                            <Style TargetType="Grid">
+                                                <Style.Triggers>
+                                                    <!-- Right side / Centre layouts: the logo sits centred over the info block -->
+                                                    <DataTrigger Binding="{PluginSettings Plugin=Kippix, Path=DetLogoOverInfo}" Value="True">
+                                                        <Setter Property="Width" Value="{Binding ActualWidth, ElementName=InfoColumn}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Grid.Style>
+                                        <Grid.RenderTransform>
+                                            <TranslateTransform x:Name="LogoShift" X="0" Y="0" />
+                                        </Grid.RenderTransform>
+                                        <ContentControl x:Name="ExtraMetadataLoader_LogoLoaderControl" MaxHeight="170" MaxWidth="620"
+                                                        HorizontalAlignment="{PluginSettings Plugin=Kippix, Path=DetLogoInnerAlignment, FallbackValue=Left}" Focusable="False">
+<ContentControl.Style><Style TargetType="ContentControl"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{PluginSettings Plugin=ExtraMetadataLoader, Path=IsLogoAvailable}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></ContentControl.Style>
+</ContentControl>
+                                        <TextBlock Text="{Binding DisplayName}" FontSize="62" TextWrapping="Wrap"
+                                                   VerticalAlignment="Bottom" HorizontalAlignment="{PluginSettings Plugin=Kippix, Path=DetLogoInnerAlignment, FallbackValue=Left}">
+<TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource KX_TextTitle}"><Setter Property="Visibility" Value="Visible" /><Style.Triggers><DataTrigger Binding="{PluginSettings Plugin=ExtraMetadataLoader, Path=IsLogoAvailable}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                                            <TextBlock.Effect>
+                                                <DropShadowEffect ShadowDepth="0" BlurRadius="18" Opacity="0.6" />
+                                            </TextBlock.Effect>
+                                        </TextBlock>
+                                    </Grid>
+
+                                <DockPanel x:Name="InfoColumn" Opacity="0"
+                                           HorizontalAlignment="{PluginSettings Plugin=Kippix, Path=DetInfoAlignment, FallbackValue=Left}"
+                                           MaxWidth="{PluginSettings Plugin=Kippix, Path=DetInfoMaxWidth, FallbackValue=1150}">
+                                    <DockPanel.RenderTransform>
+                                        <TranslateTransform x:Name="InfoShift" X="0" Y="0" />
+                                    </DockPanel.RenderTransform>
+
+
+                                    <!-- quick stats -->
+                                    <!-- the play info box: the play line (play time, last played...), then How long to beat directly under it -->
+                                    <StackPanel x:Name="KX_DetStats" DockPanel.Dock="Top" Margin="0,0,0,22" HorizontalAlignment="{PluginSettings Plugin=Kippix, Path=DetBlockAlignment, FallbackValue=Left}"
+                                               Visibility="{PluginSettings Plugin=Kippix, Path=DetShowInfo, FallbackValue=Visible}">
+                                    <WrapPanel x:Name="KX_DetStatsLine" Orientation="Horizontal" HorizontalAlignment="{PluginSettings Plugin=Kippix, Path=DetBlockAlignment, FallbackValue=Left}">
+                                        <!-- each line has its own switch (Settings › Game page › Play time and game info); the helper puts them in the
+                                             order set there by their Tag ("info:" + the line's key) -->
+                                        <StackPanel Tag="info:playtime" Orientation="Horizontal" Margin="0,0,30,6" Visibility="{PluginSettings Plugin=Kippix, Path=DetInfoShowPlaytime, FallbackValue=Visible}">
+                                            <Path Data="{StaticResource KX_IconClock}" Style="{StaticResource KX_InfoIcon}" />
+                                            <TextBlock Text="{Binding Playtime, Converter={StaticResource PlayTimeToStringConverter}}" Style="{StaticResource KX_TextSub}" />
+                                        </StackPanel>
+                                        <Border Tag="info:last" Visibility="{PluginSettings Plugin=Kippix, Path=DetInfoShowLast, FallbackValue=Visible}">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,30,6"
+                                                    Visibility="{Binding LastActivity, Converter={StaticResource NullToVisibilityConverter}}">
+                                            <Path Data="{StaticResource KX_IconCalendar}" Style="{StaticResource KX_InfoIcon}" />
+                                            <TextBlock Text="{Binding LastActivity, Converter={StaticResource DateTimeToLastPlayedConverter}}" Style="{StaticResource KX_TextSub}" />
+                                        </StackPanel>
+                                        </Border>
+                                        <Border Tag="info:ach" Visibility="{PluginSettings Plugin=Kippix, Path=DetInfoShowAch, FallbackValue=Visible}">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,30,6">
+<StackPanel.Style><Style TargetType="StackPanel"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{PluginSettings Plugin=PlayniteAchievements, Path=HasData}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></StackPanel.Style>
+                                            <Path Data="{StaticResource KX_IconTrophy}" Style="{StaticResource KX_InfoIcon}" />
+                                            <TextBlock Style="{StaticResource KX_TextSub}">
+                                                <Run Text="{PluginSettings Plugin=PlayniteAchievements, Path=Unlocked, FallbackValue='-', Mode=OneWay}" />
+                                                <Run Text="/" />
+                                                <Run Text="{PluginSettings Plugin=PlayniteAchievements, Path=Total, FallbackValue='-', Mode=OneWay}" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                        </Border>
+                                        <Border Tag="info:status" Visibility="{PluginSettings Plugin=Kippix, Path=DetInfoShowStatus, FallbackValue=Visible}">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,30,6"
+                                                    Visibility="{Binding CompletionStatus, Converter={StaticResource NullToVisibilityConverter}}">
+                                            <Path Data="{StaticResource KX_IconFlag}" Style="{StaticResource KX_InfoIcon}" />
+                                            <TextBlock Text="{Binding CompletionStatus.Name}" Style="{StaticResource KX_TextSub}" />
+                                        </StackPanel>
+                                        </Border>
+                                        <StackPanel Tag="info:size" Orientation="Horizontal" Margin="0,0,30,6" Visibility="{PluginSettings Plugin=Kippix, Path=DetInfoShowSize, FallbackValue=Collapsed}">
+                                            <Path Data="{StaticResource KX_IconDrive}" Style="{StaticResource KX_InfoIcon}" />
+                                            <TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetInfoSizeText}" Style="{StaticResource KX_TextSub}" />
+                                        </StackPanel>
+                                        <!-- the engine (Game Engine Checker's [Engine] tag) and NVIDIA Freestyle (NVIDIA Freestyle checker), when those add-ons have marked the game -->
+                                        <StackPanel Tag="info:engine" Orientation="Horizontal" Visibility="{PluginSettings Plugin=Kippix, Path=DetInfoShowEngine, FallbackValue=Visible}">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,30,6" Visibility="{PluginSettings Plugin=Kippix, Path=HasDetEngine, FallbackValue=Collapsed}">
+                                            <Path Data="{StaticResource KX_IconSliders}" Style="{StaticResource KX_InfoIcon}" />
+                                            <TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetEngine}" Style="{StaticResource KX_TextSub}" />
+                                        </StackPanel>
+                                        <Border CornerRadius="10" Background="#2676B900" BorderBrush="#9976B900" BorderThickness="1" Padding="10,1" Margin="0,0,30,6" VerticalAlignment="Center"
+                                                Visibility="{PluginSettings Plugin=Kippix, Path=ShowDetFreestyle, FallbackValue=Collapsed}">
+                                            <TextBlock Text="{DynamicResource LOC_KX_FreestyleBadge}" Style="{StaticResource KX_TextDim}" FontSize="15" Foreground="#FFB6E36A" />
+                                        </Border>
+                                        </StackPanel>
+                                        <!-- (0.99.48) how far through it you are: "Story ~60%  ·  from 4 of 7 story achievements" (ThemeApi.StoryProgress.cs) -->
+                                        <StackPanel Tag="info:progress" Orientation="Horizontal" Margin="0,0,30,6" Visibility="{PluginSettings Plugin=Kippix, Path=DetInfoShowProgress, FallbackValue=Collapsed}">
+                                            <Path Data="{StaticResource KX_IconFlag}" Style="{StaticResource KX_InfoIcon}" />
+                                            <TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetProgressText}" Style="{StaticResource KX_TextSub}" />
+                                        </StackPanel>
+                                        <!-- (r12) players on Steam right now (Steam's public count, looked up when the page opens) -->
+                                        <StackPanel Tag="info:players" Orientation="Horizontal" Margin="0,0,30,6" Visibility="{PluginSettings Plugin=Kippix, Path=DetInfoShowPlayers, FallbackValue=Collapsed}">
+                                            <Ellipse Width="9" Height="9" Fill="#FF5DD879" Margin="4,0,12,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetPlayersText}" Style="{StaticResource KX_TextSub}" />
+                                        </StackPanel>
+                                        <!-- (r13) friends: "2 friends playing now" / "3 friends play this" (the Friends card's data; off at first) -->
+                                        <StackPanel Tag="info:friends" Orientation="Horizontal" Margin="0,0,30,6" Visibility="{PluginSettings Plugin=Kippix, Path=DetInfoShowFriends, FallbackValue=Collapsed}">
+                                            <Path Data="{StaticResource KX_IconFriends}" Style="{StaticResource KX_InfoIcon}" />
+                                            <TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetFriendsLineText}" Style="{StaticResource KX_TextSub}" />
+                                        </StackPanel>
+                                    </WrapPanel>
+                                    <!-- How long to beat's times (HowLongToBeat add-on), off at first: their own line directly under the play line, in the
+                                         same box, only the times switched on (the How long to beat card shows them too) -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,6" HorizontalAlignment="{PluginSettings Plugin=Kippix, Path=DetBlockAlignment, FallbackValue=Left}" Visibility="{PluginSettings Plugin=Kippix, Path=DetInfoShowHltb, FallbackValue=Collapsed}">
+                                        <Path Data="{StaticResource KX_IconHourglass}" Style="{StaticResource KX_InfoIcon}" />
+                                        <TextBlock Text="{DynamicResource LOC_KX_InfoHltbLabel}" Style="{StaticResource KX_TextDim}" Margin="0,0,18,0" VerticalAlignment="Center"
+                                                   Visibility="{PluginSettings Plugin=Kippix, Path=DetInfoShowHltbLabel, FallbackValue=Visible}" />
+                                        <TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetInfoHltbText}" Style="{StaticResource KX_TextSub}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                    <!-- (0.88: their own line, under How long to beat) (r12) feature badges: controller, co-op, split screen, online, VR, Steam Deck (Playnite's features + Steam's data) -->
+                                    <ItemsControl Margin="0,0,0,6" Focusable="False" HorizontalAlignment="{PluginSettings Plugin=Kippix, Path=DetBlockAlignment, FallbackValue=Left}" ItemsSource="{PluginSettings Plugin=Kippix, Path=DetFeatureBadges}"
+                                                  Visibility="{PluginSettings Plugin=Kippix, Path=DetInfoShowFeatures, FallbackValue=Collapsed}">
+                                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="10" Background="#1FFFFFFF" BorderBrush="#33FFFFFF" BorderThickness="1" Padding="9,2,11,2" Margin="0,0,8,0" ToolTip="{Binding Tip}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Path Data="{Binding Icon}" Stretch="Uniform" Width="16" Height="16" StrokeThickness="1.8" Stroke="{Binding Brush}" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Margin="0,0,7,0" VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding Text}" Style="{StaticResource KX_TextDim}" FontSize="15" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    </StackPanel>
+
+                                    <!-- buttons: Play / Install (set by Playnite) and the game menu -->
+                                    <StackPanel x:Name="DetButtons" DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,26" HorizontalAlignment="{PluginSettings Plugin=Kippix, Path=DetBlockAlignment, FallbackValue=Left}">
+                                        <StackPanel.Resources>
+                                            <!-- round icon button next to Play -->
+                                            <Style x:Key="KX_RoundIconButton" TargetType="ButtonEx" BasedOn="{StaticResource KX_PillButton}">
+                                                <Setter Property="Width" Value="64" />
+                                                <Setter Property="MinWidth" Value="64" />
+                                                <Setter Property="Padding" Value="0" />
+                                                <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                            </Style>
+                                        </StackPanel.Resources>
+                                        <ButtonEx x:Name="PART_ButtonContext" Style="{StaticResource KX_PillButton}" MinWidth="240" />
+                                        <ButtonEx x:Name="PART_ButtonOptions" Style="{StaticResource KX_RoundIconButton}" ToolTip="{DynamicResource LOCGameOptions}"
+                                                  Visibility="{PluginSettings Plugin=Kippix, Path=DetShowOptionsButton, FallbackValue=Visible}">
+                                            <Path Data="{StaticResource KX_IconMenu}" Style="{StaticResource KX_IconPath}" Width="24" Height="24" />
+                                        </ButtonEx>
+                                        <ButtonEx Style="{StaticResource KX_RoundIconButton}" ToolTip="{DynamicResource LOC_KX_Achievements}"
+                                                  Command="{PluginSettings Plugin=Kippix, Path=OpenGameAchievementsCommand}"
+                                                  Visibility="{PluginSettings Plugin=Kippix, Path=DetShowAchButton, FallbackValue=Visible}">
+                                            <Path Data="{StaticResource KX_IconTrophy}" Style="{StaticResource KX_IconPath}" Width="24" Height="24" />
+                                        </ButtonEx>
+                                        <!-- (r13) News: the game's Steam news and patch notes on their own page (Steam games; Game page › Buttons and extras) -->
+                                        <ButtonEx x:Name="KX_DetNewsButton" Style="{StaticResource KX_RoundIconButton}" ToolTip="{DynamicResource LOC_KX_DetNewsButton}"
+                                                  Command="{PluginSettings Plugin=Kippix, Path=OpenGameNewsCommand}"
+                                                  Visibility="{PluginSettings Plugin=Kippix, Path=ShowDetNewsButton, FallbackValue=Collapsed}">
+                                            <Path Data="{StaticResource KX_IconNews}" Style="{StaticResource KX_IconPath}" Width="24" Height="24" />
+                                        </ButtonEx>
+                                        <ButtonEx x:Name="KX_DetMoreButton" Style="{StaticResource KX_RoundIconButton}" ToolTip="{DynamicResource LOC_KX_More}"
+                                                  Command="{PluginSettings Plugin=Kippix, Path=OpenGameMoreCommand}" Visibility="{PluginSettings Plugin=Kippix, Path=DetShowMoreButton, FallbackValue=Visible}">
+                                            <Path Data="{StaticResource KX_IconDots}" Style="{StaticResource KX_IconPath}" Width="24" Height="24" StrokeThickness="3.2" />
+                                        </ButtonEx>
+                                        <!-- (r15) Nexus Mods: the game's Nexus Mods page, or (installed) Vortex / Mod Organizer 2 (Game page › Buttons and extras) -->
+                                        <ButtonEx x:Name="KX_DetNexus" Style="{StaticResource KX_RoundIconButton}" ToolTip="{DynamicResource LOC_KX_NexusButton}"
+                                                  Command="{PluginSettings Plugin=Kippix, Path=OpenNexusCommand}" Visibility="{PluginSettings Plugin=Kippix, Path=ShowDetNexus, FallbackValue=Collapsed}">
+                                            <!-- the theme's own mark for it: an orange nut with an N -->
+                                            <Viewbox Width="27" Height="27">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Data="M12,1.8 L20.9,6.9 L20.9,17.1 L12,22.2 L3.1,17.1 L3.1,6.9 Z" Fill="#FFDA8E35" Stroke="#FFDA8E35" StrokeThickness="1.6" StrokeLineJoin="Round" />
+                                                    <Path Data="M8.7,15.8 L8.7,8.2 L15.3,15.8 L15.3,8.2" Stroke="#FFFFFFFF" StrokeThickness="2.3" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                                                </Canvas>
+                                            </Viewbox>
+                                        </ButtonEx>
+                                        <ButtonEx x:Name="KX_DetSettings" Style="{StaticResource KX_RoundIconButton}" ToolTip="{DynamicResource LOC_KX_CatGamePage}"
+                                                  Command="{PluginSettings Plugin=Kippix, Path=OpenGamePageSettingsCommand}">
+                                            <Path Data="{StaticResource KX_IconTune}" Style="{StaticResource KX_IconPath}" Width="24" Height="24" />
+                                        </ButtonEx>
+                                    </StackPanel>
+
+                                    <!-- DLC you own that isn't installed (Steam) -->
+                                    <Border x:Name="KX_DetDlc" DockPanel.Dock="Top" CornerRadius="14" Background="#26FBBF24" BorderBrush="#66FBBF24" BorderThickness="1" Padding="16,8" Margin="0,0,0,22"
+                                            HorizontalAlignment="{PluginSettings Plugin=Kippix, Path=DetBlockAlignment, FallbackValue=Left}" Visibility="{PluginSettings Plugin=Kippix, Path=ShowDetDlc, FallbackValue=Collapsed}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Path Data="{StaticResource KX_IconTag}" Style="{StaticResource KX_IconPath}" Stroke="#FFFBBF24" Width="22" Height="22" Margin="0,0,12,0" />
+                                            <TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetDlcText}" Style="{StaticResource KX_TextSub}" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="640" />
+                                            <ButtonEx x:Name="KX_DetDlcButton" Style="{StaticResource KX_ChipButton}" Height="42" Margin="16,0,0,0" Command="{PluginSettings Plugin=Kippix, Path=DlcOpenSteamCommand}" Visibility="{PluginSettings Plugin=Kippix, Path=DetDlcIsSteam, FallbackValue=Collapsed}">
+                                                <TextBlock Text="{DynamicResource LOC_KX_OpenInSteam}" VerticalAlignment="Center" />
+                                            </ButtonEx>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- details: each one has its own switch (Settings › Game page › Play time and game info); one that's off leaves no gap -->
+                                    <Grid x:Name="KX_DetFacts" DockPanel.Dock="Top" Margin="0,0,0,14" HorizontalAlignment="{PluginSettings Plugin=Kippix, Path=DetBlockAlignment, FallbackValue=Left}"
+                                          Visibility="{PluginSettings Plugin=Kippix, Path=DetShowInfo, FallbackValue=Visible}">
+                                        <UniformGrid x:Name="KX_DetFactsGrid" Columns="2" Grid.IsSharedSizeScope="True">
+                                            <Grid Tag="info:dev" Margin="0,0,40,8" Visibility="{PluginSettings Plugin=Kippix, Path=DetInfoShowDev, FallbackValue=Visible}"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="BBFactName" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><TextBlock Text="{DynamicResource LOCGameDevelopersTitle}" Style="{StaticResource KX_TextDim}" Margin="0,0,18,0" /><TextBlock Grid.Column="1" Text="{Binding Developers, Converter={StaticResource ListToStringConverter}}" Style="{StaticResource KX_TextSub}" TextTrimming="CharacterEllipsis" /></Grid>
+                                            <Grid Tag="info:pub" Margin="0,0,40,8" Visibility="{PluginSettings Plugin=Kippix, Path=DetInfoShowPub, FallbackValue=Visible}"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="BBFactName" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><TextBlock Text="{DynamicResource LOCGamePublishersTitle}" Style="{StaticResource KX_TextDim}" Margin="0,0,18,0" /><TextBlock Grid.Column="1" Text="{Binding Publishers, Converter={StaticResource ListToStringConverter}}" Style="{StaticResource KX_TextSub}" TextTrimming="CharacterEllipsis" /></Grid>
+                                            <Grid Tag="info:release" Margin="0,0,40,8" Visibility="{PluginSettings Plugin=Kippix, Path=DetInfoShowRelease, FallbackValue=Visible}"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="BBFactName" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><TextBlock Text="{DynamicResource LOCGameReleaseDateTitle}" Style="{StaticResource KX_TextDim}" Margin="0,0,18,0" /><TextBlock Grid.Column="1" Text="{Binding ReleaseDate, Converter={StaticResource ReleaseDateToStringConverter}}" Style="{StaticResource KX_TextSub}" /></Grid>
+                                            <Grid Tag="info:genres" Margin="0,0,40,8" Visibility="{PluginSettings Plugin=Kippix, Path=DetInfoShowGenres, FallbackValue=Visible}"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="BBFactName" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><TextBlock Text="{DynamicResource LOCGameGenresTitle}" Style="{StaticResource KX_TextDim}" Margin="0,0,18,0" /><TextBlock Grid.Column="1" Text="{Binding Genres, Converter={StaticResource ListToStringConverter}}" Style="{StaticResource KX_TextSub}" TextTrimming="CharacterEllipsis" /></Grid>
+                                            <Grid Tag="info:platform" Margin="0,0,40,8" Visibility="{PluginSettings Plugin=Kippix, Path=DetInfoShowPlatform, FallbackValue=Visible}"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="BBFactName" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><TextBlock Text="{DynamicResource LOCGamePlatformTitle}" Style="{StaticResource KX_TextDim}" Margin="0,0,18,0" /><TextBlock Grid.Column="1" Text="{Binding Platforms, Converter={StaticResource ListToStringConverter}}" Style="{StaticResource KX_TextSub}" TextTrimming="CharacterEllipsis" /></Grid>
+                                            <Grid Tag="info:source" Margin="0,0,40,8" Visibility="{PluginSettings Plugin=Kippix, Path=DetInfoShowSource, FallbackValue=Visible}"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="BBFactName" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><TextBlock Text="{DynamicResource LOCSourceLabel}" Style="{StaticResource KX_TextDim}" Margin="0,0,18,0" /><TextBlock Grid.Column="1" Text="{Binding Source.Name}" Style="{StaticResource KX_TextSub}" TextTrimming="CharacterEllipsis" /></Grid>
+                                        </UniformGrid>
+                                    </Grid>
+
+                                    <!-- Steam friends who are playing / have played this game (Settings › Game page › Friends) -->
+                                    <StackPanel x:Name="KX_DetFriends" DockPanel.Dock="Top" Margin="0,0,0,22" HorizontalAlignment="{PluginSettings Plugin=Kippix, Path=DetBlockAlignment, FallbackValue=Left}"
+                                                Visibility="{PluginSettings Plugin=Kippix, Path=HasDetFriends, FallbackValue=Collapsed}">
+                                        <TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetFriendsTitle}" Style="{StaticResource KX_SectionHeader}" Margin="0,0,0,10" />
+                                        <ItemsControl ItemsSource="{PluginSettings Plugin=Kippix, Path=DetFriends}" Focusable="False">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,0,30,10">
+                                                        <Grid Width="44" Height="44">
+                                                            <Ellipse Fill="#26FFFFFF" />
+                                                            <Image Source="{Binding AvatarUrl}" Width="44" Height="44" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="Fant">
+                                                                <Image.Clip>
+                                                                    <EllipseGeometry Center="22,22" RadiusX="22" RadiusY="22" />
+                                                                </Image.Clip>
+                                                            </Image>
+                                                            <Ellipse Stroke="#FF5DD879" StrokeThickness="2.5"
+                                                                     Visibility="{Binding PlayingNow, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                                        </Grid>
+                                                        <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding Name}" Style="{StaticResource KX_Text}" FontSize="18" MaxWidth="220" TextTrimming="CharacterEllipsis" />
+                                                            <TextBlock Text="{Binding Status}" FontSize="15">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource KX_TextDim}">
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding PlayingNow}" Value="True">
+                                                                                <Setter Property="Foreground" Value="#FF5DD879" />
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+
+
+                                    <!-- description (fades in last): A opens it full screen. The text is the store's description (Steam first), or Playnite's -->
+                                    <ButtonEx x:Name="KX_DetDescButton" FocusVisualStyle="{x:Null}" MaxWidth="1000"
+                                              HorizontalAlignment="{PluginSettings Plugin=Kippix, Path=DetDescAlignment, FallbackValue=Left}"
+                                              Command="{PluginSettings Plugin=Kippix, Path=OpenDescReaderCommand}"
+                                              Visibility="{PluginSettings Plugin=Kippix, Path=DetShowDescription, FallbackValue=Visible}">
+                                        <ButtonEx.Template>
+                                            <ControlTemplate TargetType="ButtonEx">
+                                                <Grid>
+                                                    <Border x:Name="Ring" CornerRadius="14" Margin="-12,-8" BorderThickness="2.3" BorderBrush="{DynamicResource KX_AccentBrush}" Background="#14FFFFFF" Opacity="0" />
+                                                    <ContentPresenter />
+                                                    <Border x:Name="Tag" CornerRadius="10" Background="#E6111317" Padding="10,4" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-4,-4" Opacity="0">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <ContentControl ContentTemplate="{DynamicResource ButtonPromptA}" Width="20" Height="20" Focusable="False" />
+                                                            <TextBlock Text="{DynamicResource LOC_KX_ReadAll}" Style="{StaticResource KX_TextSub}" FontSize="15" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                                        </StackPanel>
+                                                    </Border>
+                                                </Grid>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Ring" Property="Opacity" Value="1" /><Setter TargetName="Tag" Property="Opacity" Value="1" /></Trigger>
+                                                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Ring" Property="Opacity" Value="0.5" /></Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </ButtonEx.Template>
+                                        <ScrollViewerEx x:Name="PART_ScrollHtmlDescription" CustomScrollAmount="42" Focusable="False"
+                                                        VerticalScrollBarVisibility="Hidden" Opacity="0">
+                                            <Grid>
+                                                <HtmlTextView x:Name="KX_DetDesc" HtmlText="{PluginSettings Plugin=Kippix, Path=DetDescHtml}"
+                                                              HtmlFontSize="19" HtmlForeground="#E6E4E8EF" LinkForeground="#FFFFFFFF" Focusable="False" IsHitTestVisible="False" />
+                                                <!-- Playnite fills this one; the helper reads it when there's no store description -->
+                                                <HtmlTextView x:Name="PART_HtmlDescription" Visibility="Collapsed" Focusable="False" />
+                                            </Grid>
+                                        </ScrollViewerEx>
+                                    </ButtonEx>
+                                </DockPanel>
+                                </DockPanel>
+
+                                <!-- ============ RIGHT: game media (cover / trailer / nothing), size and height in Settings › Game page › Game media ============ -->
+                                <Grid x:Name="CoverColumn" Opacity="0"
+                                      VerticalAlignment="{PluginSettings Plugin=Kippix, Path=DetMediaVAlignment, FallbackValue=Center}"
+                                      Grid.Column="{PluginSettings Plugin=Kippix, Path=DetMediaColumn, FallbackValue=2}"
+                                      Grid.ColumnSpan="{PluginSettings Plugin=Kippix, Path=DetMediaColumnSpan, FallbackValue=1}"
+                                      HorizontalAlignment="{PluginSettings Plugin=Kippix, Path=DetMediaAlignment, FallbackValue=Right}"
+                                      Margin="{PluginSettings Plugin=Kippix, Path=DetMediaMargin, FallbackValue='0'}"
+                                      Visibility="{PluginSettings Plugin=Kippix, Path=DetShowArt, FallbackValue=Visible}">
+                                    <Grid.RenderTransform>
+                                        <TranslateTransform x:Name="CoverShift" X="0" Y="0" />
+                                    </Grid.RenderTransform>
+                                    <!-- trailer (Extra Metadata Loader), when chosen and the game has one -->
+                                    <!-- the trailer, with rewind / play-pause / forward underneath (select the video and press A for full screen) -->
+                                    <StackPanel x:Name="VideoArea" HorizontalAlignment="Center"
+                                                Visibility="{PluginSettings Plugin=Kippix, Path=DetShowVideo, FallbackValue=Collapsed}">
+                                        <Grid x:Name="VideoBox" Width="{PluginSettings Plugin=Kippix, Path=DetVideoWidth, FallbackValue=720}" Height="{PluginSettings Plugin=Kippix, Path=DetVideoHeight, FallbackValue=405}">
+                                            <Border CornerRadius="14" Background="Black" Margin="4">
+                                                <Border.Effect>
+                                                    <DropShadowEffect BlurRadius="40" ShadowDepth="8" Opacity="0.7" />
+                                                </Border.Effect>
+                                            </Border>
+                                            <Grid>
+                                                <Grid.OpacityMask>
+                                                    <VisualBrush>
+                                                        <VisualBrush.Visual>
+                                                            <Border Background="Black" CornerRadius="14"
+                                                                    Width="{Binding ActualWidth, ElementName=VideoBox}"
+                                                                    Height="{Binding ActualHeight, ElementName=VideoBox}" />
+                                                        </VisualBrush.Visual>
+                                                    </VisualBrush>
+                                                </Grid.OpacityMask>
+                                                <!-- our own player (the helper starts / pauses / loops it): a downloaded trailer, or the Steam store trailer -->
+                                                <MediaElement x:Name="KX_Trailer" LoadedBehavior="Manual" UnloadedBehavior="Stop" Stretch="UniformToFill" IsHitTestVisible="False"
+                                                              Source="{PluginSettings Plugin=Kippix, Path=DetTrailerSource}" IsMuted="{PluginSettings Plugin=Kippix, Path=DetTrailerMuted, FallbackValue=False}" Volume="0.8" />
+                                            </Grid>
+                                            <Border CornerRadius="14" BorderThickness="1" BorderBrush="#40FFFFFF" IsHitTestVisible="False" />
+                                            <!-- select the trailer and press A for full screen -->
+                                            <ButtonEx x:Name="KX_DetVideo" Style="{StaticResource KX_VideoButton}" Command="{PluginSettings Plugin=Kippix, Path=DetTrailerFullscreenCommand}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <ContentControl ContentTemplate="{DynamicResource ButtonPromptA}" Width="22" Height="22" Focusable="False" />
+                                                    <TextBlock Text="{DynamicResource LOC_KX_FullScreen}" Style="{StaticResource KX_TextSub}" FontSize="16" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </ButtonEx>
+                                        </Grid>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0"
+                                                    Visibility="{PluginSettings Plugin=Kippix, Path=DetShowTrailerControls, FallbackValue=Visible}">
+                                            <StackPanel.Resources>
+                                                <Style x:Key="KX_RoundIconButton" TargetType="ButtonEx" BasedOn="{StaticResource KX_PillButton}">
+                                                    <Setter Property="Width" Value="64" />
+                                                    <Setter Property="MinWidth" Value="64" />
+                                                    <Setter Property="Padding" Value="0" />
+                                                    <Setter Property="Margin" Value="6,0" />
+                                                    <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                                </Style>
+                                            </StackPanel.Resources>
+                                                <ButtonEx Style="{StaticResource KX_RoundIconButton}" ToolTip="{DynamicResource LOC_KX_Back10}"
+                                                          Command="{PluginSettings Plugin=Kippix, Path=TrailerBackCommand}">
+                                                    <Path Data="{StaticResource KX_IconRewind}" Style="{StaticResource KX_IconPath}" Width="22" Height="22" />
+                                                </ButtonEx>
+                                                <ButtonEx Style="{StaticResource KX_RoundIconButton}" ToolTip="{DynamicResource LOC_KX_PlayPause}"
+                                                          Command="{PluginSettings Plugin=Kippix, Path=DetToggleTrailerCommand}">
+                                                    <Path Width="22" Height="22">
+                                                        <Path.Style>
+                                                            <Style TargetType="Path" BasedOn="{StaticResource KX_IconPath}">
+                                                                <Setter Property="Data" Value="{StaticResource KX_IconPlay}" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{PluginSettings Plugin=Kippix, Path=DetTrailerPlaying}" Value="True">
+                                                                        <Setter Property="Data" Value="{StaticResource KX_IconPause}" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Path.Style>
+                                                    </Path>
+                                                </ButtonEx>
+                                                <ButtonEx Style="{StaticResource KX_RoundIconButton}" ToolTip="{DynamicResource LOC_KX_Forward10}"
+                                                          Command="{PluginSettings Plugin=Kippix, Path=TrailerForwardCommand}">
+                                                    <Path Data="{StaticResource KX_IconForward}" Style="{StaticResource KX_IconPath}" Width="22" Height="22" />
+                                                </ButtonEx>
+                                                <ButtonEx Style="{StaticResource KX_RoundIconButton}" ToolTip="{DynamicResource LOC_KX_SoundOnOff}"
+                                                          Command="{PluginSettings Plugin=Kippix, Path=TrailerSoundCommand}">
+                                                    <Path Width="22" Height="22">
+                                                        <Path.Style>
+                                                            <Style TargetType="Path" BasedOn="{StaticResource KX_IconPath}">
+                                                                <Setter Property="Data" Value="{StaticResource KX_IconSpeaker}" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{PluginSettings Plugin=Kippix, Path=DetTrailerSound}" Value="False">
+                                                                        <Setter Property="Data" Value="{StaticResource KX_IconMute}" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Path.Style>
+                                                    </Path>
+                                                </ButtonEx>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- "Loading the trailer..." while a Steam trailer downloads (shown over the cover) -->
+                                    <Border VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,-46" Padding="14,5" CornerRadius="12"
+                                            Background="#CC111317" Panel.ZIndex="2"
+                                            Visibility="{PluginSettings Plugin=Kippix, Path=HasDetTrailerStatus, FallbackValue=Collapsed}">
+                                        <TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetTrailerStatus}" Style="{StaticResource KX_TextSub}" FontSize="16" />
+                                    </Border>
+                                    <!-- cover art (also the fallback when there's no trailer) -->
+                                    <Grid>
+                                        <Grid.Style>
+                                            <Style TargetType="Grid">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{PluginSettings Plugin=Kippix, Path=DetShowCover}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Grid.Style>
+                                    <Border CornerRadius="14" Background="Black" Margin="4">
+                                        <Border.Effect>
+                                            <DropShadowEffect BlurRadius="40" ShadowDepth="8" Opacity="0.7" />
+                                        </Border.Effect>
+                                    </Border>
+                                    <Border x:Name="CoverClip" CornerRadius="14" ClipToBounds="True">
+                                        <Border.OpacityMask>
+                                            <VisualBrush>
+                                                <VisualBrush.Visual>
+                                                    <Border Background="Black" CornerRadius="14"
+                                                            Width="{Binding ActualWidth, ElementName=CoverClip}"
+                                                            Height="{Binding ActualHeight, ElementName=CoverClip}" />
+                                                </VisualBrush.Visual>
+                                            </VisualBrush>
+                                        </Border.OpacityMask>
+                                        <Grid>
+                                        <Image x:Name="PART_ImageCover" Stretch="Uniform"
+                                               Height="{PluginSettings Plugin=Kippix, Path=DetCoverHeight, FallbackValue=560}" MaxWidth="{PluginSettings Plugin=Kippix, Path=DetCoverHeight, FallbackValue=560}"
+                                               RenderOptions.BitmapScalingMode="Fant" />
+                                        <!-- (0.98) BackgroundChanger's cover for the game, in the cover's own box -->
+                                        <ContentControl x:Name="BackgroundChanger_PluginCoverImage" Focusable="False" IsHitTestVisible="False"
+                                                        Width="{Binding ActualWidth, ElementName=PART_ImageCover}" Height="{Binding ActualHeight, ElementName=PART_ImageCover}"
+                                                        Visibility="{PluginSettings Plugin=Kippix, Path=BcCoverOnPage, FallbackValue=Collapsed}" />
+                                        </Grid>
+                                    </Border>
+                                    <Border CornerRadius="14" BorderThickness="1" BorderBrush="#40FFFFFF" IsHitTestVisible="False" />
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+
+
+                                <!-- ============ THE LOWER PAGE (Down from the buttons). What's on it, and what's on the top page, is set in
+                                     Settings & Customisation › Game page › Top and lower page; the helper moves the parts between the two pages ============ -->
+                                <!-- the whole width of the screen (a scroll view cuts off whatever goes past its edges: with the page's side margins
+                                     on it, a part moved toward the left or right in Free move vanished into a strip down that side). The margins are
+                                     on what's inside instead, so the parts sit where they did. -->
+                                <ScrollViewer x:Name="KX_DetMore" Opacity="0" VerticalAlignment="Top" Height="934" Margin="0,-14,0,0" VerticalScrollBarVisibility="Hidden" Focusable="False"
+                                              KeyboardNavigation.DirectionalNavigation="Contained" Visibility="{PluginSettings Plugin=Kippix, Path=ShowDetMore, FallbackValue=Collapsed}">
+                                    <ScrollViewer.RenderTransform><TranslateTransform Y="1100" /></ScrollViewer.RenderTransform>
+                                    <!-- (0.99.51) 14 px higher with 14 px back inside: the parts sit where they did, and a highlight ring on the top line isn't cut off -->
+                                    <StackPanel Margin="96,14,96,0">
+                                        <!-- top-page parts sent down here -->
+                                        <StackPanel x:Name="KX_DownHost" />
+                                        <WrapPanel x:Name="KX_SecCards" Orientation="Horizontal">
+<ButtonEx x:Name="KX_SecHistory" Style="{StaticResource KX_DetCard}" Command="{PluginSettings Plugin=Kippix, Path=DetHistoryCommand}" Focusable="{PluginSettings Plugin=Kippix, Path=DetIntHistory, FallbackValue=True}" Visibility="{PluginSettings Plugin=Kippix, Path=SlotDetHistory, FallbackValue=Collapsed}">
+<StackPanel><TextBlock Text="{DynamicResource LOC_KX_SecPlayHistory}" Style="{StaticResource KX_SectionHeader}" Margin="0,0,0,10" />
+<TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetHistoryTotal}" Style="{StaticResource KX_Text}" FontSize="28" FontFamily="{DynamicResource FontTitilliumWebBold}" />
+<TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetHistoryLine}" Style="{StaticResource KX_TextDim}" TextWrapping="Wrap" Margin="0,2,0,14" />
+<ItemsControl ItemsSource="{PluginSettings Plugin=Kippix, Path=DetHistory}" Focusable="False" Height="140">
+<ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+<ItemsControl.ItemTemplate><DataTemplate>
+<StackPanel Width="40" Margin="0,0,2,0" VerticalAlignment="Bottom" ToolTip="{Binding Tip}">
+<Border Height="{Binding Height}" Width="26" CornerRadius="5,5,2,2" VerticalAlignment="Bottom" HorizontalAlignment="Center">
+<Border.Style><Style TargetType="Border"><Setter Property="Background" Value="#73FFFFFF" /><Style.Triggers><DataTrigger Binding="{Binding IsThisWeek}" Value="True"><Setter Property="Background" Value="{DynamicResource KX_AccentBrush}" /></DataTrigger></Style.Triggers></Style></Border.Style>
+</Border>
+<TextBlock Text="{Binding Label}" Style="{StaticResource KX_TextDim}" FontSize="12" HorizontalAlignment="Center" Margin="0,6,0,0" Height="16" />
+</StackPanel>
+</DataTemplate></ItemsControl.ItemTemplate></ItemsControl></StackPanel>
+</ButtonEx>
+<ButtonEx x:Name="KX_SecHltb" Style="{StaticResource KX_DetCard}" Command="{PluginSettings Plugin=Kippix, Path=DetHltbCommand}" Focusable="{PluginSettings Plugin=Kippix, Path=DetIntHltb, FallbackValue=True}" Visibility="{PluginSettings Plugin=Kippix, Path=SlotDetHltb, FallbackValue=Collapsed}">
+<StackPanel><TextBlock Text="{DynamicResource LOC_KX_SecHltb}" Style="{StaticResource KX_SectionHeader}" Margin="0,0,0,10" />
+<Grid Margin="0,2"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="{DynamicResource LOC_KX_HltbMain}" Style="{StaticResource KX_TextSub}" /><TextBlock Grid.Column="1" Text="{PluginSettings Plugin=Kippix, Path=DetHltbMain}" Style="{StaticResource KX_Text}" /></Grid><Grid Margin="0,2"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="{DynamicResource LOC_KX_HltbExtras}" Style="{StaticResource KX_TextSub}" /><TextBlock Grid.Column="1" Text="{PluginSettings Plugin=Kippix, Path=DetHltbExtras}" Style="{StaticResource KX_Text}" /></Grid><Grid Margin="0,2"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="{DynamicResource LOC_KX_HltbComplete}" Style="{StaticResource KX_TextSub}" /><TextBlock Grid.Column="1" Text="{PluginSettings Plugin=Kippix, Path=DetHltbComplete}" Style="{StaticResource KX_Text}" /></Grid>
+<Grid Width="480" Height="10" HorizontalAlignment="Left" Margin="0,16,0,8">
+<Border CornerRadius="5" Background="#33FFFFFF" />
+<Border CornerRadius="5" Background="{DynamicResource KX_AccentBrush}" HorizontalAlignment="Left" Width="{PluginSettings Plugin=Kippix, Path=DetHltbFill, FallbackValue=0}" />
+</Grid>
+<TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetHltbYou}" Style="{StaticResource KX_TextDim}" TextWrapping="Wrap" /></StackPanel>
+</ButtonEx>
+<ButtonEx x:Name="KX_SecAch" Style="{StaticResource KX_DetCard}" Command="{PluginSettings Plugin=Kippix, Path=DetAchCommand}" Focusable="{PluginSettings Plugin=Kippix, Path=DetIntAch, FallbackValue=True}" Visibility="{PluginSettings Plugin=Kippix, Path=SlotDetAch, FallbackValue=Collapsed}">
+<StackPanel><TextBlock Text="{DynamicResource LOC_KX_SecAchHighlights}" Style="{StaticResource KX_SectionHeader}" Margin="0,0,0,10" />
+<TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetAchSummary}" Style="{StaticResource KX_Text}" />
+<Grid Width="480" Height="10" HorizontalAlignment="Left" Margin="0,10,0,2">
+<Border CornerRadius="5" Background="#33FFFFFF" />
+<Border CornerRadius="5" Background="{DynamicResource KX_AccentBrush}" HorizontalAlignment="Left" Width="{PluginSettings Plugin=Kippix, Path=DetAchFill, FallbackValue=0}" />
+</Grid><Grid Margin="0,12,0,0" Visibility="{PluginSettings Plugin=Kippix, Path=HasDetAchRarest, FallbackValue=Collapsed}"><Grid.ColumnDefinitions><ColumnDefinition Width="56" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+<Border Width="48" Height="48" CornerRadius="8" Background="#26FFFFFF" HorizontalAlignment="Left"><Border.Clip><RectangleGeometry Rect="0,0,48,48" RadiusX="8" RadiusY="8" /></Border.Clip><Image Source="{PluginSettings Plugin=Kippix, Path=DetAchRarestIcon}" Stretch="UniformToFill" /></Border>
+<StackPanel Grid.Column="1" VerticalAlignment="Center"><TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetAchRarest}" Style="{StaticResource KX_Text}" FontSize="19" TextTrimming="CharacterEllipsis" /><TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetAchRarestSub}" Style="{StaticResource KX_TextDim}" FontSize="15" TextWrapping="Wrap" /></StackPanel></Grid><Grid Margin="0,12,0,0" Visibility="{PluginSettings Plugin=Kippix, Path=HasDetAchNext, FallbackValue=Collapsed}"><Grid.ColumnDefinitions><ColumnDefinition Width="56" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+<Border Width="48" Height="48" CornerRadius="8" Background="#26FFFFFF" HorizontalAlignment="Left"><Border.Clip><RectangleGeometry Rect="0,0,48,48" RadiusX="8" RadiusY="8" /></Border.Clip><Image Source="{PluginSettings Plugin=Kippix, Path=DetAchNextIcon}" Stretch="UniformToFill" /></Border>
+<StackPanel Grid.Column="1" VerticalAlignment="Center"><TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetAchNext}" Style="{StaticResource KX_Text}" FontSize="19" TextTrimming="CharacterEllipsis" /><TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetAchNextSub}" Style="{StaticResource KX_TextDim}" FontSize="15" TextWrapping="Wrap" /></StackPanel></Grid>
+<!-- NEXT UP: the locked achievements you're closest to (ThemeApi.NextUp.cs) -->
+<StackPanel Margin="0,14,0,0" Visibility="{PluginSettings Plugin=Kippix, Path=HasDetAchNextUp, FallbackValue=Collapsed}"><TextBlock Text="{DynamicResource LOC_KX_NextUpHeader}" Style="{StaticResource KX_TextDim}" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,6" />
+<ItemsControl ItemsSource="{PluginSettings Plugin=Kippix, Path=DetAchNextUp}" Focusable="False" IsHitTestVisible="False"><ItemsControl.ItemTemplate><DataTemplate><Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="46" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+<Border Width="38" Height="38" CornerRadius="7" Background="#26FFFFFF" HorizontalAlignment="Left"><Border.Clip><RectangleGeometry Rect="0,0,38,38" RadiusX="7" RadiusY="7" /></Border.Clip><Image Source="{Binding Icon}" Stretch="UniformToFill" Opacity="0.8" /></Border>
+<StackPanel Grid.Column="1" VerticalAlignment="Center"><TextBlock Text="{Binding Name}" Style="{StaticResource KX_Text}" FontSize="17" TextTrimming="CharacterEllipsis" /><StackPanel Orientation="Horizontal"><Grid Width="120" Height="4" Margin="0,0,10,0" VerticalAlignment="Center" Visibility="{Binding HasFill, Converter={StaticResource BooleanToVisibilityConverter}}"><Border CornerRadius="2" Background="#33FFFFFF" /><Border CornerRadius="2" HorizontalAlignment="Left" Background="{DynamicResource KX_AccentBrush}" Width="{Binding Fill}" /></Grid><TextBlock Text="{Binding Sub}" Style="{StaticResource KX_TextDim}" FontSize="14" TextTrimming="CharacterEllipsis" /></StackPanel></StackPanel></Grid></DataTemplate></ItemsControl.ItemTemplate></ItemsControl></StackPanel></StackPanel>
+</ButtonEx>
+<ButtonEx x:Name="KX_SecStatus" Style="{StaticResource KX_DetCard}" Command="{PluginSettings Plugin=Kippix, Path=OpenGameStatusCommand}" Focusable="{PluginSettings Plugin=Kippix, Path=DetIntStatus, FallbackValue=True}" Visibility="{PluginSettings Plugin=Kippix, Path=ShowDetStatus, FallbackValue=Collapsed}">
+<StackPanel><TextBlock Text="{DynamicResource LOC_KX_SecStatusRating}" Style="{StaticResource KX_SectionHeader}" Margin="0,0,0,10" />
+<TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetStatusText}" Style="{StaticResource KX_Text}" FontSize="26" />
+<TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetStarsText}" Style="{StaticResource KX_Text}" FontSize="26" Foreground="#FFFBBF24" Margin="0,4,0,14" /></StackPanel>
+</ButtonEx>
+<ButtonEx x:Name="KX_SecNotes" Style="{StaticResource KX_DetCard}" Command="{PluginSettings Plugin=Kippix, Path=EditNotesCommand}" Focusable="{PluginSettings Plugin=Kippix, Path=DetIntNotes, FallbackValue=True}" Visibility="{PluginSettings Plugin=Kippix, Path=ShowDetNotesCard, FallbackValue=Collapsed}">
+<StackPanel><TextBlock Text="{DynamicResource LOC_KX_SecNotes}" Style="{StaticResource KX_SectionHeader}" Margin="0,0,0,10" />
+<TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetNotesText}" Style="{StaticResource KX_TextSub}" TextWrapping="Wrap" MaxHeight="120" TextTrimming="CharacterEllipsis" Visibility="{PluginSettings Plugin=Kippix, Path=HasDetNotes, FallbackValue=Collapsed}" />
+<TextBlock Text="{DynamicResource LOC_KX_NoNotes}" TextWrapping="Wrap">
+<TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource KX_TextDim}"><Style.Triggers><DataTrigger Binding="{PluginSettings Plugin=Kippix, Path=HasDetNotes}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+</TextBlock></StackPanel>
+</ButtonEx>
+<ButtonEx x:Name="KX_SecScores" Style="{StaticResource KX_DetCard}" Command="{PluginSettings Plugin=Kippix, Path=DetScoresCommand}" Focusable="{PluginSettings Plugin=Kippix, Path=DetIntScores, FallbackValue=True}" Visibility="{PluginSettings Plugin=Kippix, Path=ShowDetScores, FallbackValue=Collapsed}">
+<StackPanel><TextBlock Text="{DynamicResource LOC_KX_SecScores}" Style="{StaticResource KX_SectionHeader}" Margin="0,0,0,10" />
+<StackPanel Orientation="Horizontal"><StackPanel Margin="0,0,40,0" Visibility="{Binding CriticScore, Converter={StaticResource NullToVisibilityConverter}}">
+<TextBlock Text="{Binding CriticScore}" Style="{StaticResource KX_Text}" FontSize="44" FontFamily="{DynamicResource FontTitilliumWebBold}" />
+<TextBlock Text="{DynamicResource LOC_KX_CriticScore}" Style="{StaticResource KX_TextDim}" /></StackPanel><StackPanel Margin="0,0,40,0" Visibility="{Binding CommunityScore, Converter={StaticResource NullToVisibilityConverter}}">
+<TextBlock Text="{Binding CommunityScore}" Style="{StaticResource KX_Text}" FontSize="44" FontFamily="{DynamicResource FontTitilliumWebBold}" />
+<TextBlock Text="{DynamicResource LOC_KX_CommunityScore}" Style="{StaticResource KX_TextDim}" /></StackPanel></StackPanel>
+<TextBlock Text="{DynamicResource LOC_KX_ScoresFrom}" Style="{StaticResource KX_TextDim}" TextWrapping="Wrap" Margin="0,8,0,0" FontSize="14" /></StackPanel>
+</ButtonEx>
+<ButtonEx x:Name="KX_SecSaves" Style="{StaticResource KX_DetCard}" Command="{PluginSettings Plugin=Kippix, Path=DetSavesCommand}" Focusable="{PluginSettings Plugin=Kippix, Path=DetIntSaves, FallbackValue=True}" Visibility="{PluginSettings Plugin=Kippix, Path=SlotDetSaves, FallbackValue=Collapsed}">
+<StackPanel><TextBlock Text="{DynamicResource LOC_KX_SecSavesHeader}" Style="{StaticResource KX_SectionHeader}" Margin="0,0,0,10" />
+<TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetSavesLine}" Style="{StaticResource KX_Text}" TextWrapping="Wrap" MaxWidth="480" />
+<TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetSavesSub}" Style="{StaticResource KX_TextDim}" TextWrapping="Wrap" MaxWidth="480" Margin="0,6,0,0" /></StackPanel>
+</ButtonEx>
+<!-- (r12) Mods: the game on Nexus Mods (the Nexus Mods checker add-on's link, or found in Nexus Mods' list of games), and your mod manager -->
+<ContentControl x:Name="KX_SecMods" Style="{StaticResource KX_DetCardBox}" Visibility="{PluginSettings Plugin=Kippix, Path=SlotDetMods, FallbackValue=Collapsed}">
+<StackPanel><TextBlock Text="{DynamicResource LOC_KX_SecModsHeader}" Style="{StaticResource KX_SectionHeader}" Margin="0,0,0,10" />
+<TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetModsTitle}" Style="{StaticResource KX_Text}" FontSize="28" FontFamily="{DynamicResource FontTitilliumWebBold}" TextWrapping="Wrap" />
+<TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetModsSub}" Style="{StaticResource KX_TextDim}" TextWrapping="Wrap" Margin="0,2,0,14" />
+<!-- (r15) the card's own buttons only while the game page has no Nexus Mods button (that button offers the same) -->
+<WrapPanel Orientation="Horizontal" Visibility="{PluginSettings Plugin=Kippix, Path=ShowModsCardButtons, FallbackValue=Visible}">
+<ButtonEx x:Name="KX_ModsNexus" Style="{StaticResource KX_ChipButton}" Height="46" Margin="0,0,12,8" Command="{PluginSettings Plugin=Kippix, Path=OpenModsNexusCommand}" Focusable="{PluginSettings Plugin=Kippix, Path=DetIntMods, FallbackValue=True}">
+<StackPanel Orientation="Horizontal"><Path Data="{StaticResource KX_IconGlobe}" Style="{StaticResource KX_IconPath}" Width="20" Height="20" Margin="0,0,10,0" /><TextBlock Text="{DynamicResource LOC_KX_ModsOpenNexus}" VerticalAlignment="Center" /></StackPanel></ButtonEx>
+<ButtonEx Style="{StaticResource KX_ChipButton}" Height="46" Margin="0,0,12,8" Command="{PluginSettings Plugin=Kippix, Path=OpenVortexCommand}" Focusable="{PluginSettings Plugin=Kippix, Path=DetIntMods, FallbackValue=True}" Visibility="{PluginSettings Plugin=Kippix, Path=ShowModsVortex, FallbackValue=Collapsed}">
+<StackPanel Orientation="Horizontal"><Path Data="{StaticResource KX_IconSliders}" Style="{StaticResource KX_IconPath}" Width="20" Height="20" Margin="0,0,10,0" /><TextBlock Text="{DynamicResource LOC_KX_ModsOpenVortex}" VerticalAlignment="Center" /></StackPanel></ButtonEx>
+<ButtonEx Style="{StaticResource KX_ChipButton}" Height="46" Margin="0,0,12,8" Command="{PluginSettings Plugin=Kippix, Path=OpenMo2Command}" Focusable="{PluginSettings Plugin=Kippix, Path=DetIntMods, FallbackValue=True}" Visibility="{PluginSettings Plugin=Kippix, Path=ShowModsMo2, FallbackValue=Collapsed}">
+<StackPanel Orientation="Horizontal"><Path Data="{StaticResource KX_IconSliders}" Style="{StaticResource KX_IconPath}" Width="20" Height="20" Margin="0,0,10,0" /><TextBlock Text="{DynamicResource LOC_KX_ModsOpenMo2}" VerticalAlignment="Center" /></StackPanel></ButtonEx>
+</WrapPanel></StackPanel>
+</ContentControl>
+<!-- (r12) News: the game's latest Steam news and patch notes; A on one opens the whole post in the theme's browser -->
+<ContentControl x:Name="KX_SecNews" Style="{StaticResource KX_DetCardBoxWide}" Visibility="{PluginSettings Plugin=Kippix, Path=SlotDetNews, FallbackValue=Collapsed}">
+<StackPanel><Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+<TextBlock Text="{DynamicResource LOC_KX_SecNewsHeader}" Style="{StaticResource KX_SectionHeader}" VerticalAlignment="Center" />
+<TextBlock Grid.Column="1" Text="{PluginSettings Plugin=Kippix, Path=DetNewsSub}" Style="{StaticResource KX_TextDim}" FontSize="15" VerticalAlignment="Center" /></Grid>
+<ItemsControl ItemsSource="{PluginSettings Plugin=Kippix, Path=DetNews}" Focusable="False" Margin="0,0,-12,0">
+<ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+<ItemsControl.ItemTemplate><DataTemplate>
+<ButtonEx Style="{StaticResource KX_DetCardLine}" Command="{Binding Command}" Margin="0,0,12,12" Focusable="{PluginSettings Plugin=Kippix, Path=DetIntNews, FallbackValue=True}">
+<StackPanel>
+<TextBlock Text="{Binding Title}" Style="{StaticResource KX_Text}" FontSize="19" FontFamily="{DynamicResource FontTitilliumWebBold}" TextTrimming="CharacterEllipsis" />
+<TextBlock Text="{Binding Meta}" Style="{StaticResource KX_TextDim}" FontSize="14" Margin="0,1,0,5" TextTrimming="CharacterEllipsis" />
+<TextBlock Text="{Binding Text}" Style="{StaticResource KX_TextSub}" FontSize="15" TextWrapping="Wrap" Height="60" TextTrimming="CharacterEllipsis" />
+</StackPanel>
+</ButtonEx>
+</DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+<ButtonEx Style="{StaticResource KX_ChipButton}" Height="42" HorizontalAlignment="Left" Margin="0,2,0,0" Command="{PluginSettings Plugin=Kippix, Path=OpenAllNewsCommand}" Focusable="{PluginSettings Plugin=Kippix, Path=DetIntNews, FallbackValue=True}">
+<StackPanel Orientation="Horizontal"><Path Data="{StaticResource KX_IconNews}" Style="{StaticResource KX_IconPath}" Width="20" Height="20" Margin="0,0,10,0" /><TextBlock Text="{DynamicResource LOC_KX_GameNewsAll}" VerticalAlignment="Center" /></StackPanel></ButtonEx>
+</StackPanel>
+</ContentControl>
+                                        </WrapPanel>
+                                        <StackPanel x:Name="KX_SecCaptures" Margin="0,0,0,22" Visibility="{PluginSettings Plugin=Kippix, Path=SlotDetCaptures, FallbackValue=Collapsed}">
+<!-- (0.99.54) Open in gallery is up by the heading, so the pictures can run on to the screen's right edge -->
+<StackPanel Orientation="Horizontal" Margin="0,0,0,4"><TextBlock Text="{DynamicResource LOC_KX_SecYourCaptures}" Style="{StaticResource KX_SectionHeader}" Margin="6,0,14,0" VerticalAlignment="Center" />
+<TextBlock Text="{PluginSettings Plugin=Kippix, Path=DetCapturesText}" Style="{StaticResource KX_TextDim}" VerticalAlignment="Center" />
+<ButtonEx Style="{StaticResource KX_ChipButton}" VerticalAlignment="Center" Height="40" Margin="20,0,0,0" Command="{PluginSettings Plugin=Kippix, Path=OpenDetCapturesCommand}" Focusable="{PluginSettings Plugin=Kippix, Path=DetIntCaptures, FallbackValue=True}"><StackPanel Orientation="Horizontal">
+<Path Data="{StaticResource KX_IconGallery}" Style="{StaticResource KX_IconPath}" Width="18" Height="18" Margin="0,0,8,0" /><TextBlock Text="{DynamicResource LOC_KX_OpenInGallery}" VerticalAlignment="Center" /></StackPanel></ButtonEx></StackPanel>
+<!-- (0.99.55) the row runs edge to edge (it reaches over the lower page's 96 px side margins; the pictures start 96 px in, where the
+     other parts line up) and slides sideways to keep the highlighted one in sight (the helper moves it). Not a scroll view: one of
+     those keeps Up / Down for itself, so the highlight couldn't leave the row. -->
+<Canvas x:Name="KX_DetCapturesClip" ClipToBounds="True" Height="138" Margin="-96,0,-96,0">
+<ItemsControl x:Name="KX_DetCapturesList" ItemsSource="{PluginSettings Plugin=Kippix, Path=DetCaptures}" Focusable="False" Canvas.Left="96">
+<ItemsControl.RenderTransform><TranslateTransform /></ItemsControl.RenderTransform>
+<ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+<ItemsControl.ItemTemplate><DataTemplate>
+<ButtonEx Command="{Binding Command}" FocusVisualStyle="{x:Null}" Margin="0,0,2,0" Focusable="{PluginSettings Plugin=Kippix, Path=DetIntCaptures, FallbackValue=True}">
+<ButtonEx.Template><ControlTemplate TargetType="ButtonEx">
+<!-- (0.99.20) the size is on the picture, not round the ring: a sized box cut its ring off on every side -->
+<!-- (0.99.51) and the room for the ring is inside the part (no negative margins reaching past it): the part's own edges, or the lower page's top, cut it off -->
+<Grid Margin="6">
+<Grid Width="224" Height="126">
+<Border CornerRadius="10" Background="#1FFFFFFF" />
+<Border CornerRadius="10"><Border.Background><ImageBrush ImageSource="{Binding Thumb}" Stretch="UniformToFill" /></Border.Background></Border>
+<Border CornerRadius="8" Background="#CC0D0F12" Padding="6,2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="6" Visibility="{Binding IsVideo, Converter={StaticResource BooleanToVisibilityConverter}}">
+<Path Data="{StaticResource KX_IconPlay}" Style="{StaticResource KX_IconPath}" Stroke="White" Fill="White" Width="10" Height="10" /></Border>
+</Grid>
+<Border x:Name="Ring" CornerRadius="12" Margin="-4" BorderThickness="2.5" BorderBrush="{DynamicResource KX_AccentBrush}" Opacity="0" IsHitTestVisible="False" />
+</Grid>
+<ControlTemplate.Triggers><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Ring" Property="Opacity" Value="1" /></Trigger>
+<Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Ring" Property="Opacity" Value="0.5" /></Trigger></ControlTemplate.Triggers>
+</ControlTemplate></ButtonEx.Template>
+</ButtonEx>
+</DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+</Canvas>
+</StackPanel>
+                                        <StackPanel x:Name="KX_SecSimilar" Margin="0,0,0,90" Visibility="{PluginSettings Plugin=Kippix, Path=SlotDetSimilar, FallbackValue=Collapsed}">
+<TextBlock Text="{DynamicResource LOC_KX_SecMoreLikeThis}" Style="{StaticResource KX_SectionHeader}" Margin="6,0,0,4" />
+<!-- room round the covers for the highlight ring (and above the button hints at the bottom of the screen). The row reaches 12 px past the
+     covers on every side (negative margin, padding back in: the covers sit where they did), so the ring is never cut off at its edges.
+     The covers' size is set in Free move (Y on More like this) or the part's settings; as many as fit across are shown. -->
+<ItemsControl ItemsSource="{PluginSettings Plugin=Kippix, Path=DetSimilar}" Focusable="False" Margin="0" Padding="6,6,6,10">
+<ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+<!-- the highlighted cover draws over its neighbours (triangles fit together, overlapping) -->
+<ItemsControl.ItemContainerStyle><Style TargetType="ContentPresenter"><Style.Triggers><Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter Property="Panel.ZIndex" Value="90" /></Trigger></Style.Triggers></Style></ItemsControl.ItemContainerStyle>
+<!-- each cover's shape (More like this's Cover shape: the home cards' shapes) comes with it: the helper sets its outline, clip and the room after it -->
+<ItemsControl.ItemTemplate><DataTemplate>
+<ButtonEx Command="{Binding Command}" FocusVisualStyle="{x:Null}" Margin="{Binding TileMargin}" ToolTip="{Binding Name}" Focusable="{PluginSettings Plugin=Kippix, Path=DetIntSimilar, FallbackValue=True}"
+          Width="{PluginSettings Plugin=Kippix, Path=DetSimilarTileW, FallbackValue=150}" Height="{PluginSettings Plugin=Kippix, Path=DetSimilarTileH, FallbackValue=225}">
+<ButtonEx.Template><ControlTemplate TargetType="ButtonEx">
+<Grid>
+<Grid Clip="{Binding Clip}">
+<Border Background="#FF1E2229" />
+<TextBlock Text="{Binding Name}" Style="{StaticResource KX_Text}" FontSize="16" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" Margin="10" />
+<Border><Border.Background><ImageBrush ImageSource="{Binding Cover}" Stretch="UniformToFill" /></Border.Background></Border>
+</Grid>
+<Border x:Name="Ring" CornerRadius="12" Margin="-4" BorderThickness="2.5" BorderBrush="{DynamicResource KX_AccentBrush}" Opacity="0" IsHitTestVisible="False"
+        Visibility="{Binding IsRounded, Converter={StaticResource BooleanToVisibilityConverter}}" />
+<Path x:Name="RingShape" Data="{Binding Outline}" Stretch="Fill" Margin="-4" StrokeThickness="2.5" Stroke="{DynamicResource KX_AccentBrush}" Opacity="0" IsHitTestVisible="False"
+      Visibility="{Binding IsCut, Converter={StaticResource BooleanToVisibilityConverter}}" />
+</Grid>
+<ControlTemplate.Triggers><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Ring" Property="Opacity" Value="1" /><Setter TargetName="RingShape" Property="Opacity" Value="1" /></Trigger>
+<Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Ring" Property="Opacity" Value="0.5" /><Setter TargetName="RingShape" Property="Opacity" Value="0.5" /></Trigger></ControlTemplate.Triggers>
+</ControlTemplate></ButtonEx.Template>
+</ButtonEx>
+</DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+</StackPanel>
+                                        <!-- keeps the highlight on the lower page when nothing on it can be pressed (Down / Up scroll it) -->
+                                        <ButtonEx x:Name="KX_DetMoreSink" Width="1" Height="1" Opacity="0" FocusVisualStyle="{x:Null}" HorizontalAlignment="Left" />
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </Grid>
+
+                            <!-- button hints: always at the very bottom of the screen, on both pages -->
+                            <StackPanel x:Name="KX_DetHints" Orientation="Horizontal" VerticalAlignment="Bottom" Margin="96,0,96,24" Opacity="0.8" IsHitTestVisible="False"
+                                        HorizontalAlignment="{PluginSettings Plugin=Kippix, Path=DetBlockAlignment, FallbackValue=Left}"
+                                        Visibility="{PluginSettings Plugin=Kippix, Path=DetShowHints, FallbackValue=Visible}">
+                                <ContentControl ContentTemplate="{DynamicResource ButtonPromptLB}" Width="30" Height="26" Focusable="False" />
+                                <ContentControl ContentTemplate="{DynamicResource ButtonPromptRB}" Width="30" Height="26" Focusable="False" Margin="4,0,0,0" />
+                                <TextBlock Text="{DynamicResource LOC_KX_PrevNextGame}" Style="{StaticResource KX_TextDim}" Margin="8,0,26,0" VerticalAlignment="Center" />
+                                <ContentControl ContentTemplate="{DynamicResource ButtonPromptB}" Width="26" Height="26" Focusable="False" />
+                                <TextBlock Text="{DynamicResource LOC_KX_Back}" Style="{StaticResource KX_TextDim}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                <!-- X: the settings of the part that's highlighted -->
+                                <ContentControl ContentTemplate="{DynamicResource ButtonPromptX}" Width="26" Height="26" Focusable="False" Margin="26,0,0,0" />
+                                <TextBlock Text="{DynamicResource LOC_KX_HintPartSettings}" Style="{StaticResource KX_TextDim}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                <StackPanel Orientation="Horizontal" Margin="26,0,0,0" Visibility="{PluginSettings Plugin=Kippix, Path=DetHintMoreBelow, FallbackValue=Collapsed}">
+                                    <Path Data="{StaticResource KX_IconChevron}" Style="{StaticResource KX_InfoIcon}" Margin="0,0,8,0" RenderTransformOrigin="0.5,0.5"><Path.RenderTransform><RotateTransform Angle="90" /></Path.RenderTransform></Path>
+                                    <TextBlock Text="{DynamicResource LOC_KX_DetMoreHint}" Style="{StaticResource KX_TextDim}" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="26,0,0,0" Visibility="{PluginSettings Plugin=Kippix, Path=DetHintBackUp, FallbackValue=Collapsed}">
+                                    <Path Data="{StaticResource KX_IconChevron}" Style="{StaticResource KX_InfoIcon}" Margin="0,0,8,0" RenderTransformOrigin="0.5,0.5"><Path.RenderTransform><RotateTransform Angle="-90" /></Path.RenderTransform></Path>
+                                    <TextBlock Text="{DynamicResource LOC_KX_DetBackUpHint}" Style="{StaticResource KX_TextDim}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- the description, full screen (A on the description): Up / Down scroll, B closes -->
+                            <Grid x:Name="KX_DescReader" Background="#F50A0B0E" Visibility="{PluginSettings Plugin=Kippix, Path=IsDescReaderOpen, FallbackValue=Collapsed}">
+                                <DockPanel Margin="200,80,200,40">
+                                    <TextBlock DockPanel.Dock="Top" Text="{Binding DisplayName}" Style="{StaticResource KX_TextTitle}" FontSize="46" TextWrapping="Wrap" />
+                                    <TextBlock DockPanel.Dock="Top" Text="{PluginSettings Plugin=Kippix, Path=DetDescSourceText}" Style="{StaticResource KX_TextDim}" Margin="2,4,0,24" />
+                                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,18,0,0" Opacity="0.8">
+                                        <Path Data="{StaticResource KX_IconSort}" Style="{StaticResource KX_InfoIcon}" Margin="0,0,8,0" />
+                                        <TextBlock Text="{DynamicResource LOC_KX_ReaderScroll}" Style="{StaticResource KX_TextDim}" Margin="0,0,26,0" VerticalAlignment="Center" />
+                                        <ContentControl ContentTemplate="{DynamicResource ButtonPromptB}" Width="26" Height="26" Focusable="False" />
+                                        <TextBlock Text="{DynamicResource LOC_KX_Close}" Style="{StaticResource KX_TextDim}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <ScrollViewer x:Name="KX_DescReaderScroll" Focusable="True" FocusVisualStyle="{x:Null}" VerticalScrollBarVisibility="Hidden">
+                                        <HtmlTextView HtmlText="{PluginSettings Plugin=Kippix, Path=DetDescHtml}" PartialLoadEnabled="False"
+                                                      HtmlFontSize="23" HtmlForeground="#F0E4E8EF" LinkForeground="#FFFFFFFF" Focusable="False" MaxWidth="1300" HorizontalAlignment="Left" />
+                                    </ScrollViewer>
+                                </DockPanel>
+                            </Grid>
+
+                            <!-- clock (Settings › Game page) -->
+                            <TextBlock x:Name="DetClock" Text="{PluginSettings Plugin=Kippix, Path=DetDateText}" Style="{StaticResource KX_TextSub}" FontSize="24"
+                                       HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,34,96,0"
+                                       Visibility="{PluginSettings Plugin=Kippix, Path=DetShowDate, FallbackValue=Collapsed}" />
+                        </Grid>
+                    </Grid>
+
+                    <!-- (0.99.69) the entrance (the page's fade, the background settling in, the parts fading and rising into place) is
+                         played by the helper once the page is drawn (ThemeApi.DetFade.cs DetEntranceStart): started here, the page's heavy
+                         first frame ate its start and the parts seemed to jump in -->
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

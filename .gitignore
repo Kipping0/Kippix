@@ -1,0 +1,6 @@
+# build output of Source/KippixHelper/build.ps1
+Source/KippixHelper/build/
+Source/KippixHelper/build.log
+Source/KippixHelper/*.pext
+Source/KippixHelper/*.zip
+*.pthm

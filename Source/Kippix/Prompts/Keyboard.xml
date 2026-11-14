@@ -1,0 +1,112 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Keyboard button icons for Kippix (Options > General > Look and feel > Button icons). Same keys as Playnite's own sets. -->
+    <DataTemplate x:Key="ButtonPromptA">
+        <Viewbox>
+            <Grid Width="150" Height="64">
+                <Border CornerRadius="10" BorderBrush="{DynamicResource TextBrush}" BorderThickness="5" />
+                <TextBlock Text="Enter" Foreground="{DynamicResource TextBrush}" FontFamily="{DynamicResource FontTitilliumWebBold}" FontSize="30"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-3,0,0" />
+            </Grid>
+        </Viewbox>
+    </DataTemplate>
+    <DataTemplate x:Key="ButtonPromptB">
+        <Viewbox>
+            <Grid Width="110" Height="64">
+                <Border CornerRadius="10" BorderBrush="{DynamicResource TextBrush}" BorderThickness="5" />
+                <TextBlock Text="Esc" Foreground="{DynamicResource TextBrush}" FontFamily="{DynamicResource FontTitilliumWebBold}" FontSize="30"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-3,0,0" />
+            </Grid>
+        </Viewbox>
+    </DataTemplate>
+    <DataTemplate x:Key="ButtonPromptX">
+        <Viewbox>
+            <Grid Width="72" Height="64">
+                <Border CornerRadius="10" BorderBrush="{DynamicResource TextBrush}" BorderThickness="5" />
+                <TextBlock Text="X" Foreground="{DynamicResource TextBrush}" FontFamily="{DynamicResource FontTitilliumWebBold}" FontSize="32"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-3,0,0" />
+            </Grid>
+        </Viewbox>
+    </DataTemplate>
+    <DataTemplate x:Key="ButtonPromptY">
+        <Viewbox>
+            <Grid Width="72" Height="64">
+                <Border CornerRadius="10" BorderBrush="{DynamicResource TextBrush}" BorderThickness="5" />
+                <TextBlock Text="Y" Foreground="{DynamicResource TextBrush}" FontFamily="{DynamicResource FontTitilliumWebBold}" FontSize="32"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-3,0,0" />
+            </Grid>
+        </Viewbox>
+    </DataTemplate>
+    <DataTemplate x:Key="ButtonPromptLB">
+        <Viewbox>
+            <Grid Width="140" Height="64">
+                <Border CornerRadius="10" BorderBrush="{DynamicResource TextBrush}" BorderThickness="5" />
+                <TextBlock Text="PgUp" Foreground="{DynamicResource TextBrush}" FontFamily="{DynamicResource FontTitilliumWebBold}" FontSize="28"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-3,0,0" />
+            </Grid>
+        </Viewbox>
+    </DataTemplate>
+    <DataTemplate x:Key="ButtonPromptRB">
+        <Viewbox>
+            <Grid Width="140" Height="64">
+                <Border CornerRadius="10" BorderBrush="{DynamicResource TextBrush}" BorderThickness="5" />
+                <TextBlock Text="PgDn" Foreground="{DynamicResource TextBrush}" FontFamily="{DynamicResource FontTitilliumWebBold}" FontSize="28"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-3,0,0" />
+            </Grid>
+        </Viewbox>
+    </DataTemplate>
+    <DataTemplate x:Key="ButtonPromptLT">
+        <Viewbox>
+            <Grid Width="140" Height="64">
+                <Border CornerRadius="10" BorderBrush="{DynamicResource TextBrush}" BorderThickness="5" />
+                <TextBlock Text="PgUp" Foreground="{DynamicResource TextBrush}" FontFamily="{DynamicResource FontTitilliumWebBold}" FontSize="28"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-3,0,0" />
+            </Grid>
+        </Viewbox>
+    </DataTemplate>
+    <DataTemplate x:Key="ButtonPromptRT">
+        <Viewbox>
+            <Grid Width="140" Height="64">
+                <Border CornerRadius="10" BorderBrush="{DynamicResource TextBrush}" BorderThickness="5" />
+                <TextBlock Text="PgDn" Foreground="{DynamicResource TextBrush}" FontFamily="{DynamicResource FontTitilliumWebBold}" FontSize="28"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-3,0,0" />
+            </Grid>
+        </Viewbox>
+    </DataTemplate>
+    <DataTemplate x:Key="ButtonPromptBack">
+        <Viewbox>
+            <Grid Width="130" Height="64">
+                <Border CornerRadius="10" BorderBrush="{DynamicResource TextBrush}" BorderThickness="5" />
+                <TextBlock Text="Back" Foreground="{DynamicResource TextBrush}" FontFamily="{DynamicResource FontTitilliumWebBold}" FontSize="28"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-3,0,0" />
+            </Grid>
+        </Viewbox>
+    </DataTemplate>
+    <DataTemplate x:Key="ButtonPromptStart">
+        <Viewbox>
+            <Grid Width="130" Height="64">
+                <Border CornerRadius="10" BorderBrush="{DynamicResource TextBrush}" BorderThickness="5" />
+                <TextBlock Text="Menu" Foreground="{DynamicResource TextBrush}" FontFamily="{DynamicResource FontTitilliumWebBold}" FontSize="28"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-3,0,0" />
+            </Grid>
+        </Viewbox>
+    </DataTemplate>
+    <DataTemplate x:Key="ButtonPromptLS">
+        <Viewbox>
+            <Grid Width="72" Height="64">
+                <Border CornerRadius="10" BorderBrush="{DynamicResource TextBrush}" BorderThickness="5" />
+                <TextBlock Text="Q" Foreground="{DynamicResource TextBrush}" FontFamily="{DynamicResource FontTitilliumWebBold}" FontSize="32"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-3,0,0" />
+            </Grid>
+        </Viewbox>
+    </DataTemplate>
+    <DataTemplate x:Key="ButtonPromptRS">
+        <Viewbox>
+            <Grid Width="72" Height="64">
+                <Border CornerRadius="10" BorderBrush="{DynamicResource TextBrush}" BorderThickness="5" />
+                <TextBlock Text="E" Foreground="{DynamicResource TextBrush}" FontFamily="{DynamicResource FontTitilliumWebBold}" FontSize="32"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-3,0,0" />
+            </Grid>
+        </Viewbox>
+    </DataTemplate>
+</ResourceDictionary>

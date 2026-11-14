@@ -1,0 +1,522 @@
+﻿using System;
+using System.Windows;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Globalization;
+using System.Linq;
+using System.Threading;
+using System.Windows.Input;
+using System.Windows.Media;
+using Playnite.SDK.Models;
+
+namespace KippixHelper
+{
+    /// <summary>Clock, downloads, controller battery and sound output.</summary>
+    public partial class ThemeApi
+    {
+        // =====================================================================
+        // Clock
+        // =====================================================================
+
+        private string clockText = "";
+        public string ClockText { get { return clockText; } }
+
+        private void RefreshClock(bool force)
+        {
+            string t = settings.Clock24h
+                ? DateTime.Now.ToString("HH:mm", CultureInfo.InvariantCulture)
+                : DateTime.Now.ToString("h:mm tt", CultureInfo.InvariantCulture);
+            if (force || t != clockText)
+            {
+                clockText = t;
+                Notify("ClockText");
+                ClockWidgetsTick();
+            }
+        }
+
+        // =====================================================================
+        // Downloads
+        // =====================================================================
+
+        private const double DownloadBarMax = 540;
+        private volatile bool downloadsBusy;
+
+        public ObservableCollection<DownloadItem> Downloads { get; private set; }
+        public ICommand OpenSteamDownloadsCommand { get; private set; }
+
+        private int downloadCount;
+        public int DownloadCount { get { return downloadCount; } }
+        public bool HasDownloads { get { return downloadCount > 0; } }
+
+        private string downloadsSummary = "";
+        public string DownloadsSummary { get { return downloadsSummary; } }
+
+        public void GameRunningChanged(bool running)
+        {
+            global::KippixHelper.Downloads.GameRunning = running;
+            gameRunningNow = running;
+            OnUi(() => { ReleaseFront(); UpdateMusicState(); if (running) StopTrailer(); FadeLaunchArt(running); ReminderGameRunning(running); if (running) StopAmbient(); ApplyBackgroundMotion(); PlaySleepGameRunning(running); if (!running) CapturesAfterSession(); });
+        }
+
+        // ---------------- the launch screen (Views/GameStatus.xaml): the game's art fades in, then hands over to the game ----------------
+
+        private bool launchHooked;
+        private Game launchGame;
+        private DateTime launchGameAt;
+
+        /// <summary>A game is about to start: its art goes on the launch screen.</summary>
+        public void GameStarting(Game game)
+        {
+            launchPageBg = null;   // (nothing from the last launch shows meanwhile)
+            launchPageBgWhat = "";
+            launchGame = game;
+            launchGameAt = DateTime.Now;
+            try { AutoSavesBackup(game, true); } catch (Exception) { }
+            SessionStarting(game);
+            OnUi(() =>
+            {
+                // the page's picture only when it's this game's, and settled (a tile started straight from home, or a
+                // game switched to from the overlay, still shows the previous game's)
+                try
+                {
+                    var sel = SelectedGameNow();
+                    bool direct = (DateTime.Now - launchedDirectlyAt).TotalSeconds < 3;
+                    if (game != null && sel != null && sel.Id == game.Id && !direct) launchPageBg = CurrentPageBackground(out launchPageBgWhat);
+                    else launchPageBgWhat = direct ? "skipped (started from a tile)" : sel == null ? "skipped (nothing selected)" : "skipped (another game selected: " + sel.Name + ")";
+                }
+                catch (Exception) { launchPageBg = null; } try { HoldFrontWhileStarting(); } catch (Exception ex) { logger.Warn("Kippix: launch front: " + ex.Message); } try { HookLaunchScreen(); FillLaunchArt(); } catch (Exception) { } });
+        }
+
+        /// <summary>When the "game is starting" screen appears: its art fades in (or, if the game is already running, fades out).</summary>
+        private void HookLaunchScreen()
+        {
+            if (launchHooked || !IsFullscreen) return;
+            var status = UiTools.FindByName(Application.Current.MainWindow, "PART_ElemGameStatus");
+            if (status == null) return;
+            launchHooked = true;
+            status.IsVisibleChanged += (s, e) =>
+            {
+                if (!(bool)e.NewValue) return;
+                ui.BeginInvoke(new Action(() =>
+                {
+                    try
+                    {
+                        var art = UiTools.FindByName(status, "KX_LaunchArt");
+                        if (art == null) return;
+                        // Splash Screen shows its own picture: ours stays plain underneath it
+                        if (SplashScreenTakesOver(launchGame)) { art.BeginAnimation(UIElement.OpacityProperty, null); art.Opacity = 0; return; }
+                        FillLaunchArt();
+                        if (gameRunningNow) { FadeLaunchArt(true); return; }
+                        art.BeginAnimation(UIElement.OpacityProperty, null);
+                        art.Opacity = 0;
+                        art.BeginAnimation(UIElement.OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(450))));
+                    }
+                    catch (Exception) { }
+                }), System.Windows.Threading.DispatcherPriority.Loaded);
+            };
+        }
+
+        /// <summary>Puts the starting game's background art (and its cover, for a game with no background art) on the launch screen.</summary>
+        private void FillLaunchArt()
+        {
+            var g = launchGame;
+            if (g == null || (DateTime.Now - launchGameAt).TotalMinutes > 2) return;
+            var win = Application.Current != null ? Application.Current.MainWindow : null;
+            var status = win != null ? UiTools.FindByName(win, "PART_ElemGameStatus") : null;
+            var art = status != null ? UiTools.FindByName(status, "KX_LaunchBgArt") as System.Windows.Controls.Border : null;
+            var coverImg = status != null ? UiTools.FindByName(status, "KX_LaunchCover") as System.Windows.Controls.Image : null;
+            var boundBg = status != null ? UiTools.FindByName(status, "KX_LaunchBg") : null;
+
+            // the picture: what the game page / home screen was showing, else the game's background file, else its wide art
+            System.Windows.Media.ImageSource pic = launchPageBg;
+            string from = pic != null ? "the page" : null;
+            if (pic == null) { pic = LaunchFile(g.BackgroundImage); if (pic != null) from = "background file"; }
+            if (pic == null && (string.IsNullOrEmpty(g.BackgroundImage) || !g.BackgroundImage.StartsWith("http", StringComparison.OrdinalIgnoreCase)))
+            {
+                string wide = WideArtPath(g);
+                if (wide != null) { pic = Images.LoadUncached(wide, 0); if (pic != null) from = "wide art"; }
+            }
+            if (art != null)
+                art.Background = pic != null ? new System.Windows.Media.ImageBrush(pic) { Stretch = System.Windows.Media.Stretch.UniformToFill } : null;
+            // with a background, nothing else shows under it (the cover only stands in when there's no background)
+            if (coverImg != null) coverImg.Visibility = pic != null ? Visibility.Collapsed : Visibility.Visible;
+            if (boundBg != null) boundBg.Visibility = pic != null ? Visibility.Collapsed : Visibility.Visible;
+            bool cover = pic == null && SetLaunchImage(coverImg, g.CoverImage, 900);
+            string said = "launch art: " + g.Name + ": screen " + (status != null ? "found" : "not found") + ", art " + (art != null ? "found" : "not found")
+                        + ", background " + (pic != null ? "from " + from + " " + Describe(pic) : "none (" + (g.BackgroundImage ?? "no file") + ")") + ", cover " + (cover ? "shown" : "hidden")
+                        + ", from the page: " + (launchPageBg != null ? launchPageBgWhat : "nothing [" + launchPageBgWhat + "]")
+                        + ", details open: " + detailsOpen + ", trailer background: " + (settings.HomeBgMode == 2);
+            if (said != lastLaunchLog) { lastLaunchLog = said; logger.Info("Kippix: " + said); }
+        }
+
+        private System.Windows.Media.ImageSource LaunchFile(string file)
+        {
+            if (string.IsNullOrEmpty(file) || file.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return null;
+            string path = null;
+            try { path = api.Database.GetFullFilePath(file); } catch (Exception) { }
+            return !string.IsNullOrEmpty(path) && System.IO.File.Exists(path) ? Images.LoadUncached(path, 0) : null;
+        }
+
+        private string lastLaunchLog;
+        private System.Windows.Media.ImageSource launchPageBg;
+        private string launchPageBgWhat = "";
+        internal DateTime launchedDirectlyAt = DateTime.MinValue;   // a tile started the game itself (no game page): the page's picture isn't its yet
+
+        /// <summary>The background picture showing right now (game page if it's open, else the home screen), as shown.</summary>
+        private System.Windows.Media.ImageSource CurrentPageBackground(out string what)
+        {
+            what = "nothing";
+            var win = Application.Current != null ? Application.Current.MainWindow : null;
+            if (win == null) return null;
+            var details = detailsOpen ? UiTools.FindByName(win, "PART_ElemGameDetails") : null;
+            var fade = details != null ? UiTools.FindByName(details, "PART_ImageBackground") : null;
+            if (fade == null || !fade.IsVisible) fade = UiTools.FindByName(win, "PART_ImageBackground");
+            if (fade == null) { what = "no background element"; return null; }
+            var inner = UiTools.FindAll<System.Windows.Controls.Image>(fade);
+            what = "element " + (details != null ? "game page" : "home") + ", visible " + fade.IsVisible + ", " + inner.Count + " pictures inside";
+            // what it's drawing: its inner picture that's showing
+            foreach (var im in inner)
+                if (im.Source != null && im.IsVisible && im.Opacity > 0.5) { what = Describe(im.Source); return im.Source; }
+            // else what it was given
+            object v = null;
+            try { var p = fade.GetType().GetProperty("Source"); if (p != null) v = p.GetValue(fade, null); } catch (Exception) { }
+            var src = v as System.Windows.Media.ImageSource;
+            if (src != null) { what = Describe(src); return src; }
+            string path = v as string;
+            if (path == null && v is Uri) path = ((Uri)v).LocalPath;
+            if (!string.IsNullOrEmpty(path) && System.IO.File.Exists(path))
+            {
+                var img = Images.LoadUncached(path, 0);
+                if (img != null) { what = path + " " + Describe(img); return img; }
+            }
+            what += ", its Source: " + (v == null ? "none" : v.GetType().Name);
+            return null;
+        }
+
+        private static string Describe(System.Windows.Media.ImageSource src)
+        {
+            var bi = src as System.Windows.Media.Imaging.BitmapImage;
+            var bs = src as System.Windows.Media.Imaging.BitmapSource;
+            string size = bs != null ? bs.PixelWidth + "x" + bs.PixelHeight : "";
+            string from = bi != null && bi.UriSource != null ? bi.UriSource.ToString() : src.GetType().Name;
+            return from + " " + size;
+        }
+
+        private string PixelSize(string file)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(file) || file.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return file ?? "none";
+                string path = api.Database.GetFullFilePath(file);
+                using (var fs = System.IO.File.OpenRead(path))
+                {
+                    var dec = System.Windows.Media.Imaging.BitmapDecoder.Create(fs, System.Windows.Media.Imaging.BitmapCreateOptions.DelayCreation, System.Windows.Media.Imaging.BitmapCacheOption.None);
+                    var f = dec.Frames[0];
+                    return f.PixelWidth + "x" + f.PixelHeight;
+                }
+            }
+            catch (Exception) { return "?"; }
+        }
+
+        private bool SetLaunchImage(System.Windows.Controls.Image img, string file, int width)
+        {
+            if (img == null || string.IsNullOrEmpty(file)) return false;
+            string path = null;
+            try { if (!file.StartsWith("http", StringComparison.OrdinalIgnoreCase)) path = api.Database.GetFullFilePath(file); } catch (Exception) { }
+            return SetLaunchFile(img, path, width);
+        }
+
+        private bool SetLaunchFile(System.Windows.Controls.Image img, string path, int width)
+        {
+            if (img == null || string.IsNullOrEmpty(path) || !System.IO.File.Exists(path)) return false;   // keep what the screen's own bindings found
+            try
+            {
+                var b = new System.Windows.Media.Imaging.BitmapImage();
+                b.BeginInit();
+                b.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                if (width > 0) b.DecodePixelWidth = width;
+                b.UriSource = new Uri(path);
+                b.EndInit();
+                b.Freeze();
+                img.SetCurrentValue(System.Windows.Controls.Image.SourceProperty, b);   // (the screen's own binding stays for the next game)
+                return true;
+            }
+            catch (Exception ex) { logger.Warn("Kippix: launch art " + path + ": " + ex.Message); return false; }
+        }
+
+        /// <summary>The game is running: the art fades to black (the game's window comes up over it). Back to full when it stops.</summary>
+        private void FadeLaunchArt(bool running)
+        {
+            try
+            {
+                HookLaunchScreen();
+                var win = Application.Current != null ? Application.Current.MainWindow : null;
+                var status = win != null ? UiTools.FindByName(win, "PART_ElemGameStatus") : null;
+                var art = status != null ? UiTools.FindByName(status, "KX_LaunchArt") : null;
+                if (art == null) return;
+                if (!running) { art.BeginAnimation(UIElement.OpacityProperty, null); art.Opacity = 1; return; }
+                var fade = new System.Windows.Media.Animation.DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(1400)))
+                {
+                    BeginTime = TimeSpan.FromMilliseconds(800),
+                    EasingFunction = new System.Windows.Media.Animation.QuadraticEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseIn }
+                };
+                art.BeginAnimation(UIElement.OpacityProperty, fade);
+            }
+            catch (Exception) { }
+        }
+
+        public ICommand RefreshDownloadsCommand { get; private set; }
+        public string DownloadsCheckedText { get; private set; }
+
+        private void RefreshDownloadsNow()
+        {
+            PlaySound("select");
+            global::KippixHelper.Downloads.ForceRefresh();
+            DownloadsCheckedText = Loc("LOC_KX_Checking", "Checking…");
+            Notify("DownloadsCheckedText");
+            RefreshDownloadsAsync();
+        }
+
+        private void RefreshDownloadsAsync()
+        {
+            if (downloadsBusy) return;
+            downloadsBusy = true;
+            KippixShared.SafeWork.Queue(_ =>
+            {
+                List<DownloadInfo> list = null;
+                try
+                {
+                    IEnumerable<Game> games = null;
+                    try { games = api.Database.Games.ToList(); } catch (Exception) { }
+                    list = global::KippixHelper.Downloads.Get(games);
+                }
+                catch (Exception ex) { logger.Error(ex, "Kippix: downloads check failed"); }
+                finally { downloadsBusy = false; }
+                if (list != null) OnUi(() =>
+                {
+                    ApplyDownloads(list);
+                    DownloadsCheckedText = string.Format(Loc("LOC_KX_DownloadsChecked", "Checked at {0} · it keeps checking while this is open"), DateTime.Now.ToString(settings.Clock24h ? "HH:mm:ss" : "h:mm:ss tt"));
+                    Notify("DownloadsCheckedText");
+                });
+            });
+        }
+
+        private void ApplyDownloads(List<DownloadInfo> list)
+        {
+            for (int i = Downloads.Count - 1; i >= 0; i--)
+                if (!list.Any(d => d.Key == Downloads[i].Key)) Downloads.RemoveAt(i);
+
+            foreach (var d in list)
+            {
+                var item = Downloads.FirstOrDefault(x => x.Key == d.Key);
+                if (item == null)
+                {
+                    item = new DownloadItem { Key = d.Key };
+                    Downloads.Add(item);
+                }
+                item.Name = d.Name;
+                item.Status = d.Text();
+                if (item.Command == null) { var info = d; item.Command = new RelayCommand(_ => OpenDownloadLauncher(info)); }
+                item.Source = d.Source;
+                item.HasProgress = d.Progress >= 0;
+                item.BarWidth = d.Progress >= 0 ? Math.Max(4, d.Progress * DownloadBarMax) : 0;
+            }
+
+            int active = list.Count(d => d.State != "Paused" && d.State != "Not finished" && d.State != "Queued");
+            downloadCount = list.Count;
+            if (list.Count == 0) downloadsSummary = Loc("LOC_BBH_NoDownloads", "Nothing downloading right now.");
+            else if (active == 0) downloadsSummary = list.Count == 1 ? Loc("LOC_BBH_OnePaused", "1 download, not running right now.") : string.Format(Loc("LOC_BBH_NPaused", "{0} downloads, none running right now."), list.Count);
+            else downloadsSummary = string.Format(Loc("LOC_BBH_NActive", "{0} of {1} running."), active, list.Count);
+
+            Notify("DownloadCount");
+            Notify("HasDownloads");
+            if (Widgets != null) foreach (var w in Widgets.Where(x => x.Type == "downloads")) FillDownloads(w);
+            Notify("DownloadsSummary");
+            UpdateShortcutStatus();
+        }
+
+        // =====================================================================
+        // Controller battery
+        // =====================================================================
+
+        private const double BatteryFillMax = 23.8;   // inside width of the battery outline in the theme
+
+        private string batteryText = "";
+        private double batteryFill;
+        private Brush batteryBrush = WhiteBrush;
+        private bool hasController;
+
+        /// <summary>A percentage when the controller reports one (PlayStation pads via the overlay); empty otherwise.</summary>
+        public string BatteryText { get { return batteryText; } }
+        public bool HasBatteryText { get { return settings.ShowBatteryPercent && batteryText.Length > 0; } }
+        public double BatteryFillWidth { get { return batteryFill; } }
+        public Brush BatteryBrush { get { return batteryBrush; } }
+        public bool ShowBattery { get { return settings.PinBattery && hasController; } }
+
+        private string sdlBattery;
+        private DateTime sdlBatteryAt = DateTime.MinValue;
+
+        /// <summary>
+        /// The connected controller's battery: the overlay's reading (PlayStation pads with a real percentage, Xbox pads),
+        /// then XInput, then a pad only Playnite reads (the Steam Controller outside games) through SDL. Null: no controller.
+        /// </summary>
+        private string ReadControllerBattery()
+        {
+            string raw = overlay.Available ? overlay.Get<string>("ControllerBattery", null) : null;
+            if (raw == null) raw = XInputBattery.Read();
+            if (raw != null) return raw;
+            // Playnite's own pads: battery levels change slowly, so SDL is asked at most every 20 seconds
+            object pad = null;
+            try { pad = api.GetConnectedControllers().OfType<Playnite.SDK.Events.IGamepad>().FirstOrDefault(g => g.Enabled); } catch (Exception) { }
+            if (pad == null) { sdlBattery = null; sdlBatteryAt = DateTime.MinValue; return null; }
+            if (sdlBattery == null || DateTime.Now - sdlBatteryAt > TimeSpan.FromSeconds(20))
+            {
+                sdlBattery = SdlBattery.Read(pad) ?? "Connected";
+                sdlBatteryAt = DateTime.Now;
+            }
+            return sdlBattery;
+        }
+
+        private void RefreshBattery()
+        {
+            string raw = ReadControllerBattery();
+
+            bool has = raw != null;
+            string text = "";
+            double fraction = 0;
+            Brush brush = WhiteBrush;
+
+            if (has)
+            {
+                string t = raw.Trim();
+                bool charging = t.IndexOf('⚡') >= 0;
+                t = t.Replace("⚡", "").Trim();
+                int pct;
+                if (t.EndsWith("%") && int.TryParse(t.TrimEnd('%'), NumberStyles.Integer, CultureInfo.InvariantCulture, out pct))
+                {
+                    fraction = pct / 100.0;
+                    text = pct + "%";
+                    brush = charging ? GreenBrush : pct <= 10 ? RedBrush : pct <= 25 ? AmberBrush : WhiteBrush;
+                }
+                else
+                {
+                    switch (t)
+                    {
+                        // Xbox pads only report four levels, so the percentage is a rough guide.
+                        case "Full": fraction = 1; text = "100%"; break;
+                        case "Medium": fraction = 0.6; text = "~60%"; break;
+                        case "Low": fraction = 0.3; text = "~30%"; brush = AmberBrush; break;
+                        case "Empty": fraction = 0.1; text = "~10%"; brush = RedBrush; break;
+                        case "Wired": fraction = 1; brush = GreenBrush; break;
+                        default: fraction = 1; brush = WhiteBrush; break;   // connected, level unknown
+                    }
+                }
+            }
+
+            double fill = Math.Round(fraction * BatteryFillMax, 1);
+            if (has != hasController || text != batteryText || fill != batteryFill || brush != batteryBrush)
+            {
+                hasController = has;
+                batteryText = text;
+                batteryFill = fill;
+                batteryBrush = brush;
+                Notify("BatteryText");
+                Notify("HasBatteryText");
+                Notify("BatteryFillWidth");
+                Notify("BatteryBrush");
+                Notify("ShowBattery");
+                UpdateShortcutStatus();
+            }
+        }
+
+        // =====================================================================
+        // Sound output / Sound input (one panel, "audio": the top bar shortcut always opens it for output;
+        // Quick settings' Sound input row opens it for microphones)
+        // =====================================================================
+
+        public ObservableCollection<AudioItem> AudioDevices { get; private set; }
+
+        private bool audioInput;         // the panel lists microphones
+        private bool audioInputNext;     // set just before TogglePanel("audio") by Quick settings' Sound input row
+        private bool audioFromQuick;     // opened from Quick settings: picking / Back goes back there
+        private bool audioFromQuickNext;
+
+        public string AudioPanelTitle { get { return audioInput ? Loc("LOC_KX_SoundInput", "Sound input") : Loc("LOC_KX_SoundOutput", "Sound output"); } }
+        public string AudioPanelHint { get { return audioInput ? Loc("LOC_KX_MicHint", "The green dot shows the microphone Windows uses now.") : Loc("LOC_KX_VolumeHint", "The green dot shows where sound is playing now."); } }
+
+        /// <summary>From Quick settings: the sound output or input list (picking one, or Back, comes back to Quick settings).</summary>
+        private void OpenAudioFromQuick(bool input)
+        {
+            audioInputNext = input;
+            audioFromQuickNext = true;
+            TogglePanel("audio");
+        }
+
+        private void RefreshAudio()
+        {
+            audioInput = audioInputNext;
+            audioFromQuick = audioFromQuickNext;
+            audioInputNext = false;
+            audioFromQuickNext = false;
+            Notify("AudioPanelTitle");
+            Notify("AudioPanelHint");
+            AudioDevices.Clear();
+            List<AudioDevice> list;
+            bool input = audioInput;
+            try { list = input ? Audio.InputDevices() : Audio.OutputDevices(); }
+            catch (Exception ex) { logger.Error(ex, "Kippix: couldn't list audio devices"); return; }
+            foreach (var d in list.OrderByDescending(x => x.IsDefault).ThenBy(x => x.Name))
+            {
+                string id = d.Id;
+                AudioDevices.Add(new AudioItem
+                {
+                    Id = id,
+                    Name = d.Name,
+                    IsDefault = d.IsDefault,
+                    IsInput = input,
+                    SelectCommand = new RelayCommand(_ =>
+                    {
+                        Audio.SetDefault(id);
+                        if (!AudioBack()) ClosePanels();
+                    })
+                });
+            }
+        }
+
+        /// <summary>Back (or a pick) in the sound list opened from Quick settings: Quick settings again, on that row.</summary>
+        private bool AudioBack()
+        {
+            if (openPanel != "audio" || !audioFromQuick) return false;
+            bool input = audioInput;
+            audioFromQuick = false;
+            OpenQuickSettings(input ? "mic" : "audio");
+            return true;
+        }
+    
+        /// <summary>
+        /// (0.99.55) Back from a game on its page: its captures row read again (the shots and clips just taken), once now and once
+        /// a few seconds on (a recorder can finish writing a clip after the game has closed).
+        /// </summary>
+        private void CapturesAfterSession()
+        {
+            foreach (int ms in new[] { 1500, 6000 })
+            {
+                var t = new System.Windows.Threading.DispatcherTimer(System.Windows.Threading.DispatcherPriority.Background, ui) { Interval = TimeSpan.FromMilliseconds(ms) };
+                t.Tick += (s, e) =>
+                {
+                    t.Stop();
+                    try
+                    {
+                        if (!detailsOpen || gameRunningNow) return;
+                        var g = SelectedGameNow();
+                        if (g == null) return;
+                        galleryScannedAt = DateTime.MinValue;
+                        FillCaptures(g, detMoreGen);
+                    }
+                    catch (Exception) { }
+                };
+                t.Start();
+            }
+        }
+    }
+}

@@ -1,0 +1,103 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- the card glow's colour (0.82): the glows (here and the carousel's in Main.xaml) bind to this brush's Color and the helper
+         recolours it in place (the look's glow colour, or the accent). Defined here, before it's used, so it's there when this
+         file loads; changing a resource made WPF look it up through the whole screen on every move. -->
+    <SolidColorBrush x:Key="KX_CardGlowBrush" Color="#FFFFFFFF" />
+
+    <!-- Library tile (Playnite's own item spacing around each cover).
+         The selected cover grows from its bottom edge (so it never runs off the bottom of the
+         screen), with a thin white outline and a soft white glow. -->
+    <Style x:Key="ListGameItemStyle" TargetType="ListBoxItem">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <ControlTemplate.Resources>
+                        <Storyboard x:Key="FocusedOn">
+                            <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleX"
+                                             To="1.06" Duration="0:0:0.22">
+                                <DoubleAnimation.EasingFunction>
+                                    <CubicEase EasingMode="EaseOut" />
+                                </DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                            <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleY"
+                                             To="1.06" Duration="0:0:0.22">
+                                <DoubleAnimation.EasingFunction>
+                                    <CubicEase EasingMode="EaseOut" />
+                                </DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                            <DoubleAnimation Storyboard.TargetName="FocusRing" Storyboard.TargetProperty="Opacity"
+                                             To="1" Duration="0:0:0.18" />
+                        </Storyboard>
+                        <Storyboard x:Key="FocusedOff">
+                            <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleX"
+                                             To="1" Duration="0:0:0.2" />
+                            <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleY"
+                                             To="1" Duration="0:0:0.2" />
+                            <DoubleAnimation Storyboard.TargetName="FocusRing" Storyboard.TargetProperty="Opacity"
+                                             To="0" Duration="0:0:0.15" />
+                        </Storyboard>
+                    </ControlTemplate.Resources>
+
+                    <Grid x:Name="KX_CardSpacing" Margin="{Settings FullscreenItemSpacingMargin}">
+                        <Grid x:Name="Tile" RenderTransformOrigin="0.5,1">
+                            <Grid.RenderTransform>
+                                <ScaleTransform x:Name="Scale" ScaleX="1" ScaleY="1" />
+                            </Grid.RenderTransform>
+
+                            <!-- soft shadow under every cover -->
+                            <Border x:Name="KX_TileShadow" CornerRadius="{DynamicResource KX_CardCorner}" Background="#FF000000" Margin="2">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="Black" BlurRadius="18" ShadowDepth="4" Opacity="0.55" />
+                                </Border.Effect>
+                            </Border>
+                            <!-- a cut card (circle, hexagon, triangle: Game cards and layout › Card shape): its shadow and ring follow
+                                 the shape; the helper sets the outline (never bound from PluginSettings) -->
+                            <Path x:Name="KX_ShapeShadow" Stretch="Fill" Fill="#FF000000" Margin="2" Visibility="Collapsed" IsHitTestVisible="False">
+                                <Path.Effect>
+                                    <DropShadowEffect Color="Black" BlurRadius="18" ShadowDepth="4" Opacity="0.55" />
+                                </Path.Effect>
+                            </Path>
+
+                            <ContentPresenter />
+
+                            <!-- the highlight edge and glow: the look's (Look and feel › Theme Studio) through these keys; the helper
+                                 keeps KX_CardRingBrush on the accent unless the look picks its own colour -->
+                            <Border x:Name="FocusRing" CornerRadius="{DynamicResource KX_CardRingCorner}" Margin="-3"
+                                    BorderThickness="{DynamicResource KX_CardRingThickness}" BorderBrush="{DynamicResource KX_CardRingBrush}" Opacity="0"
+                                    IsHitTestVisible="False">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="{Binding Color, Source={StaticResource KX_CardGlowBrush}, FallbackValue=White}" BlurRadius="{DynamicResource KX_CardGlowSize}" ShadowDepth="0" Opacity="{DynamicResource KX_CardGlowOpacity}" />
+                                </Border.Effect>
+                            </Border>
+                            <Path x:Name="KX_ShapeRing" Stretch="Fill" Margin="-4" StrokeThickness="{DynamicResource KX_CardRingWidth}" Stroke="{DynamicResource KX_CardRingBrush}"
+                                  Opacity="{Binding Opacity, ElementName=FocusRing}" Visibility="Collapsed" IsHitTestVisible="False">
+                                <Path.Effect>
+                                    <DropShadowEffect Color="{Binding Color, Source={StaticResource KX_CardGlowBrush}, FallbackValue=White}" BlurRadius="{DynamicResource KX_CardGlowSize}" ShadowDepth="0" Opacity="{DynamicResource KX_CardGlowOpacity}" />
+                                </Path.Effect>
+                            </Path>
+                        </Grid>
+                    </Grid>
+
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsFocused" Value="True">
+                            <Setter Property="Panel.ZIndex" Value="90" />
+                            <Trigger.EnterActions>
+                                <BeginStoryboard Storyboard="{StaticResource FocusedOn}" />
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard Storyboard="{StaticResource FocusedOff}" />
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>
