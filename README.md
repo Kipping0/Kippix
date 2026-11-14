@@ -144,6 +144,4 @@ Kippix was created with assistance from AI, future updates will also have AI to 
 
 ## Licence
 
-<!-- Choose a licence and add a LICENSE file (GitHub can add one for you: Add file › Create new file › LICENSE), then
-     replace this line with: See [LICENSE](LICENSE). -->
-Copyright © Kipping0. All rights reserved until a licence is added.
+MIT. See [LICENSE](LICENSE).
