@@ -3,8 +3,8 @@
 </p>
 
 <p align="center">
-  <b>A console-style fullscreen theme for <a href="https://playnite.link">Playnite</a>, made to be played from the sofa.</b><br>
-  Controller-first, highly customisable, with its own in-game overlay.
+  <b>A console style Fullscreen theme for <a href="https://playnite.link">Playnite</a>, made to be played from the sofa.</b><br>
+  Controller first, highly customisable, with its own in-game overlay.
 </p>
 
 <p align="center">
@@ -38,15 +38,16 @@
 Kippix replaces Playnite's fullscreen mode with a TV and handheld friendly launcher for all your games, Steam, Epic, GOG,
 Xbox, emulators and anything else Playnite knows about. It comes in two parts that are installed together:
 
-- **Kippix**, the fullscreen theme, and
+- **Kippix**, the fullscreen theme
 - **Kippix Helper**, the add-on that powers it (also includes the in-game overlay).
 
 ## Highlights
 
 **Your home screen, your way**
+- Free move, you can move anything on the home screen, delete anything, add in extra tiles, rows, reshape tiles etc
 - Six default layouts: **Row**, **Grid**, **List**, **Board**, **Manual board** (place
   every tile yourself) and **Folders** (work in progress).
-- Ready-made presets for every layout, and a **Free move** editor: hold A on anything to move, resize, rotate or hide it.
+- Ready-made presets for every layout
 - Widgets (weather, clock, PC stats, friends online, wishlist deals, free games this week, latest capture and more),
   extra rows (favourites, recently added, installed, never played…) and home tiles.
 - Backgrounds from the game's art, a muted trailer, a slideshow, your own picture or a plain colour, with zoom, depth and
@@ -72,6 +73,7 @@ Xbox, emulators and anything else Playnite knows about. It comes in two parts th
 - A **Gallery** for your screenshots and clips, with crop, filters and video trimming.
 - **Save backups** and restores with Ludusavi, **profiles** with optional daily time limits and a grown-ups' PIN, a
   **Community** gallery for sharing layouts, looks and widgets, and a getting-started tour that sets it all up.
+- **Discord** integrated in both the Fullscreen and overlay.
 
 ## Requirements
 
