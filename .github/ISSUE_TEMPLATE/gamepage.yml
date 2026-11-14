@@ -1,0 +1,27 @@
+name: Share a game page design
+description: Add your game page design to the Community gallery
+title: "Game page: "
+labels: ["gamepage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Attach the three files the theme saved in Documents\Kippix Layouts\Share\Game pages (the .json, the .jpg and the .entry.json).
+  - type: input
+    id: name
+    attributes:
+      label: Design name
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What's it like?
+      description: One or two sentences for the gallery.
+  - type: textarea
+    id: files
+    attributes:
+      label: Files
+      description: Drag the three files here.
+    validations:
+      required: true

@@ -1,0 +1,27 @@
+name: Share a layout
+description: Add your layout to the Community layouts gallery
+title: "Layout: "
+labels: ["layout"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Attach the three files the theme saved in Documents\Kippix Layouts\Share (the .json, the .jpg and the .entry.json).
+  - type: input
+    id: name
+    attributes:
+      label: Layout name
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What's it like?
+      description: One or two sentences for the gallery.
+  - type: textarea
+    id: files
+    attributes:
+      label: Files
+      description: Drag the three files here.
+    validations:
+      required: true

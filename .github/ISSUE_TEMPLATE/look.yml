@@ -1,0 +1,28 @@
+name: Share a look pack
+description: Add your look pack to the Community look packs gallery
+title: "Look pack: "
+labels: ["look"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Attach the three files the theme saved in Documents\Kippix Layouts\Share\Looks (the .json, the .jpg and the .entry.json).
+        A look pack is only colours, fonts and shapes: no names, keys or history are in it.
+  - type: input
+    id: name
+    attributes:
+      label: Look pack name
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What's it like?
+      description: One or two sentences for the gallery.
+  - type: textarea
+    id: files
+    attributes:
+      label: Files
+      description: Drag the three files here.
+    validations:
+      required: true

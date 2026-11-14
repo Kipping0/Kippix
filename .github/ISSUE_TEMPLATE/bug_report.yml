@@ -1,0 +1,45 @@
+name: Report a problem
+description: Something in Kippix isn't working as it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. Before you start: **Settings › Help › Kippix Doctor** finds many common problems, and the
+        [FAQ](../blob/main/docs/FAQ.md) may already have the answer.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead. Screenshots or a short video help a lot.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How can it be repeated?
+      placeholder: |
+        1. Open …
+        2. Press …
+        3. …
+  - type: input
+    id: versions
+    attributes:
+      label: Kippix and Playnite versions
+      description: Settings › Help shows Kippix's version; Playnite's is in its menu › About.
+      placeholder: "Kippix 1.0.0, Playnite 10.x"
+    validations:
+      required: true
+  - type: input
+    id: setup
+    attributes:
+      label: Your setup
+      description: Screen size and resolution, controller, and the layout you use.
+      placeholder: "55\" TV 3840×2160, Xbox controller, Row (Lower)"
+  - type: textarea
+    id: log
+    attributes:
+      label: Bug report
+      description: |
+        Settings › Help › **Save a log** saves a report in Documents\Kippix Logs (keys and personal details are taken out).
+        Zip that folder and drag it here.

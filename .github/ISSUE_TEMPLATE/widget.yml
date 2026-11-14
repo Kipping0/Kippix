@@ -1,0 +1,29 @@
+name: Share a widget
+description: Add your widget or tile to the Community widgets gallery
+title: "Widget: "
+labels: ["widget"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Attach the three files the theme saved in Documents\Kippix Layouts\Share\Widgets (the .json, the .jpg and the .entry.json).
+        Web snippets, news feeds and data widgets go online: say what the address is and who runs it. Only public addresses
+        that need no sign-in or key are accepted.
+  - type: input
+    id: name
+    attributes:
+      label: Widget name
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What does it show?
+      description: One or two sentences for the gallery (and the address it reads, for web snippets, news feeds and data widgets).
+  - type: textarea
+    id: files
+    attributes:
+      label: Files
+      description: Drag the three files here.
+    validations:
+      required: true
