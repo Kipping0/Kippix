@@ -4810,4 +4810,6 @@
     <sys:String x:Key="LOC_KX_BoardSlideOne">One game at a time</sys:String>
     <sys:String x:Key="LOC_KX_BoardSlideOneOn">Past the edge, every tile moves along one game and one new game comes in</sys:String>
     <sys:String x:Key="LOC_KX_BoardSlideOneOff">Off: past the edge, a whole page of new games</sys:String>
+    <sys:String x:Key="LOC_KX_RunKeep">Keep browsing while things run</sys:String>
+    <sys:String x:Key="LOC_KX_RunKeepSub">Playnite's "is running" screen closes itself, so you can start more. Music and sounds stay on while Playnite is in front</sys:String>
 </ResourceDictionary>
