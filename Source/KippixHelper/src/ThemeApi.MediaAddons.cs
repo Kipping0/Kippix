@@ -200,7 +200,7 @@ namespace KippixHelper
 
         private bool UpsQuietNow()
         {
-            try { return settings.MusicMode != 3 || (trailerPlaying && settings.DetTrailerSound) || PreviewHasSound || StoreSoundActive || GallerySoundActive || IntroSoundActive; }
+            try { return settings.MusicMode != 3 || (trailerPlaying && settings.DetTrailerSound) || PreviewHasSound || StoreSoundActive || GallerySoundActive || IntroSoundActive || LocalPlayerActive; }
             catch (Exception) { return settings.MusicMode != 3; }
         }
 

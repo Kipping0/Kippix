@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -467,6 +467,23 @@ namespace KippixHelper
         public bool ShowFreestyle = true;
         public bool SplashStandAside = true;
 
+        // ---- 1.0.1 ----
+        // Media › Shows & movies: folders of your own videos (ThemeApi.LocalMedia.cs)
+        public List<string> LocalMediaFolders = new List<string>();
+        public Dictionary<string, string> LocalMediaKinds = new Dictionary<string, string>();   // folder → "movies" / "shows" (missing: worked out)
+        public string LocalMediaSort = "name";     // name, added
+        public bool LocalMediaInKippix = true;     // play in Kippix's own full screen player (else Windows' player for the file)
+        public double LocalMediaVolume = 1.0;
+        public bool LocalMediaSubs = true;         // subtitles (a .srt beside the video) shown
+        // Game page › Splash screen layout: what the launch screen shows over the game's picture, and where (ThemeApi.SplashLayout.cs).
+        // X / Y: moved by a share of the screen from where it sits by default (0 = there); Size: 1 = as it comes.
+        public bool SplashShowLogo = false;
+        public bool SplashShowCard = false;
+        public bool SplashShowStatus = true;       // Playnite's "Starting…" words
+        public double SplashLogoX = 0, SplashLogoY = 0, SplashLogoSize = 1;
+        public double SplashCardX = 0, SplashCardY = 0, SplashCardSize = 1;
+        public double SplashStatusX = 0, SplashStatusY = 0, SplashStatusSize = 1;
+
         // ---- 0.59 ----
         // Profiles (testing: switched on in the helper's desktop settings)
         public bool ProfilesEnabled = false;
@@ -792,6 +809,9 @@ namespace KippixHelper
         public bool IsOptions { get { return Key == "options"; } }
         public bool IsBattery { get { return Key == "battery"; } }
         public bool IsClock { get { return Key == "clock"; } }
+        private System.Windows.Media.ImageSource picture;   // (1.0.1) a streaming service's own icon (from its app or website), over the line icon
+        public System.Windows.Media.ImageSource Picture { get { return picture; } set { if (Set(ref picture, value, "Picture")) Notify("HasPicture"); } }
+        public bool HasPicture { get { return picture != null; } }
 
         internal System.Action<ShortcutItem> PinChanged;
 

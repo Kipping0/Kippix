@@ -89,7 +89,9 @@ namespace KippixHelper
                 // Controller buttons: waiting for "press a button" takes every button
                 if (PadCaptureKey(e, button, true)) return;
                 if (openPanel == "welcome" && TourPadKey(e, button)) return;   // the tour's controller check: every button is being tested
-                if (bgMoveOn) { e.Handled = true; padHandled = e; BgMovePad(button, e); return; }   // (r15: Background › Move the picture takes every button: ThemeApi.BgMove.cs)
+                if (bgMoveOn) { e.Handled = true; padHandled = e; BgMovePad(button, e); return; }
+                if (splashEditOn) { e.Handled = true; padHandled = e; SplashEditPad(button, e); return; }
+                if (lpOpen) { e.Handled = true; padHandled = e; LocalPlayerPad(button, e); return; }   // (1.0.1: Shows & movies' player: ThemeApi.LocalPlayer.cs)
                 if (guideBarOpen) { e.Handled = true; padHandled = e; GuideBarPad(button, e); return; }   // (0.99.46) the quick bar takes every button (ThemeApi.GuideBar.cs)
                 if (galleryEditOpen) { e.Handled = true; padHandled = e; GalleryEditPad(button, e); return; }   // (0.99.59) the gallery's Edit (ThemeApi.GalleryEdit.cs)
                 TipsAnyKey();   // a first-time tip goes when anything is pressed (the press still counts)
@@ -244,6 +246,7 @@ namespace KippixHelper
                 if (PadCaptureKey(e, button, false)) return;
                 if (openPanel == "welcome" && TourPadKey(e, button)) return;
                 if (bgMoveOn) { e.Handled = true; return; }   // (r15: Background › Move the picture takes every button)
+                if (splashEditOn || lpOpen) { e.Handled = true; return; }   // (1.0.1)
                 if (guideBarOpen) { if (button == ControllerInput.A) GbAUp(); e.Handled = true; return; }   // (0.99.46) the quick bar
                 if (galleryEditOpen) { e.Handled = true; return; }   // (0.99.59)
                 if (kbOpen) { e.Handled = true; return; }

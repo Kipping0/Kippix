@@ -291,7 +291,8 @@ namespace KippixHelper
         private static readonly HashSet<string> Personal = new HashSet<string>
         {
             "StoreWishlist", "StoreRecent", "WishDismissed", "WishRemoveFromSteam", "Profiles", "ProfileNameOverride", "ProfilePicturePath", "RecentSearches",
-            "GalleryFolders", "GalleryFavourites", "ArtSwaps", "LastBackground", "HomeBgImage", "Collections", "UpNext", "PinnedGames", "SlotPins"
+            "GalleryFolders", "GalleryFavourites", "ArtSwaps", "LastBackground", "HomeBgImage", "Collections", "UpNext", "PinnedGames", "SlotPins",
+            "LocalMediaFolders", "LocalMediaKinds"
         };
 
         /// <summary>Kippix's settings for a bug report: every key, token, secret, PIN and personal thing replaced with "(removed)".</summary>

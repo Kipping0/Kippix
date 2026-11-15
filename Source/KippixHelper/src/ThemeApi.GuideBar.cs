@@ -65,7 +65,7 @@ namespace KippixHelper
             bool guideGoesHome = settings.GuideGoesHome && settings.HomeButton == 0;
             bool elsewhere = confirmOpen || openPanel != null || detailsOpen || extraRowAt > 0 || kbOpen || FolderInside;
             if (guideGoesHome && elsewhere) return false;   // the Guide button goes home, as before
-            if (confirmOpen || kbOpen || freeMove || IsMasterMoving || bgMoveOn) return false;
+            if (confirmOpen || kbOpen || freeMove || IsMasterMoving || bgMoveOn || splashEditOn || lpOpen) return false;
             OpenGuideBar();
             return true;
         }
@@ -407,6 +407,12 @@ namespace KippixHelper
                 case "bluetooth": geoKey = "KX_IconBluetooth"; break;
                 case "year": geoKey = "KX_IconChart"; break;
                 case "options": geoKey = "KX_IconGear"; break;
+                case "media": geoKey = "KX_IconMedia"; break;            // (1.0.1)
+                case "localmedia": geoKey = "KX_IconLocalMedia"; break;
+                case "netflix": geoKey = "KX_IconTv"; break;
+                case "youtube": geoKey = "KX_IconVideo"; break;
+                case "prime": geoKey = "KX_IconFilmStrip"; break;
+                case "crunchyroll": geoKey = "KX_IconClapper"; break;
                 default: geoKey = "KX_IconDots"; break;
             }
             var geo = Application.Current != null ? Application.Current.TryFindResource(geoKey) as Geometry : null;

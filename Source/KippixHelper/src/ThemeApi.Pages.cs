@@ -47,6 +47,7 @@ namespace KippixHelper
         public string Sub { get { return sub; } set { Set(ref sub, value, "Sub"); } }   // (can change while shown: Split screen fills in as it learns)
         public Guid GameId;
         internal string CoverPath;
+        internal string Tag;   // (1.0.1) what it stands for on pages without games (Shows & movies: the file or folder)
         private ImageSource cover;
         public ImageSource Cover { get { return cover; } set { Set(ref cover, value, "Cover"); } }
         public ICommand Command { get; set; }
@@ -131,6 +132,8 @@ namespace KippixHelper
                 case "mylibrary": return Loc("LOC_KX_HubTabLibrary", "Library");
                 case "profilepage": return Loc("LOC_KX_Profile", "Profile");
                 case "doctor": return Loc("LOC_KX_DocTitle", "Kippix Doctor");
+                case "localmedia": return Loc("LOC_KX_LocalMedia", "Shows & movies");
+                case "media": return Loc("LOC_KX_Media", "Media");
             }
             return key;
         }
@@ -153,6 +156,8 @@ namespace KippixHelper
                 case "year": return "chart";
                 case "upnext": return "forward";
                 case "health": return "check";
+                case "localmedia": return "localmedia";
+                case "media": return "media";
             }
             return "chevron";
         }
@@ -271,6 +276,12 @@ namespace KippixHelper
                 case "upnext": BuildUpNextPage(); break;          // (UpNext.cs)
                 case "health": BuildHealthPage(arg); break;       // (LibraryHealth.cs)
                 case "timesup": BuildTimesUpPage(); break;        // (TimeLimits.cs)
+                case "localmedia": BuildLocalMediaPage(arg); break;          // (1.0.1, LocalMedia.cs: Shows & movies)
+                case "localshow": BuildLocalShowPage(arg); break;
+                case "localmediafolders": BuildLocalFoldersPage(); break;
+                case "localmediafolder": BuildLocalFolderPage(arg); break;
+                case "localitem": BuildLocalItemPage(arg); break;              // (Select on a poster)
+                case "localhidden": BuildLocalHiddenPage(); break;
             }
             ApplyHubChrome();   // the profile's header and tabs (its tabs are pages), or none
             CommunityChrome();  // the Community page's tabs (ThemeApi.CommunityHub.cs), or none
@@ -385,8 +396,10 @@ namespace KippixHelper
             if (CommunityStepKey(e, step)) return true;     // (the Community page: LB / RB tabs)
             if (back && LibChipsBack()) return true;        // (the library: its Show / Store / Sort choices back to the buttons)
             if (back) return PageBack();
+            if (LocalMediaSelectKey(e)) return true;   // (1.0.1) Shows & movies: Select on a poster › its page (Hide…)
             if (xPressed)
             {
+                if (LocalMediaX()) return true;   // (1.0.1) Shows & movies: watched / not watched
                 if (pageKey == "pick") { Roll(); return true; }
                 if (pageKey == "shelf")
                 {

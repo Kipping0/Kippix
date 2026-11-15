@@ -36,7 +36,7 @@ namespace KippixHelper
             if (settings.HomeBackTo == 2) return false;
             if (e.IsRepeat || !IsBackKey(e) || IsPadRelease(e)) return false;
             if (confirmOpen || kbOpen || freeMove || IsMasterMoving || descReaderOpen || masterMoving != null || widgetMoving != null || movingItem != null
-                || boardEditing || bgMoveOn || guideBarOpen || FolderInside) return false;
+                || boardEditing || bgMoveOn || splashEditOn || lpOpen || guideBarOpen || FolderInside) return false;
             try
             {
                 bool done = settings.HomeBackTo == 1 ? HomeBackToBar() : HomeBackToFirstGame();
