@@ -769,7 +769,11 @@ namespace KippixHelper
         // =====================================================================
 
         private static readonly string[] DefaultOrder = { "search", "achievements", "gallery", "store", "discord", "audio", "hibernate", "sleep", "restart", "shutdown", "downloads", "battery",
-                                                            "quick", "releases", "wishlist", "news", "friends", "collections", "splitscreen", "pick", "storage", "controller", "bluetooth", "year", "options", "clock" };
+                                                            "quick", "releases", "wishlist", "news", "friends", "collections", "splitscreen", "pick", "storage", "controller", "bluetooth", "year",
+                                                            "media", "localmedia", "netflix", "youtube", "prime", "crunchyroll", "options", "clock" };
+        /// <summary>(1.0.1) Media, Shows &amp; movies and each streaming service: off until you switch them on (kept with ExtraPins).</summary>
+        internal static readonly string[] MediaShortcutKeys = { "media", "localmedia", "netflix", "youtube", "prime", "crunchyroll" };
+        private static bool IsExtraPinKey(string key) { return PageKeys.Contains(key) || MediaShortcutKeys.Contains(key); }
 
         public ObservableCollection<ShortcutItem> Shortcuts { get; private set; }
 
@@ -794,7 +798,7 @@ namespace KippixHelper
                 case "clock": return settings.PinClock;
                 case "options": return !settings.HideTopOptions;
             }
-            if (PageKeys.Contains(key)) return settings.ExtraPins != null && settings.ExtraPins.Contains(key);
+            if (IsExtraPinKey(key)) return settings.ExtraPins != null && settings.ExtraPins.Contains(key);
             return true;
         }
 
@@ -817,7 +821,7 @@ namespace KippixHelper
                 case "clock": settings.PinClock = v; break;
                 case "options": settings.HideTopOptions = !v; if (!v) settings.SettingsInProfileMenu = true; break;   // hidden: Settings & Customisation is in the profile menu
             }
-            if (PageKeys.Contains(key))
+            if (IsExtraPinKey(key))
             {
                 if (settings.ExtraPins == null) settings.ExtraPins = new List<string>();
                 settings.ExtraPins.Remove(key);
@@ -845,6 +849,13 @@ namespace KippixHelper
                 case "clock": return Loc("LOC_KX_Clock", "Clock");
             }
             if (PageKeys.Contains(key)) return PageName(key);
+            switch (key)
+            {
+                case "media": return Loc("LOC_KX_Media", "Media");
+                case "localmedia": return Loc("LOC_KX_LocalMedia", "Shows & movies");
+            }
+            var svc = MediaServices.FirstOrDefault(m => m.Key == key);
+            if (svc != null) return svc.Name;
             return key;
         }
 
@@ -866,6 +877,9 @@ namespace KippixHelper
                 case "gallery": return new RelayCommand(_ => OpenGallery());
             }
             if (PageKeys.Contains(key)) { string k = key; return new RelayCommand(_ => OpenPageFromShortcut(k)); }
+            if (key == "media") return new RelayCommand(_ => { PlaySound("select"); OpenMediaMenu(); });
+            if (key == "localmedia") return new RelayCommand(_ => { PlaySound("select"); OpenLocalMedia(false); });
+            if (MediaServices.Any(m => m.Key == key)) { string k = key; return new RelayCommand(_ => OpenMediaByKey(k)); }
             return null;
         }
 
@@ -901,12 +915,23 @@ namespace KippixHelper
                 item.SetStaySilently(settings.TopBarStayVisible != null && settings.TopBarStayVisible.Contains(k));
                 item.StayChanged = OnStayChanged;
                 Shortcuts.Add(item);
+                if (item.IsPinned) LoadShortcutPicture(item);
             }
             UpdateShortcutStatus();
         }
 
+        /// <summary>(1.0.1) A streaming service's shortcut: its own icon (only once it's in the top bar: nothing is fetched otherwise).</summary>
+        private void LoadShortcutPicture(ShortcutItem item)
+        {
+            if (item == null || item.Picture != null) return;
+            var svc = MediaServices.FirstOrDefault(m => m.Key == item.Key);
+            if (svc == null) return;
+            LoadMediaIcon(svc, img => item.Picture = img);
+        }
+
         private void OnPinChanged(ShortcutItem item)
         {
+            if (item.IsPinned) LoadShortcutPicture(item);
             SetPin(item.Key, item.IsPinned);
             SaveSettings();
             UpdateShortcutStatus();
@@ -1110,7 +1135,9 @@ namespace KippixHelper
             try
             {
                 if (IsMasterMoving && OutlineHasFocus) return;   // Master edit: the outline's own key handler takes everything
-                if (bgMoveOn && IsMainWindow(sender)) { BgMoveKey(e); return; }   // (r15: Background › Move the picture takes every key: ThemeApi.BgMove.cs)
+                if (bgMoveOn && IsMainWindow(sender)) { BgMoveKey(e); return; }
+                if (splashEditOn && IsMainWindow(sender)) { SplashEditKey(e); return; }
+                if (lpOpen && IsMainWindow(sender)) { LocalPlayerKey(e); return; }   // (1.0.1: Shows & movies' player takes every key)   // (1.0.1: Splash screen layout › Edit placement takes every key)   // (r15: Background › Move the picture takes every key: ThemeApi.BgMove.cs)
                 if (guideBarOpen && IsMainWindow(sender)) { GuideBarKey(e); return; }   // (0.99.46) the quick bar takes every key (ThemeApi.GuideBar.cs)
                 if (galleryEditOpen && IsMainWindow(sender)) { GalleryEditKey(e); return; }   // (0.99.59) the gallery's Edit takes every key (ThemeApi.GalleryEdit.cs)
                 if (kbOpen && IsMainWindow(sender)) { KeyboardKey(e); return; }   // the keyboard takes every key while it's up
@@ -1329,7 +1356,7 @@ namespace KippixHelper
         {
             try
             {
-                if (kbOpen || bgMoveOn || guideBarOpen || galleryEditOpen || ReferenceEquals(e, padHandled)) return;   // the keyboard had them, or OnPadDownEarly already dealt with it (or Move the picture has them)
+                if (kbOpen || bgMoveOn || splashEditOn || lpOpen || guideBarOpen || galleryEditOpen || ReferenceEquals(e, padHandled)) return;   // the keyboard had them, or OnPadDownEarly already dealt with it (or Move the picture has them)
                 if (openPanel == "browser")
                 {
                     // a controller button that didn't reach the browser (focus went somewhere else): handle it and put focus back
@@ -1788,6 +1815,7 @@ namespace KippixHelper
                 case "gamemore": return GameMoreTitle;
                 case "listinfo": return Loc("LOC_KX_ListInfoShows", "Play info shows");
                 case "gamestatus": return Loc("LOC_KX_StatusRating", "Status and rating");
+                case "splash": return Loc("LOC_KX_CatSplash", "Splash screen layout");   // (1.0.1, ThemeApi.SplashLayout.cs)
                 }
                 string gTitle = GOptionsTitle(optionsPage);   // (r12 G: Controller buttons, Handheld)
                 if (gTitle != null) return gTitle;
@@ -1817,7 +1845,8 @@ namespace KippixHelper
                 case "gamemedia":
                 case "gameextras":
                 case "gamefriends":
-                case "detanim": return "gamepage";
+                case "detanim":
+                case "splash": return "gamepage";
                 case "widgets": return "home";
                 case "widgetadd":
                 case "widgetedit": return "widgets";
@@ -1967,6 +1996,8 @@ namespace KippixHelper
             Notify("IsOptionsListInfo");
             Notify("IsOptionsGameStatus");
             if (optionsPage == "galleryfolders") BuildGalleryFolderRows();
+            Notify("IsOptionsSplash");
+            if (optionsPage == "splash") BuildSplashRows();   // (1.0.1)
             if (optionsPage == "cards" || optionsPage == "home" || optionsPage == "background") UpdateSliders();
             if (optionsPage == "extrarows") BuildExtraRowChoices();
             if (optionsPage == "layouts") { RefreshLayoutProfiles(); Notify("HasUndoReset"); }

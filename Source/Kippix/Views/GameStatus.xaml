@@ -78,9 +78,23 @@
                                     </LinearGradientBrush>
                                 </Border.Background>
                             </Border>
+                            <!-- (1.0.1) Settings › Game page › Splash screen layout: the game's card and its logo, both off unless switched on.
+                                 The helper fills them in, shows them and moves / sizes them (RenderTransform) where they were put. -->
+                            <Border x:Name="KX_LaunchCard" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" Width="293" Height="440"
+                                    CornerRadius="16" RenderTransformOrigin="0.5,0.5" RenderOptions.BitmapScalingMode="Fant">
+                                <Border.Effect><DropShadowEffect BlurRadius="40" ShadowDepth="8" Opacity="0.6" /></Border.Effect>
+                            </Border>
+                            <Grid x:Name="KX_LaunchLogoBox" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,90,0,0" RenderTransformOrigin="0.5,0.5">
+                                <Image x:Name="KX_LaunchLogo" MaxHeight="170" MaxWidth="620" Stretch="Uniform" RenderOptions.BitmapScalingMode="Fant" />
+                                <Viewbox x:Name="KX_LaunchNameBox" StretchDirection="DownOnly" MaxWidth="900" MaxHeight="170">
+                                    <TextBlock x:Name="KX_LaunchName" FontSize="72" Foreground="White" TextAlignment="Center" FontFamily="{DynamicResource FontTitilliumWebBold}">
+                                        <TextBlock.Effect><DropShadowEffect BlurRadius="18" ShadowDepth="0" Opacity="0.7" /></TextBlock.Effect>
+                                    </TextBlock>
+                                </Viewbox>
+                            </Grid>
                         </Grid>
                         <!-- what Playnite says ("Starting...", "Running"), small in the corner, and its Close button -->
-                        <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="64,0,64,56" Orientation="Horizontal">
+                        <StackPanel x:Name="KX_LaunchStatus" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="64,0,64,56" Orientation="Horizontal" RenderTransformOrigin="0,1">
                             <TextBlock x:Name="PART_TextStatus" FontSize="20" Foreground="#CCF4F6FA" FontFamily="{DynamicResource FontTitilliumWeb}"
                                        VerticalAlignment="Center" Margin="0,0,20,0" TextTrimming="CharacterEllipsis" MaxWidth="1100" />
                             <StackPanel x:Name="PART_PanelActionButtons" Orientation="Horizontal" VerticalAlignment="Center" Opacity="0.85" />

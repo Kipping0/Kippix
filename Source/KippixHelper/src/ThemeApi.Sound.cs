@@ -329,7 +329,7 @@ namespace KippixHelper
             if (music == null) return;
             var w = Application.Current != null ? Application.Current.MainWindow : null;
             bool should = settings.MusicMode != 0 && playlist.Count > 0 && !gameRunningNow
-                          && w != null && w.IsActive && !(trailerPlaying && settings.DetTrailerSound) && !PreviewHasSound && !StoreSoundActive && !GallerySoundActive && !IntroSoundActive;
+                          && w != null && w.IsActive && !(trailerPlaying && settings.DetTrailerSound) && !PreviewHasSound && !StoreSoundActive && !GallerySoundActive && !IntroSoundActive && !LocalPlayerActive;
             if (should && !musicPlaying) { music.Volume = 0; musicLevel = 0; music.Play(); musicPlaying = true; }
             musicFade.Start();
         }
@@ -338,7 +338,7 @@ namespace KippixHelper
         {
             var w = Application.Current != null ? Application.Current.MainWindow : null;
             bool should = settings.MusicMode != 0 && musicPlaying && !gameRunningNow && w != null && w.IsActive
-                          && !(trailerPlaying && settings.DetTrailerSound) && !PreviewHasSound && !StoreSoundActive && !GallerySoundActive && !IntroSoundActive;
+                          && !(trailerPlaying && settings.DetTrailerSound) && !PreviewHasSound && !StoreSoundActive && !GallerySoundActive && !IntroSoundActive && !LocalPlayerActive;
             double target = should ? 1 : 0;
             musicLevel += (target - musicLevel) * 0.25;
             if (Math.Abs(target - musicLevel) < 0.02) musicLevel = target;

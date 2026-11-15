@@ -131,7 +131,7 @@ namespace KippixHelper
             ProfileRows.Add(new PickRow { Text = Loc("LOC_KX_Achievements", "Achievements"), Sub = Loc("LOC_KX_AchMenuSub", "Every game's achievements and your progress"), Icon = "trophy", Key = "achievements", Command = new RelayCommand(_ => { ClosePanels(); OpenAchievementsView(); }) });
             ProfileRows.Add(new PickRow { Text = Loc("LOC_KX_Store", "Store"), Sub = Loc("LOC_KX_StoreMenuSub", "Deals, new games and your wishlist"), Icon = "store", Key = "store", Command = new RelayCommand(_ => { ClosePanels(); OpenStore(); }) });
             ProfileRows.Add(new PickRow { Text = Loc("LOC_KX_Gallery", "Gallery"), Sub = Loc("LOC_KX_GalleryMenuSub", "Your screenshots and clips"), Icon = "gallery", Key = "gallery", Command = new RelayCommand(_ => { ClosePanels(); OpenGallery(); }) });
-            ProfileRows.Add(new PickRow { Text = Loc("LOC_KX_Media", "Media"), Sub = "Netflix, YouTube, Prime Video, Crunchyroll", Icon = "media", Key = "media", Command = new RelayCommand(_ => SetProfilePage("media")) });
+            ProfileRows.Add(new PickRow { Text = Loc("LOC_KX_Media", "Media"), Sub = Loc("LOC_KX_MediaMenuSub", "Your shows & movies, Netflix, YouTube, Prime Video, Crunchyroll"), Icon = "media", Key = "media", Command = new RelayCommand(_ => SetProfilePage("media")) });
             AddProfileExtraRows();
             ApplyProfileOrder();   // (0.99.11) your order (and order mode)
         }
@@ -185,6 +185,15 @@ namespace KippixHelper
 
         private void BuildMediaRows()
         {
+            // (1.0.1) your own videos first (ThemeApi.LocalMedia.cs)
+            int n = LocalFolders().Count;
+            ProfileRows.Add(new PickRow
+            {
+                Text = Loc("LOC_KX_LocalMedia", "Shows & movies"), Icon = "localmedia", Key = "localmedia",
+                Sub = n == 0 ? Loc("LOC_KX_LocalSub", "Your own videos, from folders on this PC") : n == 1 ? Loc("LOC_KX_LocalOneFolder", "Your own videos, from 1 folder") : string.Format(Loc("LOC_KX_LocalNFolders", "Your own videos, from {0} folders"), n),
+                Command = new RelayCommand(_ => { PlaySound("select"); OpenLocalMedia(true); })
+            });
+            ProfileRows.Add(new PickRow { IsHeader = true, Text = Loc("LOC_KX_SecStreaming", "STREAMING") });
             foreach (var m in MediaServices)
             {
                 var svc = m;
@@ -201,6 +210,11 @@ namespace KippixHelper
         /// website gives browsers. Kept in the add-on's folder after the first time. Our line icon shows until (or if) there's none.
         /// </summary>
         private void LoadMediaIcon(MediaService svc, PickRow row)
+        {
+            LoadMediaIcon(svc, img => row.Picture = img);
+        }
+
+        private void LoadMediaIcon(MediaService svc, Action<ImageSource> show)
         {
             string dir = Path.Combine(plugin.GetPluginUserDataPath(), "MediaIcons");
             string cached = Path.Combine(dir, svc.Key + ".png");
@@ -223,7 +237,7 @@ namespace KippixHelper
                         file = cached;
                     }
                     var img = Images.Load(file, 64);
-                    if (img != null) OnUi(() => row.Picture = img);
+                    if (img != null) OnUi(() => show(img));
                 }
                 catch (Exception ex) { logger.Info("Kippix: media icon " + svc.Key + ": " + ex.Message); }
             });
@@ -267,6 +281,21 @@ namespace KippixHelper
             }
             catch (Exception) { }
             return null;
+        }
+
+        /// <summary>(1.0.1) A top bar / quick bar shortcut to one service: whether its app is installed is looked up as it's pressed.</summary>
+        private void OpenMediaByKey(string key)
+        {
+            var svc = MediaServices.FirstOrDefault(m => m.Key == key);
+            if (svc == null) return;
+            OpenMedia(svc, svc.Package != null ? FindStoreApp(svc.Package) : null);
+        }
+
+        /// <summary>(1.0.1) The Media shortcut: the profile menu, open on Media.</summary>
+        private void OpenMediaMenu()
+        {
+            if (openPanel != "profile") { if (openPanel != null) ClosePanels(); ToggleProfile(); }
+            if (openPanel == "profile") SetProfilePage("media");
         }
 
         private void OpenMedia(MediaService svc, string app)

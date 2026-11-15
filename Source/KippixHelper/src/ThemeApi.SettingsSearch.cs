@@ -42,7 +42,7 @@ namespace KippixHelper
             "home", "cards", "cardinfo", "infoitems", "preview", "listinfo", "extrarows", "homerows", "badges", "look", "background", "board", "boardpages",
             "widgets", "widgetadd", "topbar", "shortcuts", "gamepage", "gamelayout", "gamemedia", "gameextras", "gamefriends", "gamesections",
             "audio", "general", "notify", "help", "layouts", "layoutpick", "placehome", "placegame",
-            "storeopts", "storecurrency", "storetiles", "storerows", "galleryfolders", "access", "language", "seasonal", "weatherfx", "slotpins", "addons", "ups", "bgc", "folders",
+            "storeopts", "storecurrency", "storetiles", "storerows", "galleryfolders", "access", "language", "seasonal", "weatherfx", "slotpins", "addons", "ups", "bgc", "folders", "splash",
             "community", "profiles"
         };
 

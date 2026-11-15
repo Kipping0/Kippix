@@ -142,6 +142,7 @@ namespace KippixHelper
             if (coverImg != null) coverImg.Visibility = pic != null ? Visibility.Collapsed : Visibility.Visible;
             if (boundBg != null) boundBg.Visibility = pic != null ? Visibility.Collapsed : Visibility.Visible;
             bool cover = pic == null && SetLaunchImage(coverImg, g.CoverImage, 900);
+            try { ApplySplashLayout(status, g, pic != null); } catch (Exception ex) { logger.Warn("Kippix: splash screen layout: " + ex.Message); }   // (1.0.1)
             string said = "launch art: " + g.Name + ": screen " + (status != null ? "found" : "not found") + ", art " + (art != null ? "found" : "not found")
                         + ", background " + (pic != null ? "from " + from + " " + Describe(pic) : "none (" + (g.BackgroundImage ?? "no file") + ")") + ", cover " + (cover ? "shown" : "hidden")
                         + ", from the page: " + (launchPageBg != null ? launchPageBgWhat : "nothing [" + launchPageBgWhat + "]")

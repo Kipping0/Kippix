@@ -62,7 +62,8 @@ namespace KippixHelper
             "LayoutHasViews", "CompletionBeaten", "Completion100", "CompletionDropped",
             "TipsSeen", "SafeMode", "SafeModeSaved", "HandheldSaved",   // (r12 G: state, not a layout)
             "Folders",  // your folders are your own things, like collections: a reset or a layout never takes them away
-            "UpNext"    // the Up next queue (each profile's own)
+            "UpNext",   // the Up next queue (each profile's own)
+            "LocalMediaFolders", "LocalMediaKinds", "LocalMediaSort"   // (1.0.1) Shows & movies: your folders
         };
 
         // what "layout" means, screen by screen (placement, size and on / off of what's shown)
