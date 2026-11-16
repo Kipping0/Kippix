@@ -4810,4 +4810,9 @@
     <sys:String x:Key="LOC_KX_BoardSlideOne">One game at a time</sys:String>
     <sys:String x:Key="LOC_KX_BoardSlideOneOn">Past the edge, every tile moves along one game and one new game comes in</sys:String>
     <sys:String x:Key="LOC_KX_BoardSlideOneOff">Off: past the edge, a whole page of new games</sys:String>
+    <sys:String x:Key="LOC_KX_RowAppsSub">A row of their own, first under the games, and out of the games row</sys:String>
+    <sys:String x:Key="LOC_KX_RowAppsAsk">The Playnite category whose entries are your apps</sys:String>
+    <sys:String x:Key="LOC_KX_RowAppsCategory">Category: {0}</sys:String>
+    <sys:String x:Key="LOC_KX_RowAppsNoCategory">Playnite has no category with this name yet</sys:String>
+    <sys:String x:Key="LOC_KX_RowAppsCategorySub">Everything in this Playnite category counts as an app</sys:String>
 </ResourceDictionary>
