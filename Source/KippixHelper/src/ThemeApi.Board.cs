@@ -845,7 +845,7 @@ namespace KippixHelper
                 int pages = 1;
                 try
                 {
-                    var all = api.Database.Games.Where(g => g != null && !g.Hidden && ProfileAllowsGame(g)).ToList();
+                    var all = api.Database.Games.Where(g => g != null && !g.Hidden && ProfileAllowsGame(g) && !CopyBehind(g.Id)).ToList();
                     pools = new Dictionary<string, List<Guid>>();
                     foreach (string k in keys) pools[k] = BoardSourceGames(k, all, shown, order, shelves);
                     bool slide = repeat && settings.BoardSlideOne;   // (1.0.2) one game at a time
@@ -1515,7 +1515,7 @@ namespace KippixHelper
             var games = new List<Game>();
             try
             {
-                var all = api.Database.Games.Where(g => g != null && !g.Hidden && ProfileAllowsGame(g)).ToList();
+                var all = api.Database.Games.Where(g => g != null && !g.Hidden && ProfileAllowsGame(g) && !CopyBehind(g.Id)).ToList();
                 var byId = all.ToDictionary(g => g.Id, g => g);
                 var shelves = new Dictionary<string, GameShelf>();
                 foreach (string k in src.Where(k => k.StartsWith("shelf:", StringComparison.Ordinal)))
