@@ -503,7 +503,10 @@
                                                         <!-- battery (the controller's, or this device's own: Top bar settings): outline with a fill bar, plus a percentage when one is reported -->
                                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,8,0"
                                                                     Visibility="{Binding IsBattery, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                            <!-- (1.0.4) a controller on a cable (a handheld's built-in controls): a plug, not a full battery -->
+                                                            <Path Data="M3,0 H5 V4 H9 V0 H11 V4 H13 V8 C13,10.5 11.2,12.4 9,12.9 V16 H5 V12.9 C2.8,12.4 1,10.5 1,8 V4 H3 Z" Fill="{DynamicResource KX_TextBrush}" VerticalAlignment="Center" Width="14" Height="16" Stretch="Uniform"
+                                                                  Visibility="{PluginSettings Plugin=Kippix, Path=BatteryWired, FallbackValue=Collapsed}" />
+                                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Visibility="{PluginSettings Plugin=Kippix, Path=BatteryOutlineShown, FallbackValue=Visible}">
                                                                 <Border Width="30" Height="15" CornerRadius="3.5" BorderThickness="1.6"
                                                                         BorderBrush="{DynamicResource KX_TextBrush}">
                                                                     <Rectangle Margin="1.5" HorizontalAlignment="Left" RadiusX="1.5" RadiusY="1.5"

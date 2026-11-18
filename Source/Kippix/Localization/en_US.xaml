@@ -4850,7 +4850,7 @@
     <sys:String x:Key="LOC_KX_BoardSlideOneOn">Past the edge, every tile moves along one game and one new game comes in</sys:String>
     <sys:String x:Key="LOC_KX_BoardSlideOneOff">Off: past the edge, a whole page of new games</sys:String>
     <sys:String x:Key="LOC_KX_BatterySource">Battery shown</sys:String>
-    <sys:String x:Key="LOC_KX_BatterySourceSub">The controller's, or this device's own</sys:String>
+    <sys:String x:Key="LOC_KX_BatterySourceSub">Automatic shows this device's own when it has one (handhelds, laptops), else the controller's</sys:String>
     <sys:String x:Key="LOC_KX_BatterySourceController">Controller</sys:String>
     <sys:String x:Key="LOC_KX_BatterySourceDevice">This device</sys:String>
     <sys:String x:Key="LOC_KX_DeviceBattery">Battery</sys:String>
@@ -5024,4 +5024,6 @@
     <sys:String x:Key="LOC_KX_MediaHelpAuto">Netflix, Prime Video and Crunchyroll open their Windows apps when they're installed, otherwise full screen in your browser, as YouTube does. The controller drives the browser; Guide brings up the overlay to close it.</sys:String>
     <sys:String x:Key="LOC_KX_MediaHelpFull">Every service opens full screen in your browser, like a TV app. The controller drives the browser; Guide brings up the overlay to close it.</sys:String>
     <sys:String x:Key="LOC_KX_MediaHelpWindow">Every service opens its website in your browser, in a normal window.</sys:String>
+    <!-- 1.0.4: top bar battery -->
+    <sys:String x:Key="LOC_KX_BatterySourceAuto">Automatic</sys:String>
 </ResourceDictionary>

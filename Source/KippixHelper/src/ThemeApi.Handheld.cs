@@ -118,7 +118,7 @@ namespace KippixHelper
             d["FolderTileCount"] = 6;
             d["PinBattery"] = true;
             d["ShowBatteryPercent"] = true;
-            d["BatterySource"] = 1;   // the handheld's own battery, not its built-in pad's
+            d["BatterySource"] = 0;   // (1.0.4) Automatic: the handheld's own battery, not its built-in pad's
             return d;
         }
 
