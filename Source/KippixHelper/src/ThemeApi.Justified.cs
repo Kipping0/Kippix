@@ -32,7 +32,7 @@ namespace KippixHelper
         private bool ScrollsDown { get { return SideMode || LayoutNow == 6; } }
 
         public ICommand CycleJustRowsCommand { get; private set; }
-        public bool JustSettingsShown { get { return settings.HomeLayoutMode == 6; } }
+        public bool JustSettingsShown { get { return false; } }   // (1.0.3: Mosaic is no longer a home layout)
         public string JustRowsText { get { return JustRowsNow.ToString(); } }
         private int JustRowsNow { get { return Math.Max(2, Math.Min(5, settings.JustRows)); } }
 

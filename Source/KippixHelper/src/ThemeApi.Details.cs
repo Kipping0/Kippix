@@ -131,6 +131,38 @@ namespace KippixHelper
         public bool DetShadeLeft { get { return Layout == 0; } }
         public bool DetShadeRight { get { return Layout == 1; } }
         public bool DetShadeCentre { get { return Layout == 2; } }
+        // (1.0.3) how dark the shade over the picture is (Settings › Game page › Shade): normal, light, off, strong
+        private int DetShadeLevel { get { return settings.DetShade < 0 || settings.DetShade > 3 ? 0 : settings.DetShade; } }
+        public double DetShadeOpacity { get { int l = DetShadeLevel; return l == 1 ? 0.5 : l == 2 ? 0 : 1; } }
+        public bool DetShadeStrong { get { return DetShadeLevel == 3; } }
+        public string DetShadeText
+        {
+            get
+            {
+                switch (DetShadeLevel)
+                {
+                    case 1: return Loc("LOC_KX_DetShadeLight", "Light");
+                    case 2: return Loc("LOC_KX_DetShadeOff", "Off: the picture as it is (text can be harder to read)");
+                    case 3: return Loc("LOC_KX_DetShadeStrong", "Strong");
+                    default: return Loc("LOC_KX_DetShadeNormal", "Normal");
+                }
+            }
+        }
+        private System.Windows.Input.ICommand cycleDetShade;
+        public System.Windows.Input.ICommand CycleDetShadeCommand
+        {
+            get
+            {
+                return cycleDetShade ?? (cycleDetShade = new RelayCommand(_ =>
+                {
+                    int[] order = { 0, 1, 2, 3 };   // Normal › Light › Off › Strong
+                    settings.DetShade = order[(Array.IndexOf(order, DetShadeLevel) + 1) % order.Length];
+                    SaveSettings();
+                    PlaySound("move");
+                    foreach (var n in new[] { "DetShadeOpacity", "DetShadeStrong", "DetShadeText" }) Notify(n);
+                }));
+            }
+        }
 
         // left side layout: the Description position setting; Right side and Centre centre it
         public HorizontalAlignment DetDescAlignment { get { return Layout == 0 ? Align(settings.DetDescPosition) : HorizontalAlignment.Center; } }
@@ -250,10 +282,10 @@ namespace KippixHelper
 
         private void NotifyDetails()
         {
-            foreach (string n in new[] { "DetShowLogo", "DetShowInfo", "DetShowDescription", "DetShowAchButton", "DetShowDate", "DetShowHints", "DetBlackBackground", "DetShowBackground",
+            foreach (string n in new[] { "DetShowLogo", "DetShowInfo", "DetShowDescription", "DetShowAchButton", "DetAchButtonShown", "DetShowDate", "DetShowHints", "DetBlackBackground", "DetShowBackground",
                                          "DetShowOptionsButton", "DetShowTrailerControls", "DetPlacementEnabled", "DetMediaPlacementEnabled", "FriendsSourceText", "DetLayoutText", "DetDesignText", "DetLogoPositionEnabled", "DetLogoOverInfo", "DetMediaColumn", "DetMediaColumnSpan",
                                          "DetMediaAlignment", "DetMediaVAlignment", "DetInfoAlignment", "DetBlockAlignment", "DetLogoInnerAlignment",
-                                         "DetShadeLeft", "DetShadeRight", "DetShadeCentre",
+                                         "DetShadeLeft", "DetShadeRight", "DetShadeCentre", "DetShadeOpacity", "DetShadeStrong", "DetShadeText",
                                          "DetDescAlignment", "DetLogoAlignment", "DetDescPositionText", "DetLogoPositionText",
                                          "DetArtText", "DetShowArt", "DetArtVideo", "DetMediaEnabled", "DetInfoMaxWidth", "DetMediaSizeText", "DetCoverHeight",
                                          "DetVideoWidth", "DetVideoHeight", "DetMediaMargin", "DetMediaOffsetText", "MediaFillWidth", "MediaKnobMargin",

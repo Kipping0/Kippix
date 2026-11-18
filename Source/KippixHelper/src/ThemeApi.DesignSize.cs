@@ -21,6 +21,7 @@ namespace KippixHelper
         private FrameworkElement designHost;
         private bool designChanged;
         private int designTries;
+        private int designFitTries;
 
         /// <summary>The theme's units across and down right now (1920 × 1080 on a 16:9 screen).</summary>
         internal double DesignWidth { get { return designHost != null && designHost.ActualWidth > 0 ? designHost.ActualWidth : 1920; } }
@@ -72,6 +73,12 @@ namespace KippixHelper
             return null;
         }
 
+        /// <summary>
+        /// (1.0.3) Inside Playnite's scaled box (Main) is PART_MainHost, which Playnite sizes itself (ViewportWidth × 1080).
+        /// Making only Main bigger left PART_MainHost at its old size in the middle, so a 16:10 or 4:3 screen (handhelds)
+        /// got a pale frame all round, and it happened under other fullscreen themes too. Now both get the size, and only
+        /// while the fullscreen theme is Kippix (its PART_MainHost has Kippix's row template in its resources).
+        /// </summary>
         private void FitDesignSize()
         {
             try
@@ -81,25 +88,41 @@ namespace KippixHelper
                 if (designHost == null || PresentationSource.FromVisual(designHost) == null) designHost = FindDesignHost(w);
                 var host = designHost;
                 if (host == null) { logger.Info("Kippix: screen shape: Playnite's scaled box wasn't found (left as it is)"); return; }
+                var inner = UiTools.FindByName(host, "PART_MainHost");
+                bool ours = inner != null && inner.Resources != null && inner.Resources.Contains("KX_PickRowTemplate");
+                if (inner == null && ++designFitTries < 20 && ui != null)
+                {
+                    // (the theme's template isn't in yet: look again shortly)
+                    var t = new DispatcherTimer(DispatcherPriority.Background, ui) { Interval = TimeSpan.FromMilliseconds(500) };
+                    t.Tick += (s2, e2) => { t.Stop(); FitDesignSize(); };
+                    t.Start();
+                }
                 double aspect = w.ActualWidth / w.ActualHeight;
-                if (aspect < 16.0 / 9 - 0.005)
+                if (ours && aspect < 16.0 / 9 - 0.005)
                 {
                     double hgt = Math.Round(1920 / aspect);
-                    if (!SameSize(host.Width, 1920) || !SameSize(host.Height, hgt))
+                    if (!SameSize(host.Width, 1920) || !SameSize(host.Height, hgt) || !SameSize(inner.Width, 1920) || !SameSize(inner.Height, hgt))
                     {
                         host.Width = 1920;
                         host.Height = hgt;
+                        inner.Width = 1920;    // (replaces Playnite's ViewportWidth binding; the window's SizeChanged brings us back here)
+                        inner.Height = hgt;
                         designChanged = true;
                         logger.Info("Kippix: screen shape " + aspect.ToString("0.###") + " (narrower than 16:9): the theme is laid out 1920 × " + hgt + " (Playnite's would have been " + Math.Round(1080 * aspect) + " × 1080)");
                     }
                 }
                 else if (designChanged)
                 {
-                    // back to 16:9 or wider (another screen): as Playnite makes it
-                    host.Height = 1080;
-                    host.Width = Math.Round(1080 * aspect);
+                    // back to 16:9 or wider (another screen), or not Kippix: as Playnite makes it
+                    host.ClearValue(FrameworkElement.WidthProperty);
+                    host.ClearValue(FrameworkElement.HeightProperty);
+                    if (inner != null)
+                    {
+                        inner.Width = Math.Round(1080 * aspect);
+                        inner.Height = 1080;
+                    }
                     designChanged = false;
-                    logger.Info("Kippix: screen shape " + aspect.ToString("0.###") + ": the theme is laid out " + host.Width + " × 1080");
+                    logger.Info("Kippix: screen shape " + aspect.ToString("0.###") + ": the theme is laid out " + Math.Round(1080 * aspect) + " × 1080");
                 }
             }
             catch (Exception ex) { logger.Warn("Kippix: screen shape: " + ex.Message); }

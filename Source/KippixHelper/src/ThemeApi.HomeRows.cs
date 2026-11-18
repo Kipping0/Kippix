@@ -22,12 +22,16 @@ namespace KippixHelper
     {
         internal Guid GameId;
         internal string CoverFile;
+        internal bool RunRow;   // (issue #11) a tile in "Running now": A switches to it, X closes it
         public string Name { get; set; }
         private ImageSource cover;
         public ImageSource Cover { get { return cover; } set { if (Set(ref cover, value, "Cover")) Notify("HasCover"); } }
         public bool HasCover { get { return cover != null; } }
         public bool ShowNew { get; set; }
         public bool ShowInstalled { get; set; }
+        private bool showRunning;
+        /// <summary>(issue #11) Running now: a green dot.</summary>
+        public bool ShowRunning { get { return showRunning; } set { Set(ref showRunning, value, "ShowRunning"); } }
         public string AchText { get; set; }
         public bool ShowAch { get { return !string.IsNullOrEmpty(AchText); } }
         public string HltbText { get; set; }
@@ -77,11 +81,12 @@ namespace KippixHelper
         {
             ExtraRowsList = new ObservableCollection<ExtraRow>();
             ExtraRowChoices = new ObservableCollection<PickRow>();
+            Running.Changed += () => OnUi(RunningListChanged);   // (issue #11) the Running now row follows what's running
             CycleHomeLayoutCommand = new RelayCommand(_ =>
             {
                 if (boardEditing) BoardEndEdit(false);
                 libraryOpen = false;   // (the library view was over the old layout)
-                settings.HomeLayoutMode = (settings.HomeLayoutMode + 1) % 7;   // row, grid, list, board, manual, folder, mosaic
+                settings.HomeLayoutMode = (settings.HomeLayoutMode + 1) % 6;   // row, grid, list, board, manual, folder (Mosaic taken out in 1.0.3)
                 carWhy = "Games shown as changed";
                 if (settings.HomeLayoutMode != 0) LeaveExtraRows(false);
                 SaveSettings(); PlaySound("move"); HomeModeChanged();
@@ -181,6 +186,7 @@ namespace KippixHelper
             set { if (settings.ExtraRows == value) return; settings.ExtraRows = value; if (!value) LeaveExtraRows(false); SaveSettings(); NotifyHomeRows(); RebuildExtraRowsSoon(); }
         }
         public bool BadgeInstalled { get { return settings.BadgeInstalled; } set { if (SetSetting(ref settings.BadgeInstalled, value)) { Notify("BadgeInstalled"); RefreshBadgesSoon(); } } }
+        public bool BadgeRunning { get { return settings.BadgeRunning; } set { if (SetSetting(ref settings.BadgeRunning, value)) { Notify("BadgeRunning"); RunningBadgesChanged(); } } }   // (issue #11) "Running" on the tiles of what's running
         public bool BadgeNew { get { return settings.BadgeNew; } set { if (SetSetting(ref settings.BadgeNew, value)) { Notify("BadgeNew"); RefreshBadgesSoon(); } } }
         public bool BadgeAch { get { return settings.BadgeAch; } set { if (SetSetting(ref settings.BadgeAch, value)) { Notify("BadgeAch"); RefreshBadgesSoon(); } } }
         public bool BadgeHltb { get { return settings.BadgeHltb; } set { if (SetSetting(ref settings.BadgeHltb, value)) { Notify("BadgeHltb"); RefreshBadgesSoon(); } } }
@@ -190,6 +196,7 @@ namespace KippixHelper
             {
                 var on = new List<string>();
                 if (settings.BadgeInstalled) on.Add(Loc("LOC_KX_BadgeInstalledShort", "Installed"));
+                if (settings.BadgeRunning) on.Add(Loc("LOC_KX_BadgeRunningShort", "Running"));
                 if (settings.BadgeNew) on.Add(Loc("LOC_KX_BadgeNewShort", "New"));
                 if (settings.BadgeAch) on.Add(Loc("LOC_KX_BadgeAchShort", "Achievements"));
                 if (settings.BadgeHltb) on.Add("HLTB");
@@ -216,11 +223,13 @@ namespace KippixHelper
         {
             switch (key)
             {
+                case "running": return Loc("LOC_KX_RowRunning", "Running now");
                 case "favourites": return Loc("LOC_KX_RowFavourites", "Favourites");
                 case "recent": return Loc("LOC_KX_RowRecent", "Recently added");
                 case "installed": return Loc("LOC_KX_RowInstalled", "Installed");
                 case "never": return Loc("LOC_KX_RowNever", "Never played");
                 case "upnext": return Loc("LOC_KX_PageUpNext", "Up next");
+                case "apps": return AppsCategoryName;   // (ThemeApi.AppsRow.cs)
             }
             if (key.StartsWith("shelf:", StringComparison.Ordinal))
             {
@@ -242,9 +251,10 @@ namespace KippixHelper
         private void BuildExtraRowChoices()
         {
             ExtraRowChoices.Clear();
-            var keys = new List<string> { "upnext", "favourites", "recent", "installed", "never" };
+            var keys = new List<string> { "running", "upnext", "favourites", "recent", "installed", "never" };
             try { foreach (var p in api.Database.FilterPresets.OrderBy(p => p.Name)) keys.Add("filter:" + p.Id); } catch (Exception) { }
             foreach (var c in settings.Collections) keys.Add("shelf:" + c.Id);
+            keys.Insert(0, "apps");   // apps in a row of their own (ThemeApi.AppsRow.cs)
             var on = ExtraKeys();
             bool filtersHeader = false, shelvesHeader = false;
             ExtraRowChoices.Add(new PickRow { IsHeader = true, Text = Loc("LOC_KX_LibGroupGames", "YOUR GAMES") });
@@ -268,11 +278,14 @@ namespace KippixHelper
                 {
                     Text = name, Key = k, IsSelected = pos >= 0, IsSwitch = true,
                     Sub = pos >= 0 ? string.Format(Loc("LOC_KX_RowNumber", "Row {0}"), pos + 2) : Loc("LOC_KX_Off", "Off"),
-                    Icon = k.StartsWith("filter:", StringComparison.Ordinal) ? "filter" : k == "upnext" ? "forward" : "shelf"
+                    Icon = k.StartsWith("filter:", StringComparison.Ordinal) ? "filter" : k == "upnext" ? "forward" : k == "running" ? "play" : "shelf"
                 };
+                // (issue #11) Running now is always the first row, and shows by itself with Keep browsing on
+                if (k == "running") { row.Sub = pos >= 0 || settings.RunKeepBrowsing ? Loc("LOC_KX_RunRowSub", "First, while something is running") : Loc("LOC_KX_Off", "Off"); row.IsSelected = pos >= 0 || settings.RunKeepBrowsing; }
                 row.Command = new RelayCommand(_ => ToggleExtraRow(key));
                 ExtraRowChoices.Add(row);
             }
+            AddAppsRowChoice();
         }
 
         private void ToggleExtraRow(string key)
@@ -509,7 +522,9 @@ namespace KippixHelper
         // Extra rows (one row mode only)
         // =====================================================================
 
-        public bool ShowExtraRows { get { return settings.ExtraRows && settings.HomeLayoutMode == 0 && settings.RowDesign == 0 && ExtraRowsList.Count > 0 && !LibraryOpen; } }
+        public bool ShowExtraRows { get { return ExtraRowsWanted && ExtraRowsList.Count > 0 && !LibraryOpen; } }
+        /// <summary>Row › Lower with the extra rows on, or (issue #11) with Keep browsing on: then "Running now" shows by itself.</summary>
+        private bool ExtraRowsWanted { get { return (settings.ExtraRows || settings.RunKeepBrowsing) && settings.HomeLayoutMode == 0 && settings.RowDesign == 0; } }
         /// <summary>In one of the extra rows: the filter name above the games shows that row's name instead (same place, same look).</summary>
         private bool InExtraRow { get { return extraRowAt > 0 && extraRowAt <= ExtraRowsList.Count; } }
         /// <summary>The filter name shows a name of its own: the extra row you're in, or (Folder) the folder that's open.</summary>
@@ -538,8 +553,9 @@ namespace KippixHelper
                     rowsListHooked = true;
                     ((System.Collections.Specialized.INotifyCollectionChanged)list.Items).CollectionChanged += (s, e) =>
                     {
+                        if (appsRowFlipping) return;   // (the highlight going into or out of the Apps row: nothing to build again)
                         if (IsBoardMode) { BoardRefreshLater(); return; }   // the Board's "All games" follows Playnite's list
-                        if (!ShowExtraRows && !(settings.ExtraRows && settings.HomeLayoutMode == 0 && settings.RowDesign == 0)) return;
+                        if (!ExtraRowsWanted) return;
                         if (rowsChangeTimer == null)
                         {
                             rowsChangeTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1.5) };
@@ -567,8 +583,11 @@ namespace KippixHelper
         private void RebuildExtraRows()
         {
             if (!IsFullscreen) return;
-            if (!settings.ExtraRows || settings.HomeLayoutMode != 0 || settings.RowDesign != 0) { ExtraRowsList.Clear(); Notify("ShowExtraRows"); return; }   // (Row: Lower only)
-            var keys = ExtraKeys().ToList();
+            if (!ExtraRowsWanted) { ExtraRowsList.Clear(); Notify("ShowExtraRows"); return; }   // (Row: Lower only)
+            var keys = settings.ExtraRows ? ExtraKeys().ToList() : new List<string>();
+            // (issue #11) "Running now": first when it's one of your rows, and there by itself with Keep browsing on
+            bool runRow = keys.Remove("running") || settings.RunKeepBrowsing;
+            if (runRow) keys.Insert(0, "running");
             double w = rowTileW, h = rowTileH;
             var shown = GamesInView();
             KippixShared.SafeWork.Queue(_ =>
@@ -585,10 +604,15 @@ namespace KippixHelper
                         List<Game> games;
                         switch (k)
                         {
+                            case "running":   // (whatever Playnite's filter or the hidden flag say: it's running), the last one started first
+                                games = new List<Game>();
+                                foreach (var r in Running.Snapshot().AsEnumerable().Reverse()) { var rg = api.Database.Games.Get(r.Id); if (rg != null) games.Add(rg); }
+                                break;
                             case "favourites": games = all.Where(g => IsFavouriteNow(g)).OrderByDescending(g => LastPlayedNow(g) ?? DateTime.MinValue).ToList(); break;
                             case "recent": games = all.Where(g => g.Added.HasValue).OrderByDescending(g => g.Added.Value).ToList(); break;
                             case "installed": games = all.Where(g => g.IsInstalled).OrderByDescending(g => g.LastActivity ?? DateTime.MinValue).ToList(); break;
                             case "never": games = all.Where(g => g.Playtime == 0).OrderByDescending(g => g.Added ?? DateTime.MinValue).ToList(); break;
+                            case "apps": games = new List<Game>(); break;   // (put in after the others: AppsRowBuild)
                             case "upnext":
                                 {
                                     // in the queue's order (a copy of it: the list changes on the UI thread)
@@ -618,28 +642,43 @@ namespace KippixHelper
                                     break;
                                 }
                         }
-                        if (shown != null) games = games.Where(g => shown.Contains(g.Id)).ToList();   // Playnite can only select what its filter shows
+                        if (shown != null && k != "running") games = games.Where(g => shown.Contains(g.Id)).ToList();   // Playnite can only select what its filter shows
                         if (games.Count > 0) built.Add(Tuple.Create(k, name, games.Take(40).ToList()));
                     }
+                    AppsRowBuild(built, keys, all);
                 }
                 catch (Exception ex) { logger.Warn("Kippix: extra rows: " + ex.Message); }
                 OnUi(() =>
                 {
                     int wasAt = extraRowAt;
+                    // (issue #11) Running now comes and goes above the others: where you were is found again by its row and game, not its number
+                    string wasKey = wasAt > 0 && wasAt <= ExtraRowsList.Count ? ExtraRowsList[wasAt - 1].Key : null;
+                    Guid wasGame = extraFocused != null ? extraFocused.GameId : Guid.Empty;
                     rowOffsets.Clear();
                     ExtraRowsList.Clear();
                     foreach (var b in built)
                     {
                         rowTilePlace = 0;
                         var row = new ExtraRow { Key = b.Item1, Title = b.Item2, TileHeight = h };
-                        foreach (var g in b.Item3) row.Tiles.Add(MakeRowTile(g, w, h));
+                        foreach (var g in b.Item3) { var tile = MakeRowTile(g, w, h); tile.RunRow = b.Item1 == "running"; row.Tiles.Add(tile); }
                         ExtraRowsList.Add(row);
                     }
                     Notify("ShowExtraRows");
                     if (wasAt > 0)
                     {
                         if (ExtraRowsList.Count == 0) LeaveExtraRows(true);
-                        else ui.BeginInvoke(new Action(() => GoToExtraRow(Math.Min(wasAt, ExtraRowsList.Count), 0)), DispatcherPriority.Loaded);
+                        else
+                        {
+                            int at = wasKey != null ? ExtraRowsList.ToList().FindIndex(r => r.Key == wasKey) + 1 : 0;
+                            if (at <= 0) at = Math.Min(wasAt, ExtraRowsList.Count);
+                            int col = 0;
+                            var tiles = ExtraRowsList[at - 1].Tiles;
+                            for (int i = 0; i < tiles.Count; i++) if (tiles[i].GameId == wasGame) { col = i; break; }
+                            // (a game page or a menu over the rows has the highlight as well, e.g. editing the game of a row's tile, which
+                            //  builds the rows again: taking the highlight back to the row closed the game page under the menu)
+                            if (StatusScreenUp() || openPanel != null || detailsOpen || confirmOpen || kbOpen) { extraRowAt = at; extraFocused = tiles[col]; }   // (Playnite's status screen has the highlight: back on the tile when it closes)
+                            else ui.BeginInvoke(new Action(() => GoToExtraRow(at, col)), DispatcherPriority.Loaded);
+                        }
                     }
                     LayoutExtraRows(false);
                     LoadRowCovers();
@@ -662,6 +701,7 @@ namespace KippixHelper
                 GameId = g.Id, Name = g.Name, Width = w, Height = h,
                 CoverFile = ShuffledCover(g, !string.IsNullOrEmpty(g.CoverImage) && !g.CoverImage.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? SafeFullPath(g.CoverImage) : g.CoverImage),
                 ShowInstalled = settings.BadgeInstalled && g.IsInstalled,
+                ShowRunning = settings.BadgeRunning && Running.IsRunning(g.Id),
                 ShowNew = settings.BadgeNew && IsNewGame(g),
                 AchText = settings.BadgeAch ? AchBadgeText(g.Id) : null,
                 HltbText = settings.BadgeHltb ? HltbBadgeText(g.Id, false) : null
@@ -720,6 +760,7 @@ namespace KippixHelper
         {
             Notify("HomeLabelOwn");
             Notify("HomeLabelText");
+            Notify("HintAText"); Notify("HintXText"); Notify("ShowXPlayHint");   // (issue #11) Running now: A Switch, X Close
             try
             {
                 var win = Application.Current != null ? Application.Current.MainWindow : null;
@@ -730,8 +771,24 @@ namespace KippixHelper
                 if (host == null || list == null || root == null) return;
                 double coverBottom;
                 double top = CoverTop(list, root, out coverBottom);
-                if (double.IsNaN(top)) top = root.ActualHeight - rowTileH - 60;
-                else if (mainRowShift != null) top -= mainRowShift.Y;   // where the row sits, not where it's sliding to
+                // (nothing to measure while Playnite's list is being filled again, as it is each time the highlight goes into or out
+                //  of the Apps row: then where the covers were last, not a guess. The guess put the Apps row 30 px higher than the
+                //  games, with its highlighted tile over the row's name)
+                //  (and the same while the games row is empty: CoverTop only guesses then)
+                bool measured = !double.IsNaN(top) && list.Items.Count > 0;
+                if (!measured && !double.IsNaN(lastCoverTop)) top = lastCoverTop;
+                else if (double.IsNaN(top)) top = root.ActualHeight - rowTileH - 60;
+                else { if (mainRowShift != null) top -= mainRowShift.Y; if (measured) lastCoverTop = top; }   // where the row sits, not where it's sliding to
+                if (!measured && double.IsNaN(lastCoverTop) && extraRowAt > 0 && !rowsLayoutAgain)
+                {
+                    // never measured (Playnite started on a filter with no games): once more when the list has the row's tiles in it
+                    rowsLayoutAgain = true;
+                    ui.BeginInvoke(new Action(() =>
+                    {
+                        try { if (list.Items.Count > 0) { LayoutExtraRows(true); ApplyHomeLayout(); } }
+                        finally { rowsLayoutAgain = false; }
+                    }), DispatcherPriority.ContextIdle);
+                }
                 double pitch = RowTitleH + rowTileH + RowGap;
                 // row k (1-based) sits with its tiles where the cover row's tiles are
                 double y = extraRowAt == 0 ? top + rowTileH + 70 - RowTitleH : top - RowTitleH - (extraRowAt - 1) * pitch;
@@ -787,6 +844,8 @@ namespace KippixHelper
         }
         private TranslateTransform mainRowShift;
         private double lastRowsTop = double.NaN;
+        private double lastCoverTop = double.NaN;   // where the games row's covers were when last measured (LayoutExtraRows)
+        private bool rowsLayoutAgain;
         private TranslateTransform carRowShift;
 
         /// <summary>The carousel slides up with Playnite's row (its own translate, beside Free move's).</summary>
@@ -806,12 +865,27 @@ namespace KippixHelper
             carRowShift.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(y, new Duration(TimeSpan.FromMilliseconds(animate && !ReduceMotionNow ? 320 : 0))) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
         }
 
+        /// <summary>
+        /// The controller's B in a row under the games: back up to the game you left, as Up from the first row and the keyboard's
+        /// Esc do. (The controller's B never reaches ExtraRowKey: it went to B's job on the home screen, the first game. From
+        /// the Apps row that was an app in the games row, which then left the row and took the highlight with it.)
+        /// </summary>
+        private bool ExtraRowBackKey(KeyEventArgs e)
+        {
+            if (extraRowAt == 0 || !ShowExtraRows || e.IsRepeat || IsPadRelease(e) || !IsBackKey(e)) return false;
+            if (confirmOpen || kbOpen || freeMove || IsMasterMoving || descReaderOpen) return false;
+            PlaySound("back");
+            LeaveExtraRows(true);
+            return true;
+        }
+
         /// <summary>Down from the games into the first extra row; Up / Down between rows; Up from the first back to the games.</summary>
         private bool ExtraRowKey(KeyEventArgs e)
         {
             if (!ShowExtraRows || openPanel != null || detailsOpen) return false;
             if (IsPadRelease(e)) return extraRowAt > 0 && (e.Key == Key.Up || e.Key == Key.Down || e.Key == Key.Left || e.Key == Key.Right);   // a let-go: nothing (but don't let it through either)
             if (extraRowAt > 0 && IsBackKey(e)) { PlaySound("back"); LeaveExtraRows(true); return true; }
+            if (extraRowAt > 0 && e.Key == Key.X && RunningRowX(true)) return true;   // (issue #11) the keyboard's X on a Running now tile: closes it (the controller's: ThemeApi.PadInput.cs)
             if (e.Key != Key.Up && e.Key != Key.Down && e.Key != Key.Left && e.Key != Key.Right) return false;
             var win = Application.Current.MainWindow;
             var games = UiTools.FindByName(win, "PART_ListGameItems");
@@ -870,6 +944,7 @@ namespace KippixHelper
             if (k < 1 || k > ExtraRowsList.Count) return;
             PlaySound("move");
             extraRowAt = k;
+            AppsRowSync();
             LayoutExtraRows(true);
             var row = ExtraRowsList[k - 1];
             int col = Math.Min(row.Tiles.Count - 1, screenCol + (int)Math.Round(RowOffset(row) / RowTileStep));
@@ -939,6 +1014,7 @@ namespace KippixHelper
         {
             if (extraRowAt == 0) return;
             extraRowAt = 0;
+            AppsRowSync();
             extraFocused = null;
             if (extraSelectTimer != null) extraSelectTimer.Stop();
             LayoutExtraRows(true);
@@ -975,10 +1051,11 @@ namespace KippixHelper
         private void OpenRowTile(RowTile t)
         {
             if (t == null) return;
+            if (t.RunRow) { RunningSwitchTo(t.GameId); return; }   // (issue #11) Running now: its window comes to the front
             PlaySound("select");
             extraFocused = t;
             try { api.MainView.SelectGame(t.GameId); } catch (Exception) { }
-            if (settings.SkipGamePage) { launchedDirectlyAt = DateTime.Now; try { api.StartGame(t.GameId); } catch (Exception) { } return; }
+            if (settings.SkipGamePage) { if (TrySwitchInsteadOfPlay(t.GameId)) return; launchedDirectlyAt = DateTime.Now; try { api.StartGame(t.GameId); } catch (Exception) { } return; }
             ui.BeginInvoke(new Action(() =>
             {
                 if (SelectedGameId() != t.GameId) return;   // Playnite's filter hides it: don't open another game's page
@@ -1123,7 +1200,7 @@ namespace KippixHelper
         /// <summary>(0.99.17) From the tick: the badge settings changed some other way (a preset, a layout, Getting started): the tiles again.</summary>
         private void BadgeSettingsTick()
         {
-            string sig = string.Join("|", settings.BadgeNew, settings.BadgeAch, settings.BadgeHltb, settings.BadgeFeatures, settings.BadgeFeatHide, settings.BadgeStore, settings.SlotPinBadge, settings.HomeLayoutMode);
+            string sig = string.Join("|", settings.BadgeNew, settings.BadgeAch, settings.BadgeHltb, settings.BadgeFeatures, settings.BadgeFeatHide, settings.BadgeStore, settings.SlotPinBadge, settings.HomeLayoutMode, settings.BadgeRunning);
             if (sig == badgeSigWas) return;
             bool first = badgeSigWas == null;
             badgeSigWas = sig;
@@ -1168,10 +1245,15 @@ namespace KippixHelper
             string h = any && settings.BadgeHltb && g != null ? HltbBadgeText(id, true) : null;
             SetBadge(c, "KX_BadgeHltb", h != null, "KX_BadgeHltbText", h);
             SetBadge(c, "KX_BadgeSlot", settings.SlotPinBadge && id != Guid.Empty && SlotOf(id) > 0, null, null);
+            // (issue #11) "Running": Playnite's own IsRunning shows it in the theme; what only Kippix's list knows is running (an app
+            // Playnite marks as stopped at once) is said here, on the pill's Tag (a card used again for another game: taken off)
+            var run = UiTools.FindByName(c, "KX_BadgeRunning");
+            object runTag = settings.BadgeRunning && id != Guid.Empty && Running.IsRunning(id) ? "on" : null;
+            if (run != null && !Equals(run.Tag, runTag)) run.Tag = runTag;
             BadgeCardExtras(c, any ? g : null);   // (r12) feature icons and store pill (ThemeApi.Badges.cs)
         }
 
-        private bool AnyBadges { get { return settings.BadgeNew || settings.BadgeAch || settings.BadgeHltb || settings.BadgeFeatures || settings.BadgeStore || (settings.SlotPinBadge && settings.SlotPins != null && settings.SlotPins.Count > 0); } }
+        private bool AnyBadges { get { return (settings.BadgeRunning && Running.Any) || settings.BadgeNew || settings.BadgeAch || settings.BadgeHltb || settings.BadgeFeatures || settings.BadgeStore || (settings.SlotPinBadge && settings.SlotPins != null && settings.SlotPins.Count > 0); } }
 
         private static void SetBadge(FrameworkElement container, string name, bool show, string textName, string text)
         {
