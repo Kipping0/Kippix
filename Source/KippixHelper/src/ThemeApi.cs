@@ -924,7 +924,7 @@ namespace KippixHelper
                 item.SetStaySilently(settings.TopBarStayVisible != null && settings.TopBarStayVisible.Contains(k));
                 item.StayChanged = OnStayChanged;
                 Shortcuts.Add(item);
-                if (item.IsPinned) LoadShortcutPicture(item);
+                LoadShortcutPicture(item);   // (1.0.4: the white icons are the theme's own files, so the settings list shows them too)
             }
             UpdateShortcutStatus();
         }
@@ -935,7 +935,19 @@ namespace KippixHelper
             if (item == null || item.Picture != null) return;
             var svc = MediaServices.FirstOrDefault(m => m.Key == item.Key);
             if (svc == null) return;
-            LoadMediaIcon(svc, img => item.Picture = img);
+            // (1.0.4) the top bar's own white icons (Images/Streaming), to match its other icons; the service's own colour icon otherwise
+            // (fetched only once it's in the top bar)
+            try
+            {
+                string own = Path.Combine(ThemeDir, "Images", "Streaming", svc.Key + ".png");
+                if (File.Exists(own))
+                {
+                    var img = Images.Load(own, 64);
+                    if (img != null) { item.Picture = img; return; }
+                }
+            }
+            catch (Exception) { }
+            if (item.IsPinned) LoadMediaIcon(svc, img => item.Picture = img);
         }
 
         private void OnPinChanged(ShortcutItem item)
@@ -1348,6 +1360,7 @@ namespace KippixHelper
             double cx = from.Left + from.Width / 2;
             var pick = all.Where(t => !t.Item2.IsEmpty && t.Item1.IsVisible).OrderBy(t => Math.Abs(t.Item2.Left + t.Item2.Width / 2 - cx)).Select(t => t.Item1).FirstOrDefault();
             if (pick == null) return false;
+            pick = SideBarEntry(pick);   // (1.0.4) down the side: the bottom one (or the top)
             PlaySound("move");
             Keyboard.Focus(pick);
             return true;

@@ -376,6 +376,42 @@ namespace KippixHelper
         public VerticalAlignment TopLeftAlignment { get { return settings.ShortcutsVertical ? VerticalAlignment.Top : VerticalAlignment.Center; } }
         public Thickness TopRightItemMargin { get { return settings.ShortcutsVertical ? new Thickness(0, 6, 0, 6) : new Thickness(0); } }
 
+        // (1.0.4, issue: Bencey17) shortcuts down the side: where Up from the games lands
+        public string ShortcutsStartText { get { return settings.ShortcutsStartTop ? Loc("LOC_KX_ShortcutsStartTop", "Top") : Loc("LOC_KX_ShortcutsStartBottom", "Bottom"); } }
+        public string ShortcutsStartTextNext { get { HookCycleNext(); return "›  " + (settings.ShortcutsStartTop ? Loc("LOC_KX_ShortcutsStartBottom", "Bottom") : Loc("LOC_KX_ShortcutsStartTop", "Top")); } }
+        private ICommand cycleShortcutsStartCommand;
+        public ICommand CycleShortcutsStartCommand
+        {
+            get
+            {
+                if (cycleShortcutsStartCommand == null) cycleShortcutsStartCommand = new RelayCommand(_ =>
+                {
+                    settings.ShortcutsStartTop = !settings.ShortcutsStartTop;
+                    SaveSettings();
+                    PlaySound("move");
+                    Notify("ShortcutsStartText");
+                });
+                return cycleShortcutsStartCommand;
+            }
+        }
+
+        /// <summary>
+        /// (1.0.4) Up from the games onto the shortcuts down the side: every one of them is as near across as the others, so it
+        /// took the first (the top) and you went down them backwards. Now the bottom one, the one next to the games (or the
+        /// top, Top bar › Up from the games starts at).
+        /// </summary>
+        private FrameworkElement SideBarEntry(FrameworkElement pick)
+        {
+            if (!settings.ShortcutsVertical || pick == null) return pick;
+            var right = UiTools.FindByName(Application.Current.MainWindow, "KX_TopRight");
+            if (right == null || !right.IsAncestorOf(pick)) return pick;
+            var all = new List<UIElement>();
+            CollectFocusable(right, all);
+            var them = all.OfType<FrameworkElement>().Where(x => x.IsVisible && x.ActualHeight > 1).ToList();
+            if (them.Count == 0) return pick;
+            return settings.ShortcutsStartTop ? them[0] : them[them.Count - 1];
+        }
+
         private void NotifyTopBarShape()
         {
             foreach (string n in new[] { "ShortcutsVertical", "ShortcutsOrientation", "TopBarRowSpan", "TopRightAlignment", "TopRightItemMargin", "TopLeftAlignment" }) Notify(n);

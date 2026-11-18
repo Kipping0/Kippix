@@ -24,6 +24,10 @@ namespace KippixHelper
         public bool PinRestart = false;
         public bool PinShutdown = false;
         public List<string> ShortcutOrder;
+        public int StreamOpenIn = 0;               // (1.0.4) Media: 0 Automatic (its app / YouTube here / else full screen), 1 full screen in your browser, 2 a browser window
+        public int PadStartDoes = 0;               // (1.0.4) Menu (Start) on the home screen / game page: 0 Playnite's game options, 1 Kippix's game options, 2 Search, 3 nothing
+        public int PadViewDoes = 0;                // (1.0.4) View (Select) there: 0 Playnite's menu, 1 Kippix's menu (the profile menu), 2 Settings, 3 nothing
+        public bool ShortcutsStartTop = false;     // (1.0.4) shortcuts down the side: Up from the games lands on the bottom one (false) or the top one
         public bool ShortcutsVertical = false;     // the shortcut bar stands down the right side instead of across the top
         public int ProfileShow = 0;                // the profile button: 0 name and picture, 1 name only, 2 picture only
         public bool SettingsInProfileMenu = false; // Settings & Customisation at the bottom of the profile menu

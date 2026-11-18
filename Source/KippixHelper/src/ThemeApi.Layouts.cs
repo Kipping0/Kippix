@@ -90,7 +90,7 @@ namespace KippixHelper
         private static readonly HashSet<string> TopBarFields = new HashSet<string>
         {
             "PinSearch", "PinAchievements", "PinDiscord", "PinAudio", "PinHibernate", "PinDownloads", "PinStore", "PinBattery", "PinSleep", "PinRestart",
-            "PinShutdown", "PinGallery", "ShortcutOrder", "PinClock", "ShortcutsVertical", "ProfileShow", "SettingsInProfileMenu", "HideTopOptions", "ExtraPins", "AutoHideTopBar", "TopBarKeepClock", "TopBarStayVisible", "ShowNotificationIcon", "Clock24h", "ShowBatteryPercent"
+            "PinShutdown", "PinGallery", "ShortcutOrder", "PinClock", "ShortcutsVertical", "ShortcutsStartTop", "ProfileShow", "SettingsInProfileMenu", "HideTopOptions", "ExtraPins", "AutoHideTopBar", "TopBarKeepClock", "TopBarStayVisible", "ShowNotificationIcon", "Clock24h", "ShowBatteryPercent"
         };
 
         private static string FieldGroup(string f)

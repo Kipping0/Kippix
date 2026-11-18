@@ -235,6 +235,15 @@ namespace KippixOverlay
             return true;
         }
 
+        /// <summary>(1.0.4) A key with a modifier held (Shift+Tab, Alt+Left).</summary>
+        public static void TapCombo(byte mod, byte vk)
+        {
+            Key(mod, false);
+            Key(vk, false);
+            Key(vk, true);
+            Key(mod, true);
+        }
+
         public static void TapKey(byte vk)
         {
             Key(vk, false);
@@ -266,8 +275,12 @@ namespace KippixOverlay
         /// <paramref name="waitMs"/> is it forced closed (taskkill /T /F, as before, which lost whatever it hadn't saved yet).
         /// Runs off the calling thread; <paramref name="done"/> gets true when it closed by itself.
         /// </summary>
+        /// <summary>(1.0.4) Asks one window to close (its close button: WM_CLOSE).</summary>
+        public static bool CloseWindow(IntPtr h) { return h != IntPtr.Zero && PostMessage(h, 0x0010, IntPtr.Zero, IntPtr.Zero); }
+
         public static void CloseGracefully(uint pid, int waitMs, Action<bool> done)
         {
+            GameFreeze.UnfreezeIf(pid);   // (1.0.4) a frozen game can't answer "close"
             new System.Threading.Thread(() =>
             {
                 bool gentle = false;

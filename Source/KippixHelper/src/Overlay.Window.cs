@@ -1294,6 +1294,7 @@ namespace KippixOverlay
 
         public void CloseOverlay(Action after)
         {
+            GameFreeze.Unfreeze();   // (1.0.4) the game carries on as the overlay goes (before it's given the focus back)
             if (!IsOpen) return;
             IsOpen = false;
             closingSince = DateTime.UtcNow;

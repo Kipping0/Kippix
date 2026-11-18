@@ -132,13 +132,30 @@ namespace KippixHelper
         /// <summary>Splash Screen will show its own picture for this game launch (so ours keeps out of the way).</summary>
         private bool SplashScreenTakesOver(Game g)
         {
-            if (!settings.SplashStandAside || !PluginInstalled(SplashScreenId)) return false;
+            return settings.SplashStandAside && SplashScreenShows(g);
+        }
+
+        /// <summary>
+        /// (1.0.4, issue: Bencey17) Splash Screen will show its picture / video for this launch (installed, on for fullscreen, not
+        /// switched off for the game). Its window sits on top by itself; Kippix mustn't hold Playnite over it (it did: the
+        /// launch screen covered Splash Screen's from the home screen and the game page alike).
+        /// </summary>
+        private bool SplashScreenShows(Game g)
+        {
+            if (!PluginInstalled(SplashScreenId)) return false;
             try
             {
                 if (g != null && g.Features != null && g.Features.Any(f => f != null && string.Equals(f.Name, "[Splash Screen] Disable", StringComparison.OrdinalIgnoreCase))) return false;
                 var cfg = PluginConfig(SplashScreenId);
                 object on = Cfg(cfg, "GeneralSplashSettings", "FullscreenModeSettings", "IsEnabled");
-                return !(on is bool) || (bool)on;
+                if (on is bool && !(bool)on) return false;
+                // (1.0.4) a picture or a video to show (with both off, or the picture skipped for this game and no videos, it shows nothing)
+                object img = Cfg(cfg, "GeneralSplashSettings", "FullscreenModeSettings", "EnableBackgroundImage");
+                object vid = Cfg(cfg, "GeneralSplashSettings", "FullscreenModeSettings", "EnableVideos");
+                bool picture = !(img is bool) || (bool)img;
+                bool videos = !(vid is bool) || (bool)vid;
+                if (picture && g != null && g.Features != null && g.Features.Any(f => f != null && string.Equals(f.Name, "[Splash Screen] Skip splash image", StringComparison.OrdinalIgnoreCase))) picture = false;
+                return picture || videos;
             }
             catch (Exception) { return true; }
         }

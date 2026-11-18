@@ -4986,4 +4986,42 @@
     <sys:String x:Key="LOC_KX_BoardKeepSpotOn">After a page turn the highlight stays where it was</sys:String>
     <sys:String x:Key="LOC_KX_BoardKeepSpotOff">Off: after a page turn the highlight goes to the side the new page came in from</sys:String>
     <sys:String x:Key="LOC_KX_DetShade">Shade over the picture</sys:String>
+    <!-- 1.0.4: shortcuts down the side, where Up from the games lands -->
+    <sys:String x:Key="LOC_KX_ShortcutsStart">Up from the games starts at</sys:String>
+    <sys:String x:Key="LOC_KX_ShortcutsStartSub">Which end of the side shortcuts you land on</sys:String>
+    <sys:String x:Key="LOC_KX_ShortcutsStartBottom">Bottom</sys:String>
+    <sys:String x:Key="LOC_KX_ShortcutsStartTop">Top</sys:String>
+    <!-- 1.0.4: in-game overlay, freeze the game while it's open -->
+    <sys:String x:Key="LOC_KX_OverlayFreeze">Freeze the game while it's open</sys:String>
+    <sys:String x:Key="LOC_KX_OverlayFreezeSub">Emulators read the controller even behind the overlay. This pauses the game until the overlay closes (never online games)</sys:String>
+    <sys:String x:Key="LOC_KX_OverlayFreezeOff">Off</sys:String>
+    <sys:String x:Key="LOC_KX_OverlayFreezeEmu">Emulators only</sys:String>
+    <sys:String x:Key="LOC_KX_OverlayFreezeAll">All games</sys:String>
+    <!-- 1.0.4: Menu (Start) and View (Select) buttons -->
+    <sys:String x:Key="LOC_KX_SecMenuView">MENU AND VIEW BUTTONS</sys:String>
+    <sys:String x:Key="LOC_KX_PadStartRow">Menu (Start): {0}</sys:String>
+    <sys:String x:Key="LOC_KX_PadStartSub">On the home screen and the game page. Playnite's game options, Kippix's, Search or nothing</sys:String>
+    <sys:String x:Key="LOC_KX_PadViewRow">View (Select): {0}</sys:String>
+    <sys:String x:Key="LOC_KX_PadViewSub">On the home screen and the game page. Playnite's menu, Kippix's menu, Settings or nothing</sys:String>
+    <sys:String x:Key="LOC_KX_PadViewSubMoved">Playnite's menu is still in Settings › Help</sys:String>
+    <sys:String x:Key="LOC_KX_PadDoesPlayniteGame">Playnite's game options</sys:String>
+    <sys:String x:Key="LOC_KX_PadDoesKippixGame">Kippix's game options</sys:String>
+    <sys:String x:Key="LOC_KX_PadDoesSearch">Search</sys:String>
+    <sys:String x:Key="LOC_KX_PadDoesNothing">Nothing</sys:String>
+    <sys:String x:Key="LOC_KX_PadDoesPlayniteMenu">Playnite's menu</sys:String>
+    <sys:String x:Key="LOC_KX_PadDoesKippixMenu">Kippix's menu</sys:String>
+    <sys:String x:Key="LOC_KX_PadDoesSettings">Settings</sys:String>
+    <sys:String x:Key="LOC_KX_HelpPlayniteMenu">Playnite's menu</sys:String>
+    <sys:String x:Key="LOC_KX_HelpPlayniteMenuSub">Playnite's own settings, desktop mode, exit and more</sys:String>
+    <sys:String x:Key="LOC_KX_PlayniteGameMenu">Playnite's options for this game</sys:String>
+    <sys:String x:Key="LOC_KX_PlayniteGameMenuSub">Playnite's own game menu (Menu does something else now)</sys:String>
+    <!-- 1.0.4: streaming services, how they open (profile menu > Media > Opens in) -->
+    <sys:String x:Key="LOC_KX_StreamOpenRow">Opens in: {0}</sys:String>
+    <sys:String x:Key="LOC_KX_StreamOpenSub">Automatic, full screen in your browser, or a browser window</sys:String>
+    <sys:String x:Key="LOC_KX_StreamOpenAuto">Automatic</sys:String>
+    <sys:String x:Key="LOC_KX_StreamOpenFull">Full screen in your browser</sys:String>
+    <sys:String x:Key="LOC_KX_StreamOpenWindow">Your browser, in a window</sys:String>
+    <sys:String x:Key="LOC_KX_MediaHelpAuto">Netflix, Prime Video and Crunchyroll open their Windows apps when they're installed, otherwise full screen in your browser, as YouTube does. The controller drives the browser; Guide brings up the overlay to close it.</sys:String>
+    <sys:String x:Key="LOC_KX_MediaHelpFull">Every service opens full screen in your browser, like a TV app. The controller drives the browser; Guide brings up the overlay to close it.</sys:String>
+    <sys:String x:Key="LOC_KX_MediaHelpWindow">Every service opens its website in your browser, in a normal window.</sys:String>
 </ResourceDictionary>

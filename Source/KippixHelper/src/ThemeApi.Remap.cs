@@ -331,6 +331,7 @@ namespace KippixHelper
                                            }) });
                 }
             }
+            AddStartViewRows(rows);   // (1.0.4) Menu (Start) and View (Select): Playnite's menus, Kippix's or nothing (ThemeApi.StartView.cs)
             rows.Add(new PickRow { IsHeader = true, Text = Loc("LOC_KX_RmFixedHeader", "PLAYNITE'S OWN (CAN'T CHANGE)") });
             Action<string, string, string> fixedRow = (k, t, s) => rows.Add(new PickRow { Key = k, IsInfo = true, Icon = "lock", Text = t, Sub = s });
             fixedRow("f.a", Loc("LOC_KX_RmFixedA", "A: choose, open"), Loc("LOC_KX_RmFixedASub", "A and B can be swapped in Playnite's own settings (Input)"));
@@ -348,6 +349,8 @@ namespace KippixHelper
                                        settings.GuideGoesHome = true;
                                        settings.HomeButton = 0;
                                        settings.HomeBackTo = 0;
+                                       settings.PadStartDoes = 0;   // (1.0.4)
+                                       settings.PadViewDoes = 0;
                                        remapHeld.Clear();
                                        SaveSettings();
                                        PlaySound("select");

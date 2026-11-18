@@ -289,6 +289,8 @@ namespace KippixOverlay
                 d => { c.VibrationStrength = OverlayConfig.Wrap(c.VibrationStrength + d, OverlayConfig.VibrationNames.Length); int vs = c.VibrationStrength; if (plugin.Poller != null) plugin.Poller.Pulse(vs == 0 ? 50 : vs == 1 ? 60 : 70, vs == 2 ? 0.12 : 0.0, vs == 0 ? 0.22 : vs == 1 ? 0.4 : 0.6); }));
             l.Add(Option("\uE769", "When the overlay opens", () => OverlayConfig.WhenOpenedNames[OverlayConfig.Wrap(c.WhenOpened, OverlayConfig.WhenOpenedNames.Length)],
                 d => c.WhenOpened = OverlayConfig.Wrap(c.WhenOpened + d, OverlayConfig.WhenOpenedNames.Length)));
+            l.Add(Option("\uE769", "Freeze the game while it's open", () => GameFreeze.ModeNames[OverlayConfig.Wrap(c.FreezeGame, GameFreeze.ModeNames.Length)],
+                d => c.FreezeGame = OverlayConfig.Wrap(c.FreezeGame + d, GameFreeze.ModeNames.Length)));
             l.Add(Note("\uE946", "Pause: the overlay takes the focus, so games that pause when you switch away pause. Online games with anti-cheat may not like that: Let it keep running leaves the game alone (it keeps the focus; it may see your button presses; also stops a black flash in some full-screen games). Automatic does that for online / MMO games. From the next time it opens."));
 
             l.Add(Header("Achievement pop-ups"));

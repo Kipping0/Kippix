@@ -88,7 +88,7 @@ namespace KippixHelper
                     if (game != null && sel != null && sel.Id == game.Id && !direct) launchPageBg = CurrentPageBackground(out launchPageBgWhat);
                     else launchPageBgWhat = direct ? "skipped (started from a tile)" : sel == null ? "skipped (nothing selected)" : "skipped (another game selected: " + sel.Name + ")";
                 }
-                catch (Exception) { launchPageBg = null; } try { HoldFrontWhileStarting(); } catch (Exception ex) { logger.Warn("Kippix: launch front: " + ex.Message); } try { PrepareLaunchScreen(); HookLaunchScreen(); FillLaunchArt(); } catch (Exception) { } });
+                catch (Exception) { launchPageBg = null; } try { if (SplashScreenShows(game)) logger.Info("Kippix: launch: Splash Screen shows its own screen (Playnite isn't held in front over it)"); else HoldFrontWhileStarting(); } catch (Exception ex) { logger.Warn("Kippix: launch front: " + ex.Message); } try { PrepareLaunchScreen(); HookLaunchScreen(); FillLaunchArt(); } catch (Exception) { } });
         }
 
         /// <summary>When the "game is starting" screen appears: its art fades in (or, if the game is already running, fades out).</summary>

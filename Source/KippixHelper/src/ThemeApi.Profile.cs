@@ -210,6 +210,7 @@ namespace KippixHelper
                 ProfileRows.Add(row);
                 LoadMediaIcon(svc, row);
             }
+            AddStreamOpenRow();   // (1.0.4) Opens in: Automatic / full screen in your browser / a browser window (ThemeApi.StreamOpen.cs)
         }
 
         /// <summary>
@@ -308,7 +309,7 @@ namespace KippixHelper
         private void OpenMedia(MediaService svc, string app)
         {
             PlaySound("select");
-            if (svc.InTheme) { ClosePanels(); OpenBrowser(svc.Web); return; }
+            if (OpenMediaAsSet(svc, app)) return;   // (1.0.4) full screen in your browser, a browser window, or YouTube here (Media › Opens in)
             ClosePanels();
             try
             {

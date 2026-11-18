@@ -104,6 +104,55 @@ namespace KippixHelper
             Notify("OverlayWhenOpenedText");
         }
 
+        /// <summary>(1.0.4) The overlay's "Freeze the game while it's open": Off / Emulators only / All games.</summary>
+        public string OverlayFreezeText
+        {
+            get
+            {
+                int m = 1;
+                try { var c = OverlayConfigNow(); if (c != null) m = c.FreezeGame; } catch (Exception) { }
+                switch (m)
+                {
+                    case 0: return Loc("LOC_KX_OverlayFreezeOff", "Off");
+                    case 2: return Loc("LOC_KX_OverlayFreezeAll", "All games");
+                }
+                return Loc("LOC_KX_OverlayFreezeEmu", "Emulators only");
+            }
+        }
+
+        private ICommand cycleOverlayFreeze;
+        public ICommand CycleOverlayFreezeCommand
+        {
+            get { if (cycleOverlayFreeze == null) cycleOverlayFreeze = new RelayCommand(_ => CycleOverlayFreeze()); return cycleOverlayFreeze; }
+        }
+
+        private void CycleOverlayFreeze()
+        {
+            try
+            {
+                int n = KippixOverlay.GameFreeze.ModeNames.Length;
+                var ov = plugin.Overlay;
+                if (ov != null)
+                {
+                    var c = ov.ReloadConfig();
+                    c.FreezeGame = (c.FreezeGame + 1) % n;
+                    ov.SaveConfig();
+                }
+                else
+                {
+                    string path = Path.Combine(api.Paths.ExtensionsDataPath, KippixOverlay.OverlayPlugin.PluginId.ToString(), "config.json");
+                    var c = KippixOverlay.OverlayConfig.TryLoad(path);
+                    if (c == null) { PlaySound("back"); return; }   // (being written just then: nothing saved over it)
+                    c.FreezeGame = (c.FreezeGame + 1) % n;
+                    c.Clamp();
+                    c.Save(path);
+                }
+            }
+            catch (Exception ex) { logger.Warn("Kippix: overlay setting: " + ex.Message); }
+            PlaySound("move");
+            Notify("OverlayFreezeText");
+        }
+
         /// <summary>Under the switch: running, or what happens at the next start.</summary>
         public string OverlayStateText
         {
