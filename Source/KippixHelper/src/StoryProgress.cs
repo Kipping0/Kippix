@@ -36,7 +36,10 @@ namespace KippixHelper
     ///     (by chapter / act number when they have one, otherwise by how many players have each: fewer players get further),
     ///     and you're placed after the furthest one you have: 4 of 7 = about 57%. Play time against HowLongToBeat's main story
     ///     moves it on between two of them (never past the next one you haven't got).
-    ///  3. Play time against HowLongToBeat (main story, or main + extras, or completionist), never more than 99%.
+    ///  3. Play time against HowLongToBeat's main story. Only where that says something: not for a game with no main story
+    ///     time (extras / completionist only), nor for one that's multiplayer only by its features, tags and categories (a
+    ///     football game with 100 hours isn't "Story ~99%"), nor once the play time has reached the story time (98% at most:
+    ///     past that, and all the more at several times the story time, the time played no longer says where you are).
     ///  4. The share of achievements unlocked, labelled as that (it isn't the story).
     /// Null when there's nothing to go on.
     /// </summary>
@@ -59,7 +62,36 @@ namespace KippixHelper
 
         public static readonly string[] FinishedStatuses = { "beaten", "completed", "finished", "100%", "platinum" };
 
-        public static ProgressResult Estimate(List<ProgressAch> ach, double playedSeconds, double hltbStoryHours, double hltbExtrasHours, double hltbCompleteHours, string status, IEnumerable<string> extraFinished)
+        // the game's feature / tag / category names that say it's played with others, and the ones that say it has a single-player side
+        private static readonly Regex MultiLabel = new Regex(@"(multi-?player|\bonline\b|\bpvp\b|\bmmo|\bco-?op\b)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        private static readonly Regex SoloLabel = new Regex(@"(single[\s-]?player|campaign|story|^\s*play:\s*solo\s*$)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+        /// <summary>The names of the game's features, tags and categories (what Estimate's labels are).</summary>
+        public static List<string> LabelsOf(Playnite.SDK.Models.Game g)
+        {
+            var names = new List<string>();
+            if (g == null) return names;
+            try { if (g.Features != null) names.AddRange(g.Features.Where(x => x != null && x.Name != null).Select(x => x.Name)); } catch (Exception) { }
+            try { if (g.Tags != null) names.AddRange(g.Tags.Where(x => x != null && x.Name != null).Select(x => x.Name)); } catch (Exception) { }
+            try { if (g.Categories != null) names.AddRange(g.Categories.Where(x => x != null && x.Name != null).Select(x => x.Name)); } catch (Exception) { }
+            return names;
+        }
+
+        /// <summary>Multiplayer only: a label says multiplayer / online / PvP / MMO / co-op and none says single player, campaign, story or "Play: Solo".</summary>
+        internal static bool MultiplayerOnly(IEnumerable<string> labels)
+        {
+            if (labels == null) return false;
+            bool multi = false;
+            foreach (var l in labels)
+            {
+                if (string.IsNullOrWhiteSpace(l)) continue;
+                if (SoloLabel.IsMatch(l)) return false;
+                if (MultiLabel.IsMatch(l)) multi = true;
+            }
+            return multi;
+        }
+
+        public static ProgressResult Estimate(List<ProgressAch> ach, double playedSeconds, double hltbStoryHours, double hltbExtrasHours, double hltbCompleteHours, string status, IEnumerable<string> extraFinished, IEnumerable<string> labels)
         {
             string st = (status ?? "").Trim().ToLowerInvariant();
             var finishedNames = new HashSet<string>(FinishedStatuses);
@@ -94,7 +126,10 @@ namespace KippixHelper
             }
 
             // ---- play time against HowLongToBeat ----
-            if (byTime.HasValue)
+            // (only against a main story time, and not for a multiplayer-only game: neither has a story to be part-way through;
+            //  and only while the play time is short of that story time: at or past it the time says nothing about where you
+            //  are (18 hours of chess against a 2 hour "story" isn't "Story ~99%"), so there's no estimate, not one pinned at 99)
+            if (byTime.HasValue && hltbStoryHours > 0 && byTime.Value < 0.985 && !MultiplayerOnly(labels))
             {
                 int pct = (int)Math.Round(Math.Max(0, Math.Min(0.99, byTime.Value)) * 100);
                 return new ProgressResult { Percent = pct, Source = "playtime", Short = string.Format(L("LOC_KX_StpStory", "Story ~{0}%"), pct), Basis = L("LOC_KX_StpBasisTime", "estimate from play time") };
@@ -104,7 +139,7 @@ namespace KippixHelper
             if (ach != null && ach.Count > 0)
             {
                 int pct = (int)Math.Round(100.0 * ach.Count(a => a.Unlocked) / ach.Count);
-                return new ProgressResult { Percent = pct, Source = "achievements", Short = string.Format(L("LOC_KX_StpAch", "Achievements {0}%"), pct), Basis = L("LOC_KX_StpBasisAch", "no story to go by") };
+                return new ProgressResult { Percent = pct, Source = "achievements", Short = string.Format(L("LOC_KX_StpAch", "Achievements {0}%"), pct) };   // (says what it is: no basis after it)
             }
             return null;
         }
