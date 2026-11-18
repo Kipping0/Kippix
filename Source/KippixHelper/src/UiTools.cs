@@ -140,6 +140,9 @@ namespace KippixHelper
                 var list = FindByName(MainWindow(), listName) as ItemsControl;
                 if (list == null) return;
                 var container = list.ItemContainerGenerator.ContainerFromItem(item) as DependencyObject;
+                // a row that was moved keeps the highlight, so nothing scrolls by itself: its whole row is brought into view
+                var row = container as FrameworkElement;
+                if (row != null) row.BringIntoView();
                 var part = container != null ? FindByName(container, partName) : null;
                 if (part != null) Keyboard.Focus(part);
             }
