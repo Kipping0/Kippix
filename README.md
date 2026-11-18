@@ -1,7 +1,4 @@
 <p align="center">
-  <img src="docs/images/kippix-logo.png" alt="Kippix" width="360">
-</p>
-<p align="center">
   <img src="docs/images/kippix-logo.png" alt="Kippix" width="360"><br>
   <a href="../../releases"><img src="https://img.shields.io/github/downloads/Kipping0/Kippix/total?label=downloads&color=8a2be2" alt="Total downloads"></a>
 </p>
