@@ -772,7 +772,7 @@ namespace KippixHelper
 
         private void ReminderTick()
         {
-            if (!settings.SessionReminder || !gameRunningNow) return;
+            if (!settings.SessionReminder || !AnyRunning) return;
             int every = Math.Max(15, settings.SessionReminderMinutes);
             double minutes = (DateTime.Now - sessionStart).TotalMinutes;
             int due = (int)(minutes / every);

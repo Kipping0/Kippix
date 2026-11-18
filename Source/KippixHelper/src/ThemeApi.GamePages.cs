@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -516,7 +516,7 @@ namespace KippixHelper
                 var g = PanelGame();
                 if (g == null) return;
                 PlaySound("select");
-                OpenBrowser("https://howlongtobeat.com/?q=" + Uri.EscapeDataString(g.Name));
+                OpenLink("https://howlongtobeat.com/?q=" + Uri.EscapeDataString(g.Name));
             });
             DetAchCommand = new RelayCommand(_ => { PlaySound("select"); if (OpenGameAchievementsCommand != null && OpenGameAchievementsCommand.CanExecute(null)) OpenGameAchievementsCommand.Execute(null); });
             DetScoresCommand = new RelayCommand(_ =>
@@ -525,7 +525,7 @@ namespace KippixHelper
                 if (g == null) return;
                 PlaySound("select");
                 var link = g.Links != null ? g.Links.FirstOrDefault(l => l != null && !string.IsNullOrEmpty(l.Url) && (l.Url.IndexOf("metacritic.com", StringComparison.OrdinalIgnoreCase) >= 0 || l.Url.IndexOf("opencritic.com", StringComparison.OrdinalIgnoreCase) >= 0)) : null;
-                OpenBrowser(link != null ? link.Url : "https://www.metacritic.com/search/" + Uri.EscapeDataString(g.Name) + "/");
+                OpenLink(link != null ? link.Url : "https://www.metacritic.com/search/" + Uri.EscapeDataString(g.Name) + "/");
             });
             OpenDescReaderCommand = new RelayCommand(_ => OpenDescReader());
             ShowLowerPageCommand = new RelayCommand(_ => { if (detailsOpen && ShowDetMore) { PlaySound("move"); DetailsScrollTo(!detMoreDown, true); } });
@@ -782,7 +782,7 @@ namespace KippixHelper
             return true;
         }
         /// <summary>How long to beat in the info (the How long to beat card stays as it is): the times switched on, when the game has them.</summary>
-        public bool DetInfoShowHltb { get { return DetInfoOn("hltb") && !string.IsNullOrEmpty(DetInfoHltbText); } }
+        public bool DetInfoShowHltb { get { return DetInfoOn("hltb") && !string.IsNullOrEmpty(DetInfoHltbText) && !DetIsApp; } }
         /// <summary>(0.88) the "HowLongToBeat" label at the start of that line (off: just the times)</summary>
         public bool DetInfoShowHltbLabel { get { return DetInfoOn("hltblabel"); } }
         public string DetInfoHltbText

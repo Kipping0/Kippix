@@ -44,9 +44,10 @@ namespace KippixHelper
         public bool ShowNotificationIcon = true;
         public bool Clock24h = true;
         public bool ShowBatteryPercent = true;
+        public int BatterySource = 0;              // the top bar battery: 0 the controller's, 1 this device's own (a handheld, a laptop; the controller's on a PC without one)
         // Sizes: 0 small, 1 medium, 2 large, 3 extra large
         public int HintsSize = 1;
-        public bool LogoBalance = true;   // every logo about the same room on screen, whatever its shape (ThemeApi.LogoBalance.cs)
+        public bool LogoBalance = false;   // every logo about the same room on screen, whatever its shape (ThemeApi.LogoBalance.cs)
         public int LogoSize = 1;
         public int InfoSize = 1;
         // Game cards: pixels up (+) or down (-) from the default spot
@@ -153,6 +154,7 @@ namespace KippixHelper
         public int BoardCols = 5, BoardRows = 3;   // the grid the cards snap to
         public bool BoardSnap = true;              // moving / sizing in whole grid squares (off: small steps)
         public int BoardPageAxis = 0;              // past the edge to the next page of games: 0 Left / Right, 1 Up / Down
+        public bool BoardKeepSpot = true;          // (1.0.3) a page turn keeps the highlight on the same tile (off: it goes to the side the page came in from)
         public bool BoardSlideOne = false;         // (1.0.2) past the edge: every tile moves along one game (one new game comes in), not a whole new page
         public int BoardIndicator = 0;             // 0 dots, 1 "2 / 5", 2 hidden
         public int BoardLiveSeconds = 8;           // live tiles change this often
@@ -162,6 +164,7 @@ namespace KippixHelper
         public int BgChangeDelay = 150;            // (0.99.7) ms after moving to another game before the home background changes (0–400)
         public bool PreviewSound = false;
         public bool SkipGamePage = false;          // A plays the game instead of opening the game page
+        public bool RunKeepBrowsing = false;       // (issue #11) apps and games stay open while you carry on in Playnite: its "X is running" screen closes itself, and music, sounds and the rest come back while Playnite is in front
 
         // Game page extras
         public bool DetShowOptionsButton = true;
@@ -261,6 +264,14 @@ namespace KippixHelper
         public string HomeBgColor = "#0E1014";
         // ---- round 12 (agent C): HomeBgMode 4 = the game's trailer, muted (live background), 5 = slideshow of the game's pictures ----
         public bool LiveSlideWeb = true;             // Slideshow: also the store's screenshots (Steam games)
+        // (issue #13) Background > Gameplay video behind the games (ThemeApi.HomeVideo.cs): a muted clip of the highlighted game over its art
+        public bool HomeVideo = false;               // off unless you turn it on
+        public int HomeVideoMode = 0;                // (issue #21) 0 fills the background, 1 picture in picture: a small box over the art, above the games
+        public int HomeVideoDelayMs = 1500;          // how long the highlight rests on a game before its video starts
+        public bool HomeVideoDownload = true;        // no video of its own: the Steam store trailer may be downloaded
+        public bool HomeVideoOnBattery = false;      // a handheld on battery: it plays all the same (off: paused with the other live backgrounds)
+        public int HomeVideoSkipSeconds = 0;         // starts this far in (and loops back to there): trailers open on a ratings card or a logo; only clips over 30 s
+        public string HomeVideoMediaDir = "";        // ES-DE's media folder (downloaded_media); empty: found by itself
         // Look and feel › Intro and outro: 0 none, 2 your own video (IntroVideo / OutroVideo: a copy in ExtensionsData\intro\), (0.99.66) 1 (the old animated logo) and 3 (Kippix's own video) are gone: read as 0
         public int IntroMode = 0;                    // (0.99.66: none unless you choose a video of your own)
         public string IntroVideo = "";
@@ -303,6 +314,8 @@ namespace KippixHelper
         public string ItadApiKey = "";             // IsThereAnyDeal key pasted in desktop settings, DPAPI encrypted
         public int BrowserCursorSpeed = 3;         // 1 slowest .. 5 fastest
         public double BrowserZoom = 0;             // Chromium zoom level (0 = 100%, each 1 = x1.2)
+        public bool BrowserAutoKeyboard = true;    // the keyboard comes up when you press A on a text box on a page
+        public int LinksOpenIn = 0;                // links to read (news, a game's links, guides): 0 the theme's browser, 1 Windows' default browser
         public bool StoreResellers = false;
         public bool StoreHideOwned = false;        // hide games already in the Playnite library from store lists
         public bool StoreHideFree = false;         // hide free games from store lists (not the wishlist or "Free games")
@@ -366,8 +379,8 @@ namespace KippixHelper
         public int GallerySlideSeconds = 6;
 
         // Home: one row or a grid, extra rows, tile badges
-        public int HomeLayoutMode = 0;             // 0 row, 1 grid, 2 a list down one side, 3 board, 4 manual board, 5 folders, 6 mosaic
-        public bool LibraryDownOpens = true;       // Row: Down from the games (or from the last row under them) opens the library view: every game as a mosaic, B goes back
+        public int HomeLayoutMode = 0;             // 0 row, 1 grid, 2 a list down one side, 3 board, 4 manual board, 5 folders (6 was Mosaic: taken out in 1.0.3, the library view still uses its panel)
+        public bool LibraryDownOpens = false;       // Row: Down from the games (or from the last row under them) opens the library view: every game as a mosaic, B goes back
         public int JustRows = 3;                   // mosaic: rows on screen (2-5): the height its rows aim for (each row ends up a little over or under, to fill the width)
         // Folders (HomeLayoutMode 5): folder tiles on the home screen, each opening its own games
         public List<HomeFolder> Folders = new List<HomeFolder>();   // All games (Id "all") first, then yours in the order they were made
@@ -399,6 +412,8 @@ namespace KippixHelper
         public List<string> WishRemoveFromSteam = new List<string>();   // Steam app ids taken off the wishlist here, still to take off Steam's   // "steam:123" / "gog:456" taken off here: not brought back
         public List<string> ExtraPins = new List<string> { "quick" };   // top bar shortcuts added in 0.32 that are pinned
         public bool InstalledOnly = false;         // Sort and show: only installed games on the home screen, whatever filter is on
+        public bool SortShuffle = false;           // Sort and show: the games in a random order (ThemeApi.SortShuffle.cs)
+        public string SortShuffleOver = "";        // ... Playnite's own sort when it was chosen (another one since: the shuffle is over)
         public bool OneTilePerGame = false;        // Sort and show: a game that's in the library more than once shows as one tile (ThemeApi.Copies.cs)
         public List<string> CopyPicks = new List<string>();    // ... the copy chosen by hand to be that tile (game ids)
         public List<string> CopySplits = new List<string>();   // ... games that keep a tile of their own (two different games with one name)
@@ -408,7 +423,9 @@ namespace KippixHelper
         public int GridColumns = 6;
         public bool ExtraRows = false;             // rows under the games (one row only)
         public List<string> ExtraRowKeys;          // which rows, in order: favourites, recent, installed, never, filter:<id>
+        public string AppsRowCategory = "Apps";    // the extra row "apps": the Playnite category whose entries get that row (and leave the games row)
         public bool BadgeInstalled = false;
+        public bool BadgeRunning = true;           // (issue #11) "Running" on the tiles of what's running now
         public bool BadgeNew = false;
         public bool BadgeAch = false;
         public bool BadgeHltb = false;
@@ -522,7 +539,8 @@ namespace KippixHelper
         // X / Y: moved by a share of the screen from where it sits by default (0 = there); Size: 1 = as it comes.
         public bool SplashShowLogo = false;
         public bool SplashShowCard = false;
-        public bool DetBgZoom = true;              // (1.0.2) Game page › Animation: the background zooms in slowly as the page opens
+        public bool DetBgZoom = true;
+        public int DetShade = 0;                   // (1.0.3) Game page: the dark shade over the picture behind the text: 0 normal, 1 light, 2 off, 3 strong              // (1.0.2) Game page › Animation: the background zooms in slowly as the page opens
         public bool SplashShowStatus = true;       // Playnite's "Starting…" words
         public double SplashLogoX = 0, SplashLogoY = 0, SplashLogoSize = 1;
         public double SplashCardX = 0, SplashCardY = 0, SplashCardSize = 1;

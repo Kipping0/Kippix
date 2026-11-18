@@ -130,8 +130,9 @@
                                             Visibility="{PluginSettings Plugin=Kippix, Path=BcBgOnPage, FallbackValue=Collapsed}" />
                         </Grid>
 
-                        <!-- dark side behind the logo / info (mirrored when the layout is flipped) -->
-                        <Border IsHitTestVisible="False" Visibility="{PluginSettings Plugin=Kippix, Path=DetShadeLeft, FallbackValue=Visible}">
+                        <!-- dark side behind the logo / info (mirrored when the layout is flipped). How dark: Settings › Game page › Shade (1.0.3: DetShadeOpacity, and a tint more for Strong) -->
+                        <Border IsHitTestVisible="False" Background="#59000000" Visibility="{PluginSettings Plugin=Kippix, Path=DetShadeStrong, FallbackValue=Collapsed}" />
+                        <Border IsHitTestVisible="False" Opacity="{PluginSettings Plugin=Kippix, Path=DetShadeOpacity, FallbackValue=1}" Visibility="{PluginSettings Plugin=Kippix, Path=DetShadeLeft, FallbackValue=Visible}">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                                     <GradientStop Color="#F0000000" Offset="0" />
@@ -140,8 +141,8 @@
                                 </LinearGradientBrush>
                             </Border.Background>
                         </Border>
-                        <Border IsHitTestVisible="False" Background="#A6000000" Visibility="{PluginSettings Plugin=Kippix, Path=DetShadeCentre, FallbackValue=Collapsed}" />
-                        <Border IsHitTestVisible="False" Visibility="{PluginSettings Plugin=Kippix, Path=DetShadeRight, FallbackValue=Collapsed}">
+                        <Border IsHitTestVisible="False" Background="#A6000000" Opacity="{PluginSettings Plugin=Kippix, Path=DetShadeOpacity, FallbackValue=1}" Visibility="{PluginSettings Plugin=Kippix, Path=DetShadeCentre, FallbackValue=Collapsed}" />
+                        <Border IsHitTestVisible="False" Opacity="{PluginSettings Plugin=Kippix, Path=DetShadeOpacity, FallbackValue=1}" Visibility="{PluginSettings Plugin=Kippix, Path=DetShadeRight, FallbackValue=Collapsed}">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="1,0" EndPoint="0,0">
                                     <GradientStop Color="#F0000000" Offset="0" />
@@ -150,7 +151,7 @@
                                 </LinearGradientBrush>
                             </Border.Background>
                         </Border>
-                        <Border IsHitTestVisible="False">
+                        <Border IsHitTestVisible="False" Opacity="{PluginSettings Plugin=Kippix, Path=DetShadeOpacity, FallbackValue=1}">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
                                     <GradientStop Color="#00000000" Offset="0.45" />
@@ -388,14 +389,35 @@
                                                 <Setter Property="HorizontalContentAlignment" Value="Center" />
                                             </Style>
                                         </StackPanel.Resources>
-                                        <ButtonEx x:Name="PART_ButtonContext" Style="{StaticResource KX_PillButton}" MinWidth="240" />
+                                        <!-- an app (the Apps category): the button reads "Open", not "Play" (only how Playnite's own text is shown: its
+                                             Content and Command stay Playnite's; ThemeApi.AppsRow.cs) -->
+                                        <!-- (issue #11) a game Kippix lists as running (Keep browsing on): the button reads "Switch to" (only how Playnite's own
+                                             text is shown: its Content and Command stay Playnite's; the press is the helper's, ThemeApi.Running.cs) -->
+                                        <ButtonEx x:Name="PART_ButtonContext" MinWidth="240">
+                                            <ButtonEx.Style>
+                                                <Style TargetType="ButtonEx" BasedOn="{StaticResource KX_PillButton}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{PluginSettings Plugin=Kippix, Path=DetPlayOpens}" Value="True">
+                                                            <Setter Property="ContentTemplate">
+                                                                <Setter.Value><DataTemplate><TextBlock Text="{DynamicResource LOC_KX_Open}" /></DataTemplate></Setter.Value>
+                                                            </Setter>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{PluginSettings Plugin=Kippix, Path=DetPlaySwitches}" Value="True">
+                                                            <Setter Property="ContentTemplate">
+                                                                <Setter.Value><DataTemplate><TextBlock x:Name="KX_DetSwitchText" Text="{DynamicResource LOC_KX_RunSwitch}" /></DataTemplate></Setter.Value>
+                                                            </Setter>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ButtonEx.Style>
+                                        </ButtonEx>
                                         <ButtonEx x:Name="PART_ButtonOptions" Style="{StaticResource KX_RoundIconButton}" ToolTip="{DynamicResource LOCGameOptions}"
                                                   Visibility="{PluginSettings Plugin=Kippix, Path=DetShowOptionsButton, FallbackValue=Visible}">
                                             <Path Data="{StaticResource KX_IconMenu}" Style="{StaticResource KX_IconPath}" Width="24" Height="24" />
                                         </ButtonEx>
                                         <ButtonEx Style="{StaticResource KX_RoundIconButton}" ToolTip="{DynamicResource LOC_KX_Achievements}"
                                                   Command="{PluginSettings Plugin=Kippix, Path=OpenGameAchievementsCommand}"
-                                                  Visibility="{PluginSettings Plugin=Kippix, Path=DetShowAchButton, FallbackValue=Visible}">
+                                                  Visibility="{PluginSettings Plugin=Kippix, Path=DetAchButtonShown, FallbackValue=Visible}">
                                             <Path Data="{StaticResource KX_IconTrophy}" Style="{StaticResource KX_IconPath}" Width="24" Height="24" />
                                         </ButtonEx>
                                         <!-- (r13) News: the game's Steam news and patch notes on their own page (Steam games; Game page › Buttons and extras) -->

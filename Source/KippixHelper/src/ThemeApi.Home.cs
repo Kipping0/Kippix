@@ -129,6 +129,10 @@ namespace KippixHelper
                 if (mainRowShift != null) moved += mainRowShift.Y;   // the row sliding away for the extra rows isn't a new place for the info
                 top -= moved;
                 coverBottom -= moved;
+                // (no games in the row: where the covers were when there were some, not CoverTop's guess. With the guess, a row under
+                //  the games (Apps, Running now) sat higher than the games do, and its name was under its own tiles)
+                if (list.Items.Count > 0) { homeCoverTop = top; homeCoverBottom = coverBottom; }
+                else if (!double.IsNaN(homeCoverTop)) { top = homeCoverTop; coverBottom = homeCoverBottom; }
                 // the highlighted cover grows by 6% from its bottom edge (plus its glow): the filter name sits above that, not under it
                 double lift = Math.Round(Math.Max(0, coverBottom - top) * 0.06) + 16;
                 // room for the filter name above the covers: (0.89) kept when it's switched off or deleted, so nothing round it moves
@@ -183,6 +187,8 @@ namespace KippixHelper
             }
             catch (Exception ex) { logger.Error(ex, "Kippix: home layout failed"); }
         }
+
+        private double homeCoverTop = double.NaN, homeCoverBottom = double.NaN;   // the games row's covers when last measured from real covers
 
         private static void SetScale(FrameworkElement el, double scale)
         {
@@ -445,11 +451,14 @@ namespace KippixHelper
             lastSelectAt = DateTime.Now;   // (the start-up black screen waits for the background to settle)
             PreviewSelectionChanged();
             try { LogoBalanceApply(); } catch (Exception) { }   // the logo's box for this game (ThemeApi.LogoBalance.cs)
+            if (Running.Any) Notify("DetPlaySwitches");   // (issue #11) the game page's Play button reads "Switch to" for a game that's running
             try { LiveSelectionChanged(); } catch (Exception) { }   // live backgrounds / animated art (ThemeApi.LiveBackground.cs)
             try { ShufflePageCover(game); } catch (Exception) { }   // Shuffle covers: the game page moved to another game
+            try { HomeVideoSelectionChanged(game); } catch (Exception) { }   // (issue #13) the last game's video goes at once (ThemeApi.HomeVideo.cs)
             try { TileBgSelected(game); } catch (Exception) { }   // (0.88) Background › The game's tile
             try { CopySelected(game); } catch (Exception) { }   // play time of all its copies (ThemeApi.Copies.cs)
             try { HomeExtrasSelected(game, false); } catch (Exception) { }   // (r13) the info line's players online / friends (ThemeApi.HomeInfoExtras.cs)
+            AppsPageSelected();   // an app's page: "Open", no achievements or save backups (ThemeApi.AppsRow.cs)
             try { LookGameSelected(game); FolderAccentFollow(); if (detailsOpen) UpdateGamePageMore(); } catch (Exception) { }
             try { if (detailsOpen && game != null) GamePageUpdateCheck(game); } catch (Exception) { }
             try { if (detailsOpen) DetProgressRefresh(); } catch (Exception) { }   // (0.99.48)   // (0.99.39) another game on the page

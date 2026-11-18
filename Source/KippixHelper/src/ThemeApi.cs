@@ -288,6 +288,7 @@ namespace KippixHelper
             RefreshBattery();
             try { MediaAddonsTick(); } catch (Exception) { }   // (0.98) UniPlaySong / BackgroundChanger, once they're loaded
             ApplyBgChangeDelay();   // (0.99.7) Playnite puts its own 300 ms back now and then
+            try { EnsureHomeVideoTimer(); } catch (Exception) { }   // (issue #13) Gameplay video behind the games (ThemeApi.HomeVideo.cs)
             try { BadgeSettingsTick(); } catch (Exception) { }   // (0.99.17)
             try { PlayersBootCheck(); } catch (Exception) { }    // (0.99.36) the first game's players online after fullscreen starts
             // (0.93) moving through the games on the home screen: the upkeep below waits until you stop (for up to 6 s), so it
@@ -321,9 +322,11 @@ namespace KippixHelper
             BgFollowLayout();
             TickTime("per layout");
             try { LogoBalanceApply(); } catch (Exception) { }   // (the game page's logo, and a logo file that changed)
+            SortShuffleTick();   // (Sort and show > Shuffle: under the kept-in-place spots)
             ApplySlotPins(false);
             TickTime("pins");
-            if (ProfileFilterActive || slotsAlwaysShow || folderFilter != null || settings.InstalledOnly || settings.OneTilePerGame) { InstalledOnlyHook(); CopiesHook(); ApplyListFilter(false); }   // Playnite may have put its own filter back
+            AppsRowTick();   // (the Apps row: ThemeApi.AppsRow.cs)
+            if (ProfileFilterActive || slotsAlwaysShow || folderFilter != null || settings.InstalledOnly || settings.OneTilePerGame || appsCatId != Guid.Empty) { InstalledOnlyHook(); CopiesHook(); ApplyListFilter(false); }   // Playnite may have put its own filter back
             if (FolderSortWanted || folderSorter != null) FolderSortApply();   // (and its own sort, over a folder's)
             TickTime("filter/sort");
             PcStatsTick();
@@ -495,7 +498,7 @@ namespace KippixHelper
             if (!settings.TriAlternate) { if (settings.CardShape == CardShapes.TriUp) settings.TriArrange = 1; settings.TriAlternate = true; }
             settings.TriArrange = Math.Max(0, Math.Min(2, settings.TriArrange));
             settings.TriSpacing = Math.Max(0, Math.Min(40, settings.TriSpacing));
-            settings.HomeLayoutMode = Math.Max(0, Math.Min(6, settings.HomeLayoutMode));
+            settings.HomeLayoutMode = settings.HomeLayoutMode == 6 ? 0 : Math.Max(0, Math.Min(5, settings.HomeLayoutMode));   // (1.0.3: 6 was Mosaic, taken out: back to the Row)
             settings.JustRows = Math.Max(2, Math.Min(5, settings.JustRows));
             settings.FolderGameDesign = Math.Max(0, Math.Min(4, settings.FolderGameDesign));
             settings.FolderInstalled = Math.Max(0, Math.Min(2, settings.FolderInstalled));
@@ -846,7 +849,7 @@ namespace KippixHelper
                 case "downloads": return Loc("LOC_KX_Downloads", "Downloads");
                 case "store": return Loc("LOC_KX_Store", "Store");
                 case "gallery": return Loc("LOC_KX_Gallery", "Gallery");
-                case "battery": return Loc("LOC_KX_ControllerBattery", "Controller battery");
+                case "battery": return settings.BatterySource == 1 ? Loc("LOC_KX_DeviceBattery", "Battery") : Loc("LOC_KX_ControllerBattery", "Controller battery");
                 case "sleep": return Loc("LOC_KX_Sleep", "Sleep");
                 case "restart": return Loc("LOC_KX_Restart", "Restart");
                 case "shutdown": return Loc("LOC_KX_PowerOff", "Power off");
@@ -1514,6 +1517,7 @@ namespace KippixHelper
             if (openPanel == "options" && optionsPage == "galleryfolders" && GallerySettingsBack()) return;
             if (openPanel == "options" && optionsPage == "picker" && PickerBack()) return;
             if (CollectionsBack()) return;
+            if (GameEditBack()) return;   // (Edit this game: a list → its rows → the More menu)
             if (BoardSettingsBack()) return;
             if (openPanel == "options" && BringPartBack()) return;   // (0.92) Bring a part into view: the page choice → the list
             if (openPanel == "options" && (optionsPage == "gamemore" || optionsPage == "gamestatus" || optionsPage == "dethistory") && GameMoreBack()) return;

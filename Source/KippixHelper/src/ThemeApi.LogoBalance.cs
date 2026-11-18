@@ -127,6 +127,9 @@ namespace KippixHelper
             }
         }
 
+        /// <summary>Home settings › Logo, game info & button hints › "Same size logos" (off by default): the switch for LogoBalance.</summary>
+        public bool LogoBalance { get { return settings.LogoBalance; } set { if (SetSetting(ref settings.LogoBalance, value)) { Notify("LogoBalance"); try { LogoBalanceApply(); } catch (Exception) { } } } }
+
         /// <summary>From the tick, and at once when another game is selected: the logo controls on screen get this game's box.</summary>
         private void LogoBalanceApply()
         {

@@ -482,8 +482,12 @@ namespace KippixHelper
             {
                 var view = HomeListView();
                 if (view == null) return;
-                bool want = ProfileFilterActive || slotsAlwaysShow || folderFilter != null || settings.InstalledOnly || settings.OneTilePerGame;
-                if (!ReferenceEquals(view, listFilterView)) { listFilterView = view; listWrapFilter = null; listOrigFilter = null; CopyListSeen(view); }
+                bool want = ProfileFilterActive || slotsAlwaysShow || folderFilter != null || settings.InstalledOnly || settings.OneTilePerGame || appsCatId != Guid.Empty;
+                if (!ReferenceEquals(view, listFilterView))
+                {
+                    listFilterView = view; listWrapFilter = null; listOrigFilter = null; CopyListSeen(view);
+                    ((System.Collections.Specialized.INotifyCollectionChanged)view).CollectionChanged += AppsRowListChanged;   // (ThemeApi.AppsRow.cs)
+                }
                 bool ours = listWrapFilter != null && ReferenceEquals(view.Filter, listWrapFilter);
                 if (!want)
                 {
@@ -507,6 +511,9 @@ namespace KippixHelper
                             // own filter isn't touched: it applies again as it was once Folder is no longer chosen.
                             var inFolder = folderFilter;
                             if (inFolder != null) return inFolder.Contains(id);
+                            // the Apps row (ThemeApi.AppsRow.cs): its apps aren't in the games row; while the highlight is in that row they
+                            // all are in the list, whatever Playnite's filter says, so they can be selected
+                            if (appsCatId != Guid.Empty && !appsInGames) { var app = FolderEntryGame(o); if (IsAppsRowGame(app)) return appsRowOpen && !app.Hidden; }
                             // Installed only (Sort and show): on top of Playnite's filter, whichever saved filter is on
                             if (settings.InstalledOnly) { var game = FolderEntryGame(o); if (game != null && !game.IsInstalled) return false; }
                             if (slotsAlwaysShow && SlotOf(id) > 0) return true;
@@ -797,7 +804,7 @@ namespace KippixHelper
                     try { Registry.SetValue(@"HKEY_CURRENT_USER\Software\Valve\Steam", "AutoLoginUser", p.SteamAccount, RegistryValueKind.String); } catch (Exception) { }
                     return false;
                 }
-                if (gameRunningNow || SteamGameRunning())
+                if (AnyRunning || SteamGameRunning())
                 {
                     OnUi(() => { try { ShowNotice(Loc("LOC_KX_SteamSwitch", "STEAM"), p.SteamPersona ?? p.SteamAccount, Loc("LOC_KX_SwitchGameRunning", "A game is running: Steam can't switch accounts until it's closed"), "", null); } catch (Exception) { } });
                     return true;

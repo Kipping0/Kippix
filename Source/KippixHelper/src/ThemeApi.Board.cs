@@ -1873,6 +1873,13 @@ namespace KippixHelper
             var cands = BoardTiles.Where(x => BoardUsable(x)).ToList();
             if (cands.Count == 0) { FocusBoard(); return; }
             Point c0 = new Point(from.X + from.Width / 2, from.Y + from.Height / 2);
+            if (settings.BoardKeepSpot && !IsManualMode)
+            {
+                // (1.0.3) the same tile on the new page (the tiles stay where they are; only their games change)
+                var same = cands.OrderBy(x => Math.Abs(x.Left + x.Width / 2 - c0.X) + Math.Abs(x.Top + x.Height / 2 - c0.Y)).First();
+                FocusBoardTile(same);
+                return;
+            }
             Func<BoardTile, double> score = x =>
             {
                 double cx = x.Left + x.Width / 2, cy = x.Top + x.Height / 2;
@@ -2127,13 +2134,13 @@ namespace KippixHelper
                 ui.BeginInvoke(new Action(() =>
                 {
                     try { api.MainView.SelectGame(id); } catch (Exception) { }
-                    if (settings.SkipGamePage) { launchedDirectlyAt = DateTime.Now; try { api.StartGame(id); } catch (Exception) { } return; }
+                    if (settings.SkipGamePage) { if (TrySwitchInsteadOfPlay(id)) return; launchedDirectlyAt = DateTime.Now; try { api.StartGame(id); } catch (Exception) { } return; }
                     ui.BeginInvoke(new Action(() => { if (SelectedGameId() == id) RunMainCommand("ToggleGameDetailsCommand"); }), DispatcherPriority.Loaded);
                 }), DispatcherPriority.ContextIdle);
                 return;
             }
             try { api.MainView.SelectGame(id); } catch (Exception) { }
-            if (settings.SkipGamePage) { launchedDirectlyAt = DateTime.Now; try { api.StartGame(id); } catch (Exception) { } return; }
+            if (settings.SkipGamePage) { if (TrySwitchInsteadOfPlay(id)) return; launchedDirectlyAt = DateTime.Now; try { api.StartGame(id); } catch (Exception) { } return; }
             ui.BeginInvoke(new Action(() =>
             {
                 if (SelectedGameId() != id) return;   // Playnite's filter hides it: don't open another game's page
@@ -3290,6 +3297,12 @@ namespace KippixHelper
                     Sub = settings.BoardPageAxis == 1 ? Loc("LOC_KX_BoardAxisUD", "Up / Down past the edge") : Loc("LOC_KX_BoardAxisLR", "Left / Right past the edge"),
                     Command = new RelayCommand(_ => { settings.BoardPageAxis = 1 - settings.BoardPageAxis; BoardMakeDots(); BoardChanged(false); BoardRowsAgain(BuildBoardRows, "axis"); PlaySound("move"); })
                 });
+                // (1.0.3) a page turn: the highlight stays on its tile (hidden with one game at a time, which always keeps it)
+                if (!settings.BoardSlideOne)
+                    rows.Add(BoardSwitch("cursor", "keepspot", Loc("LOC_KX_BoardKeepSpot", "Stay on the same tile"), settings.BoardKeepSpot,
+                                         Loc("LOC_KX_BoardKeepSpotOn", "After a page turn the highlight stays where it was"),
+                                         Loc("LOC_KX_BoardKeepSpotOff", "Off: after a page turn the highlight goes to the side the new page came in from"),
+                                         () => { settings.BoardKeepSpot = !settings.BoardKeepSpot; SaveSettings(); BoardRowsAgain(BuildBoardRows, "keepspot"); PlaySound("move"); }));
                 // (1.0.2) a whole page, or one game at a time
                 rows.Add(BoardSwitch("forward", "slideone", Loc("LOC_KX_BoardSlideOne", "One game at a time"), settings.BoardSlideOne,
                                      Loc("LOC_KX_BoardSlideOneOn", "Past the edge, every tile moves along one game and one new game comes in"),
