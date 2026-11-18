@@ -177,7 +177,7 @@ namespace KippixHelper
                     {
                         // the same button again while waiting: the first press happens now, this one waits in turn
                         comboTimer.Stop();
-                        ReplayButton(comboArgsType, comboFirst, null);
+                        if (!StartViewKey(comboFirst, true)) ReplayButton(comboArgsType, comboFirst, null);
                     }
                     comboFirst = button;
                     comboFocus = Keyboard.FocusedElement;
@@ -190,13 +190,16 @@ namespace KippixHelper
                             comboTimer.Stop();
                             var b = comboFirst;
                             comboFirst = ControllerInput.None;
-                            if (b != ControllerInput.None) ReplayButton(comboArgsType, b, null);   // only one of them: it does what it always does (where the highlight is now)
+                            if (b != ControllerInput.None && !StartViewKey(b, true)) ReplayButton(comboArgsType, b, null);   // (1.0.4: or Kippix's job for it)   // only one of them: it does what it always does (where the highlight is now)
                         };
                     }
                     comboTimer.Stop();
                     comboTimer.Start();
                     return;
                 }
+
+                // (1.0.4) Menu (Start) and View (Select): Playnite's menus, one of Kippix's, or nothing (Settings › Controller buttons)
+                if (StartViewKey(button, pressed)) { e.Handled = true; padHandled = e; return; }
 
                 // (0.99.46) the Guide button: the quick bar (on the home screen, or anywhere when the Guide button doesn't go home)
                 if (button == ControllerInput.Guide && !raised && GuideBarGuide(e)) { e.Handled = true; padHandled = e; return; }
@@ -258,6 +261,7 @@ namespace KippixHelper
                 if (kbOpen) { e.Handled = true; return; }
                 if (!raised && RemapUp(e, button)) return;   // the release of a moved button follows its press
                 if ((button == ControllerInput.Back || button == ControllerInput.Start) && settings.GuideGoesHome && settings.HomeButton == 1 && !gameRunningNow && openPanel != "browser") { e.Handled = true; return; }   // played back whole
+                if (StartViewKey(button, false)) { e.Handled = true; return; }   // (1.0.4) the let-go of a Menu / View press Kippix took
                 if (button == ControllerInput.B && descReaderOpen) { DescReaderKey(e); e.Handled = true; return; }
                 if (button == ControllerInput.X && HoldXUp(e)) return;
                 if (CropPadUp(button)) { e.Handled = true; return; }   // (0.82: LB / RB let go while cropping)

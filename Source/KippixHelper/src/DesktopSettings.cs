@@ -246,8 +246,13 @@ namespace KippixHelper
                 SettingsUi.Help("Pause the game: the overlay takes the focus, so a game that pauses when you switch away pauses while it's open. " +
                                 "Online games with anti-cheat may not like this: choose Let it keep running for those (the game keeps the focus and " +
                                 "nothing is done to it; it may also see your button presses, and it stops some full-screen games flickering). " +
-                                "Automatic lets the games Playnite lists as online or MMO keep running. The overlay never suspends or reads a game."),
+                                "Automatic lets the games Playnite lists as online or MMO keep running. The overlay never reads a game."),
                 SettingsUi.Combo(KippixOverlay.OverlayConfig.WhenOpenedNames, o.WhenOpened, v => o.WhenOpened = v)));
+            general.Add(SettingsUi.Row("Freeze the game while it's open",
+                SettingsUi.Help("Emulators keep reading the controller even when the overlay is in front, so moving around the overlay also plays the game. " +
+                                "This pauses the game's program while the overlay is open and carries on the moment it closes. Emulators only (the default), " +
+                                "or every game. Never a game the overlay lets keep running (online games)."),
+                SettingsUi.Combo(KippixOverlay.GameFreeze.ModeNames, o.FreezeGame, v => o.FreezeGame = v)));
             general.Add(SettingsUi.CheckRow("Show HowLongToBeat times", null, o.ShowHltb, v => o.ShowHltb = v));
             general.Add(SettingsUi.CheckRow("Show story progress", "On the Now playing tile, under HowLongToBeat: how far through the game you are, from its story achievements or play time.", o.ShowProgress, v => o.ShowProgress = v));
             parts.Add(general.Card);
@@ -764,7 +769,7 @@ namespace KippixHelper
         public int AchToastPosition, AchToastSeconds = 6, AchToastStyle, AchSoundVolume = 70;
         public string AchSoundFile = "", AchSoundName = "", SavedSoundFile = "";
         public string DataFolder { get { return System.IO.Path.GetDirectoryName(overlay.ConfigPath); } }
-        public int Theme, Trigger, Screenshot, Replay, WhenOpened;
+        public int Theme, Trigger, Screenshot, Replay, WhenOpened, FreezeGame;
         public string DiscordClientId, DiscordClientSecret;
 
         public OverlayDesktopSettings(ThemeApi theme, KippixOverlay.OverlayPlugin overlay)
@@ -781,7 +786,7 @@ namespace KippixHelper
             {
                 var c = overlay.ReloadConfig();
                 Theme = c.Theme; Trigger = c.TriggerMode; Screenshot = c.ScreenshotMethod; Replay = c.ReplayMethod;
-                OnlyInFullscreen = c.OnlyInFullscreen; ConfirmClose = c.ConfirmClose; WhenOpened = c.WhenOpened; OpenVibration = c.OpenVibration; HoldGuidePower = c.HoldGuidePower; ScreenshotSound = c.ScreenshotSound; OpenSound = c.OpenSound; AchToasts = c.AchToasts; AchHideOther = c.AchHideOther; AchToastPosition = c.AchToastPosition; AchToastSeconds = c.AchToastSeconds; AchToastProgress = c.AchToastProgress;
+                OnlyInFullscreen = c.OnlyInFullscreen; ConfirmClose = c.ConfirmClose; WhenOpened = c.WhenOpened; FreezeGame = c.FreezeGame; OpenVibration = c.OpenVibration; HoldGuidePower = c.HoldGuidePower; ScreenshotSound = c.ScreenshotSound; OpenSound = c.OpenSound; AchToasts = c.AchToasts; AchHideOther = c.AchHideOther; AchToastPosition = c.AchToastPosition; AchToastSeconds = c.AchToastSeconds; AchToastProgress = c.AchToastProgress;
                 AchToastStyle = c.AchToastStyle; AchSoundFile = c.AchSoundFile ?? ""; SavedSoundFile = AchSoundFile; AchSoundVolume = c.AchSoundVolume; AchSoundName = c.AchSoundName ?? "";
                 ShowHltb = c.ShowHowLongToBeat; ShowProgress = c.ShowStoryProgress; ShowDiscordMessages = c.ShowDiscordMessages;
                 DiscordClientId = c.DiscordClientId; DiscordClientSecret = c.DiscordClientSecret;
@@ -796,7 +801,7 @@ namespace KippixHelper
             {
                 var c = overlay.ReloadConfig();
                 c.Theme = Theme; c.TriggerMode = Trigger; c.ScreenshotMethod = Screenshot; c.ReplayMethod = Replay;
-                c.OnlyInFullscreen = OnlyInFullscreen; c.ConfirmClose = ConfirmClose; c.WhenOpened = WhenOpened; c.OpenVibration = OpenVibration; c.HoldGuidePower = HoldGuidePower; c.ScreenshotSound = ScreenshotSound; c.OpenSound = OpenSound; c.AchToasts = AchToasts; c.AchHideOther = AchHideOther; c.AchToastPosition = AchToastPosition; c.AchToastSeconds = AchToastSeconds; c.AchToastProgress = AchToastProgress;
+                c.OnlyInFullscreen = OnlyInFullscreen; c.ConfirmClose = ConfirmClose; c.WhenOpened = WhenOpened; c.FreezeGame = FreezeGame; c.OpenVibration = OpenVibration; c.HoldGuidePower = HoldGuidePower; c.ScreenshotSound = ScreenshotSound; c.OpenSound = OpenSound; c.AchToasts = AchToasts; c.AchHideOther = AchHideOther; c.AchToastPosition = AchToastPosition; c.AchToastSeconds = AchToastSeconds; c.AchToastProgress = AchToastProgress;
                 c.AchToastStyle = AchToastStyle; c.AchSoundFile = AchSoundFile ?? ""; c.AchSoundVolume = AchSoundVolume; c.AchSoundName = AchSoundName ?? ""; SavedSoundFile = c.AchSoundFile;
                 c.ShowHowLongToBeat = ShowHltb; c.ShowStoryProgress = ShowProgress; c.ShowDiscordMessages = ShowDiscordMessages;
                 c.DiscordClientId = (DiscordClientId ?? "").Trim(); c.DiscordClientSecret = (DiscordClientSecret ?? "").Trim();

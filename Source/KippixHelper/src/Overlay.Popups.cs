@@ -164,6 +164,36 @@ namespace KippixOverlay
         }
     }
 
+    /// <summary>(1.0.4) The reminder strip while the controller drives a streaming service's browser window: shown for a few seconds.</summary>
+    internal class BrowserHintBar : FloatingWindow
+    {
+        public BrowserHintBar(IntPtr anchor, OverlayTheme t, PadKind kind) : base(anchor, true)
+        {
+            var row = new StackPanel { Orientation = Orientation.Horizontal };
+            row.Children.Add(new TextBlock
+            {
+                Text = "Controller mode",
+                Foreground = t.Accent,
+                FontSize = 16,
+                FontWeight = FontWeights.Bold,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 18, 0)
+            });
+            row.Children.Add(OverlayWindow.TextHint("Left stick", "mouse"));
+            row.Children.Add(OverlayWindow.ButtonHint(kind, Btn.A, "click"));
+            row.Children.Add(OverlayWindow.ButtonHint(kind, Btn.X, "play / pause"));
+            row.Children.Add(OverlayWindow.ButtonHint(kind, Btn.B, "back"));
+            row.Children.Add(OverlayWindow.TextHint("Right stick", "scroll"));
+            row.Children.Add(OverlayWindow.ButtonHint(kind, Btn.Y, "keyboard"));
+            row.Children.Add(OverlayWindow.ButtonHint(kind, Btn.Guide, "menu"));
+            Content = Card(t, row, new Thickness(20, 10, 8, 10));
+            Loaded += (s, e) => PlaceTopCenter(10);
+            var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(7) };
+            timer.Tick += (s, e) => { timer.Stop(); try { Close(); } catch (Exception) { } };
+            timer.Start();
+        }
+    }
+
     /// <summary>The reminder strip shown while the controller drives Discord.</summary>
     internal class HintBar : FloatingWindow
     {

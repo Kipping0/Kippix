@@ -35,12 +35,17 @@ namespace KippixOverlay
         // Since r11b only follows WhenOpened (== 1), kept so older files carry over.
         public bool KeepGameFocused { get; set; }
 
-        // What happens to the game when the overlay opens (r11b). The overlay never suspends, injects into or reads the game:
+        // What happens to the game when the overlay opens (r11b). The overlay never injects into or reads the game (it only
+        // pauses one with Freeze the game, below, 1.0.4):
         //  0 Pause the game: the overlay takes the focus (the old default), so a game that pauses when you switch away pauses;
         //  1 Let it keep running: the game keeps the focus and nothing is done to it (the overlay only shows on top);
         //  2 Automatic: 1 for a game Playnite lists as online multiplayer / MMO, else 0.
         public int WhenOpened { get; set; }
         public static readonly string[] WhenOpenedNames = { "Pause the game", "Let it keep running", "Automatic (online games keep running)" };
+
+        // (1.0.4) Freeze the game while the overlay is open (Overlay.GameFreeze.cs): 0 Off, 1 Emulators only (the default), 2 All games.
+        // Only when the overlay takes the focus (never a game it lets keep running).
+        public int FreezeGame { get; set; }
 
         // 0 built-in, 1 Xbox Game Bar, 2 Steam, 3 NVIDIA, 4 custom
         public int ScreenshotMethod { get; set; }
@@ -138,6 +143,7 @@ namespace KippixOverlay
             OpenAiInputPricePerM = 0.25;
             OpenAiOutputPricePerM = 2.00;
             OpenAiSearchPricePerCall = 0.01;
+            FreezeGame = 1;
         }
 
         public static readonly string[] GuideProviderNames = { "Off", "OpenAI", "Gemini (free)" };
@@ -191,6 +197,7 @@ namespace KippixOverlay
         {
             TriggerMode = Wrap(TriggerMode, TriggerNames.Length);
             WhenOpened = Wrap(WhenOpened, WhenOpenedNames.Length);
+            FreezeGame = Wrap(FreezeGame, GameFreeze.ModeNames.Length);
             KeepGameFocused = WhenOpened == 1;
             ScreenshotMethod = Wrap(ScreenshotMethod, ScreenshotNames.Length);
             ReplayMethod = Wrap(ReplayMethod, ReplayNames.Length);

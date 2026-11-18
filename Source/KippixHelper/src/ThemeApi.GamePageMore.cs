@@ -917,6 +917,7 @@ namespace KippixHelper
                 GameMoreRows.Add(new PickRow { Text = Loc("LOC_KX_Uninstall", "Uninstall"), Sub = Loc("LOC_KX_UninstallSub", "Through the game's own launcher"), Icon = "trash", Key = "uninstall",
                                                Command = new RelayCommand(_ => { ClosePanels(); try { api.UninstallGame(id); } catch (Exception ex) { logger.Warn("Kippix: uninstall: " + ex.Message); } }) });
             }
+            AddPlayniteGameMenuRow(g);   // (1.0.4) while Menu (Start) does something else (ThemeApi.StartView.cs)
             if (!GameMoreRows.Any(r => r.IsRow)) GameMoreRows.Add(new PickRow { Text = Loc("LOC_KX_NothingMore", "Nothing more for this game."), Icon = "info", IsInfo = true });
         }
 

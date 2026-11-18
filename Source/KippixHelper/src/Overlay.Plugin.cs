@@ -20,7 +20,7 @@ namespace KippixOverlay
     /// KippixOverlay): HelperPlugin creates it and passes Playnite's events on. Its files (config, guides, Discord login)
     /// stay in the old add-on's data folder, so nothing is lost.
     /// </summary>
-    public class OverlayPlugin
+    public partial class OverlayPlugin
     {
         private static readonly ILogger logger = LogManager.GetLogger();
         /// <summary>The old KippixOverlay add-on's id: its data folder (and how we spot it if it's still installed).</summary>
@@ -214,13 +214,16 @@ namespace KippixOverlay
 
             // only once everything above is up: the theme's link and the game events rely on it
             Started = true;
+            GameFreeze.Init(GetPluginUserDataPath());   // (1.0.4) a game left frozen last time carries on
             OverlayBridge.Plugin = this;
         }
 
         public void OnApplicationStopped(OnApplicationStoppedEventArgs args)
         {
             if (!Started) return;
+            GameFreeze.Unfreeze();   // (1.0.4)
             try { if (discordMode) ExitDiscordMode(false); } catch (Exception) { }
+            try { EndBrowserMode(); } catch (Exception) { }   // (1.0.4)
             if (Poller != null) Poller.Stop();
             if (tracker != null) tracker.Dispose();
             Stats.Stop();
@@ -254,6 +257,7 @@ namespace KippixOverlay
             if (RunningGame != null && stopped != null && RunningGame.Id != stopped.Id) return;
             RunningGame = null;
             GameWindow = IntPtr.Zero;
+            GameFreeze.Unfreeze();   // (1.0.4)
             CloseCompose();
             if (overlay != null) overlay.CloseOverlay(null);
             lock (achievementSummaries) achievementSummaries.Clear();
@@ -591,6 +595,9 @@ namespace KippixOverlay
                 return;
             }
 
+            // (1.0.4) a streaming service Kippix opened full screen: the controller drives the browser (Overlay.BrowserMode.cs)
+            if (BrowserModeHandles(pressed, released)) return;
+
             if (overlay != null && overlay.IsOpen)
             {
                 // (0.99.72) pressed again while it was still opening: that press was waiting in the queue and closed the overlay
@@ -700,11 +707,31 @@ namespace KippixOverlay
                 overlay = w;
                 w.Closed += (s, e) =>
                 {
+                    GameFreeze.Unfreeze();   // (1.0.4) however it closed, the game carries on
                     if (ReferenceEquals(overlay, w)) { overlay = null; Stats.Stop(); DropOpenShot(); }
+                    BrowserModeAfterOverlay();   // (1.0.4) back to driving the streaming window, if it's still there
                     if (Config.OpenSound) Chime.PlayOpen();   // (0.99.37) the same light sound on the way out
                 };
                 w.ShowOverlay();
                 overlayReadyAt = DateTime.UtcNow;
+                // (1.0.4) Freeze the game while the overlay is open (emulators read the controller even when they're behind it):
+                // a moment after it has the focus, so the game has seen it go
+                if (!LetsGameRun && Config.FreezeGame > 0)
+                {
+                    IntPtr gw = GameWindow;
+                    Game g = RunningGame;
+                    int mode = Config.FreezeGame;
+                    var ft = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
+                    ft.Tick += (s, e) =>
+                    {
+                        ft.Stop();
+                        if (!ReferenceEquals(overlay, w) || !w.IsOpen) return;
+                        uint gpid = gw != IntPtr.Zero ? Native.GetProcessId(gw) : 0;
+                        if (gpid == 0 || DiscordHelper.IsDiscordPid(gpid)) return;
+                        GameFreeze.Freeze(mode, g, gpid, ownPid, why);
+                    };
+                    ft.Start();
+                }
                 logger.Info("Kippix overlay: shown " + sw.ElapsedMilliseconds + " ms after the press was let go (screen " + tShot + ", game data " + (tData - tShot) + ", panel " + (tWin - tData) + ", showing " + (sw.ElapsedMilliseconds - tWin) + " = " + w.ShowTimings + ")" + (guideDownAt != DateTime.MinValue ? "; the Guide button was down " + (int)(guideUpAt - guideDownAt).TotalMilliseconds + " ms" : ""));
                 // (0.99.47) opened while an achievement pop-up was up: straight to that achievement
                 try
@@ -1207,8 +1234,21 @@ namespace KippixOverlay
         }
 
         /// <summary>Force-closes the game. Returns false if its window couldn't be found.</summary>
+        /// <summary>(1.0.4) A streaming service Kippix opened full screen in a browser window (ThemeApi.StreamOpen.cs), or nothing.</summary>
+        internal static IntPtr MediaWindow = IntPtr.Zero;
+
         internal bool CloseGame()
         {
+            // (1.0.4) over a streaming service Kippix opened full screen: just that window closes, not the whole browser
+            if (MediaWindow != IntPtr.Zero && GameWindow == MediaWindow && RunningGame == null && Native.IsWindow(MediaWindow))
+            {
+                IntPtr mw = MediaWindow;
+                CloseOverlayThen(null);
+                Native.CloseWindow(mw);
+                logger.Info("Kippix overlay: Close: the streaming window Kippix opened");
+                RunLater(() => OnUi(BringPlayniteForward), 800);
+                return true;
+            }
             uint pid = Native.GetProcessId(GameWindow);
             string name = GameName;
             CloseOverlayThen(null);
@@ -1629,10 +1669,10 @@ namespace KippixOverlay
 
         private void ShowKeyboard()
         {
-            if (keyboard != null || !discordMode) return;
+            if (keyboard != null || (!discordMode && !BrowserModeOn)) return;
             try
             {
-                keyboard = new KeyboardWindow(discordHwnd, Theme, Poller.Kind);
+                keyboard = new KeyboardWindow(discordMode ? discordHwnd : browserHwnd, Theme, Poller.Kind);
                 keyboard.OnClose = () => HideKeyboard(true);
                 keyboard.Show();
             }
