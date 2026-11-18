@@ -48,7 +48,7 @@ namespace KippixHelper
         public bool ShowNotificationIcon = true;
         public bool Clock24h = true;
         public bool ShowBatteryPercent = true;
-        public int BatterySource = 0;              // the top bar battery: 0 the controller's, 1 this device's own (a handheld, a laptop; the controller's on a PC without one)
+        public int BatterySource = 0;              // the top bar battery: (1.0.4) 0 Automatic (this device's own when it has one, else the controller's), 1 this device's own (the controller's on a PC without), 2 the controller's (1.0.3's 0 was the controller's; Automatic is right for those who never changed it) one)
         // Sizes: 0 small, 1 medium, 2 large, 3 extra large
         public int HintsSize = 1;
         public bool LogoBalance = false;   // every logo about the same room on screen, whatever its shape (ThemeApi.LogoBalance.cs)

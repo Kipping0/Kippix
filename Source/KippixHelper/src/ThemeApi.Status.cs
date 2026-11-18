@@ -382,14 +382,33 @@ namespace KippixHelper
 
         /// <summary>Charging or plugged in: a small bolt beside the battery.</summary>
         public bool BatteryCharging { get { return batteryCharging; } }
-        public string BatterySourceText { get { return settings.BatterySource == 1 ? Loc("LOC_KX_BatterySourceDevice", "This device") : Loc("LOC_KX_BatterySourceController", "Controller"); } }
+        public string BatterySourceText
+        {
+            get
+            {
+                switch (settings.BatterySource)
+                {
+                    case 1: return Loc("LOC_KX_BatterySourceDevice", "This device");
+                    case 2: return Loc("LOC_KX_BatterySourceController", "Controller");
+                }
+                return Loc("LOC_KX_BatterySourceAuto", "Automatic");
+            }
+        }
+
+        /// <summary>
+        /// (1.0.4) The controller is on a cable (a handheld's built-in controls count as one): a plug, not a battery. Windows only
+        /// says "wired" for those, and it was drawn as a full battery (a handheld at 7% showed full).
+        /// </summary>
+        public bool BatteryWired { get { return batteryWired; } }
+        public bool BatteryOutlineShown { get { return !batteryWired; } }
+        private bool batteryWired;
         public ICommand CycleBatterySourceCommand
         {
             get
             {
                 if (cycleBatterySourceCommand == null) cycleBatterySourceCommand = new RelayCommand(_ =>
                 {
-                    settings.BatterySource = settings.BatterySource == 1 ? 0 : 1;
+                    settings.BatterySource = (Math.Max(0, Math.Min(2, settings.BatterySource)) + 1) % 3;   // (1.0.4) Automatic, This device, Controller
                     SaveSettings();
                     PlaySound("move");
                     Notify("BatterySourceText");
@@ -439,8 +458,10 @@ namespace KippixHelper
 
         private void RefreshBattery()
         {
-            // this device's own battery when that's what the top bar shows (a PC without one: the controller's, as before)
-            string raw = settings.BatterySource == 1 ? ReadDeviceBattery() : null;
+            // (1.0.4) Automatic: this device's own battery when it has one (a handheld, a laptop), else the controller's; This device
+            // (a PC without one: the controller's, as before); Controller
+            int src = Math.Max(0, Math.Min(2, settings.BatterySource));
+            string raw = src != 2 ? ReadDeviceBattery() : null;
             bool device = raw != null;
             if (raw == null) raw = ReadControllerBattery();
 
@@ -449,6 +470,7 @@ namespace KippixHelper
             double fraction = 0;
             Brush brush = WhiteBrush;
             bool charging = false;
+            bool wired = false;
 
             if (has)
             {
@@ -471,15 +493,18 @@ namespace KippixHelper
                         case "Medium": fraction = 0.6; text = "~60%"; break;
                         case "Low": fraction = 0.3; text = "~30%"; brush = AmberBrush; break;
                         case "Empty": fraction = 0.1; text = "~10%"; brush = RedBrush; break;
-                        case "Wired": fraction = 1; brush = GreenBrush; break;
+                        case "Wired": fraction = 0; wired = true; break;   // (1.0.4) a plug, not a full battery
                         default: fraction = 1; brush = WhiteBrush; break;   // connected, level unknown
                     }
                 }
             }
 
             double fill = Math.Round(fraction * BatteryFillMax, 1);
-            if (has != hasController || text != batteryText || fill != batteryFill || brush != batteryBrush || charging != batteryCharging || device != batteryIsDevice)
+            if (has != hasController || text != batteryText || fill != batteryFill || brush != batteryBrush || charging != batteryCharging || device != batteryIsDevice || wired != batteryWired)
             {
+                batteryWired = wired;
+                Notify("BatteryWired");
+                Notify("BatteryOutlineShown");
                 hasController = has;
                 batteryText = text;
                 batteryFill = fill;
