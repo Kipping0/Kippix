@@ -434,7 +434,7 @@ namespace KippixHelper
             Notify("StartupBackground");
         }
 
-        /// <summary>Remembers the selected game's background for next time (saved every couple of seconds, not on every move).</summary>
+        /// <summary>Remembers the selected game's background for next time (written when you stop on a game, not on every move).</summary>
         internal void GameSelected(Game game)
         {
             var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -471,8 +471,7 @@ namespace KippixHelper
                 if (string.IsNullOrEmpty(path)) return;
                 PreloadSelectedBackground(path);
                 if (path == settings.LastBackground) return;
-                settings.LastBackground = path;
-                backgroundDirty = true;
+                settings.LastBackground = path;   // (written by the next upkeep: SaveLastBackground)
             }
             catch (Exception) { }
         }
