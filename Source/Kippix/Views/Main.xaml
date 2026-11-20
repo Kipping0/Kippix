@@ -5021,11 +5021,19 @@
                                                 <StackPanel Orientation="Horizontal">
                                                     <TextBlock Text="{PluginSettings Plugin=Kippix, Path=SearchText}" Style="{StaticResource KX_Text}" FontSize="40" VerticalAlignment="Center" />
                                                     <Border Width="3" Height="42" Background="{DynamicResource KX_AccentBrush}" Margin="4,0,0,0" VerticalAlignment="Center">
-                                                        <Border.Triggers>
-                                                            <EventTrigger RoutedEvent="Loaded">
-                                                                <BeginStoryboard><Storyboard RepeatBehavior="Forever"><DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0" Duration="0:0:0.55" AutoReverse="True" /></Storyboard></BeginStoryboard>
-                                                            </EventTrigger>
-                                                        </Border.Triggers>
+                                                        <!-- blinks only while Search is open: a running animation has WPF draw every frame, whether it shows or not -->
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Style.Triggers>
+                                                                    <Trigger Property="IsVisible" Value="True">
+                                                                        <Trigger.EnterActions>
+                                                                            <BeginStoryboard x:Name="KX_SearchCaretBlink"><Storyboard RepeatBehavior="Forever" Timeline.DesiredFrameRate="30"><DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0" Duration="0:0:0.55" AutoReverse="True" /></Storyboard></BeginStoryboard>
+                                                                        </Trigger.EnterActions>
+                                                                        <Trigger.ExitActions><StopStoryboard BeginStoryboardName="KX_SearchCaretBlink" /></Trigger.ExitActions>
+                                                                    </Trigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
                                                     </Border>
                                                 </StackPanel>
                                             </Grid>
@@ -7563,11 +7571,19 @@
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{PluginSettings Plugin=Kippix, Path=KeyboardText}" Style="{StaticResource KX_Text}" FontSize="34" VerticalAlignment="Center" MaxWidth="1200" TextTrimming="CharacterEllipsis" />
                                             <Border Width="3" Height="38" Background="{DynamicResource KX_AccentBrush}" Margin="4,0,0,0" VerticalAlignment="Center">
-                                                <Border.Triggers>
-                                                    <EventTrigger RoutedEvent="Loaded">
-                                                        <BeginStoryboard><Storyboard RepeatBehavior="Forever"><DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0" Duration="0:0:0.55" AutoReverse="True" /></Storyboard></BeginStoryboard>
-                                                    </EventTrigger>
-                                                </Border.Triggers>
+                                                <!-- blinks only while the keyboard is open (as the Search caret does) -->
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Style.Triggers>
+                                                            <Trigger Property="IsVisible" Value="True">
+                                                                <Trigger.EnterActions>
+                                                                    <BeginStoryboard x:Name="KX_KbCaretBlink"><Storyboard RepeatBehavior="Forever" Timeline.DesiredFrameRate="30"><DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0" Duration="0:0:0.55" AutoReverse="True" /></Storyboard></BeginStoryboard>
+                                                                </Trigger.EnterActions>
+                                                                <Trigger.ExitActions><StopStoryboard BeginStoryboardName="KX_KbCaretBlink" /></Trigger.ExitActions>
+                                                            </Trigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
                                             </Border>
                                         </StackPanel>
                                     </Border>
