@@ -8306,8 +8306,9 @@
                                         <Style.Triggers>
                                             <Trigger Property="IsVisible" Value="True">
                                                 <Trigger.EnterActions>
+                                                    <!-- 15 frames a second: the picture's edges move about 2 px a second, and every frame redraws the whole screen -->
                                                     <BeginStoryboard x:Name="KX_AmbientDrift">
-                                                        <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                                        <Storyboard RepeatBehavior="Forever" AutoReverse="True" Timeline.DesiredFrameRate="15">
                                                             <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX" From="1" To="1.1" Duration="0:0:40" />
                                                             <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY" From="1" To="1.1" Duration="0:0:40" />
                                                         </Storyboard>
