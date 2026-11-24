@@ -1,0 +1,63 @@
+# Accepts a Community upload when you add the "approved" label to its pull request. Use this instead of Merge.
+# It copies the upload's gallery files onto main as your own commit (so uploaders don't show up in the repository's
+# contributors list), rebuilds community/index.json, puts each file on the "community" pre-release where downloads are
+# counted, and closes the pull request. The uploader still gets the credit inside the gallery.
+# Nothing from the pull request is run: its files are only checked (with the checker from main) and copied.
+name: Community approve
+
+on:
+  pull_request_target:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: community-index
+  cancel-in-progress: false
+
+jobs:
+  approve:
+    if: github.event.label.name == 'approved' && github.event.pull_request.state == 'open' && github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+    env:
+      PR: ${{ github.event.pull_request.number }}
+      AUTHOR: ${{ github.event.pull_request.user.login }}
+      TITLE: ${{ github.event.pull_request.title }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Check the upload (with the checker from main)
+        run: |
+          cp .github/scripts/community_check.py "$RUNNER_TEMP/community_check.py"
+          cp .github/scripts/community_index.py "$RUNNER_TEMP/community_index.py"
+          cp .github/scripts/community_assets.py "$RUNNER_TEMP/community_assets.py"
+          git fetch origin "refs/pull/$PR/head:upload"
+          git checkout -q upload
+          python3 -I "$RUNNER_TEMP/community_check.py" origin/main "$AUTHOR"
+          git diff --name-only origin/main...upload -- community/ ':!community/index.json' > "$RUNNER_TEMP/files.txt"
+          git checkout -q main
+          if [ ! -s "$RUNNER_TEMP/files.txt" ]; then echo "The upload has no gallery files."; exit 1; fi
+
+      - name: Copy the files onto main as your commit
+        run: |
+          xargs -a "$RUNNER_TEMP/files.txt" -d '\n' git checkout upload --
+          python3 -I "$RUNNER_TEMP/community_index.py"
+          git config user.name "Kipping0"
+          git config user.email "343212293+Kipping0@users.noreply.github.com"
+          git add community/
+          if git diff --cached --quiet; then echo "Nothing new: it's already in the gallery."; else
+            git commit -q -m "Community: $TITLE" -m "From pull request #$PR, uploaded by $AUTHOR."
+            for i in 1 2 3; do git push origin main && break; git pull -q --rebase origin main; done
+          fi
+
+      - name: Put the files where downloads are counted
+        run: python3 -I "$RUNNER_TEMP/community_assets.py"
+
+      - name: Close the pull request
+        run: gh pr close "$PR" --repo "$GITHUB_REPOSITORY" --comment "Thanks! It's been added to the Community gallery."

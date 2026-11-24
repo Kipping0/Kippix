@@ -78,5 +78,8 @@ restart when asked.
 The theme reads the gallery from `community/index.json` on the `main` branch. People upload from fullscreen
 (Community › Yours › Upload, after signing in to GitHub once): Kippix puts their files in their own copy of this repository
 and opens a pull request. The **community-check** workflow checks it (only files under `community/`, named after the
-uploader, valid JSON and JPEGs), and you merge or close it. When one is merged, **community-index** rebuilds
-`community/index.json` and puts each item's file on the `community` pre-release, where downloads are counted.
+uploader, valid JSON and JPEGs). To accept one, add the **approved** label to the pull request (don't press Merge, which
+would add the uploader to the repository's contributors list): the **community-approve** workflow checks it again, copies its
+files onto `main` as your commit, rebuilds `community/index.json`, puts each item's file on the `community` pre-release, where
+downloads are counted, and closes the pull request. The uploader keeps their credit in the gallery. To turn one down, close it.
+When you change `community/` by hand, **community-index** rebuilds the list in the same way.
