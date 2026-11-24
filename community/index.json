@@ -2,6 +2,21 @@
   "version": 2,
   "layouts": [
     {
+      "id": "cinema-plus-mwisnowski",
+      "name": "Cinema Plus",
+      "author": "mwisnowski",
+      "description": "List in Cinema Mode, trailer in details, UniPlaySong on hover, and quick widgets",
+      "file": "layouts/cinema-plus-mwisnowski.json",
+      "preview": "previews/cinema-plus-mwisnowski.jpg",
+      "added": "2026-11-21",
+      "themeVersion": "1.0.6",
+      "tags": [],
+      "previews": [
+        "previews/cinema-plus-mwisnowski.jpg"
+      ],
+      "asset": "layouts--cinema-plus-mwisnowski--68b5628925.json"
+    },
+    {
       "id": "big-art-row-with-library-scottwilliamanderson",
       "name": "Big art row with library",
       "author": "ScottWilliamAnderson",
