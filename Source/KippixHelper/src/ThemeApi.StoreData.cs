@@ -1022,7 +1022,7 @@ namespace KippixHelper
             var reviews = Dig(info, "reviews") as System.Collections.IEnumerable;
             if (reviews != null)
                 r.Scores = string.Join("   ·   ", reviews.Cast<object>().OfType<Dictionary<string, object>>()
-                    .Where(x => FNum(x, "score") > 0)
+                    .Where(x => FNum(x, "score") > 0 && (FStr(x, "source") == "Steam" || FStr(x, "source") == "Metascore"))   // (1.0.7) Steam's and the Metascore only
                     .Select(x => FStr(x, "source") + " " + FNum(x, "score") + (FStr(x, "source") == "Steam" ? "%" : "")).ToArray());
             return r;
         }

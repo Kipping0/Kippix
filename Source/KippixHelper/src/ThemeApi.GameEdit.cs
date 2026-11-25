@@ -256,6 +256,7 @@ namespace KippixHelper
                     try { api.MainView.ToggleFullscreenView(); } catch (Exception ex) { logger.Warn("Kippix: desktop mode: " + ex.Message); }
                 })
             });
+            AddSgdbArtRows(rows);   // (1.0.7) Next background / Next cover from SteamGridDB (ThemeApi.SgdbArt.cs)
             rows.Add(new PickRow { IsHeader = true, Text = Loc("LOC_KX_AddLibraryHeader", "LIBRARY") });
             rows.Add(GameAddMenuRow(false));   // (ThemeApi.GameAdd.cs)
             return rows;

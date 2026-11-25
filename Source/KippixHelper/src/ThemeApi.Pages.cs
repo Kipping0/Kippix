@@ -318,11 +318,14 @@ namespace KippixHelper
             foreach (string n in new[] { "PageTitle", "PageSub", "PageStatus", "HasPageStatus", "PageHint", "PageStats", "HasPageStats", "HasPageRows", "HasPageTiles",
                                          "HasPageChips", "PageTilesTitle", "HasPageTilesTitle", "IsControllerPage", "PageHeroCover", "PageHeroTitle", "PageHeroSub", "HasPageHero" }) Notify(n);
             NotifyHubShelves();
+            NotifyPagesConsole();   // (1.0.7) the Console design (ThemeApi.PagesConsole.cs)
+            LabApplySoon();   // (1.0.7) Layout changes WIP: the page's layout (ThemeApi.LayoutLab.cs)
         }
 
         /// <summary>Called when the page changes or the pages close: stops anything the page had running.</summary>
         private void LeavePage()
         {
+            labState.Remove("pages");   // (1.0.7) the next page takes its layout afresh (the profile's own templates may have been put back)
             StopControllerTest();
             StopRoll();
             ClearHubExtras();   // the profile's play calendar and finished shelf (ThemeApi.Heatmap.cs)
@@ -377,7 +380,7 @@ namespace KippixHelper
             profilePage = menuPage;
             BuildProfileRows();
             TogglePanel("profile");
-            Notify("IsProfileMedia"); Notify("IsProfileMediaPage");
+            Notify("IsProfileMedia"); Notify("IsProfileMediaPage"); Notify("MediaSettingsHint");
             Notify("ProfileMenuTitle");
             focusBeforePanel = null;   // closing the menu later puts the highlight on the profile button
             ui.BeginInvoke(new Action(() =>

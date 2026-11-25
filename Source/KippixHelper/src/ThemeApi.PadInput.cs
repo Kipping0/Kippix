@@ -96,6 +96,8 @@ namespace KippixHelper
                 if (lpOpen) { e.Handled = true; padHandled = e; LocalPlayerPad(button, e); return; }   // (1.0.1: Shows & movies' player: ThemeApi.LocalPlayer.cs)
                 if (guideBarOpen) { e.Handled = true; padHandled = e; GuideBarPad(button, e); return; }   // (0.99.46) the quick bar takes every button (ThemeApi.GuideBar.cs)
                 if (galleryEditOpen) { e.Handled = true; padHandled = e; GalleryEditPad(button, e); return; }   // (0.99.59) the gallery's Edit (ThemeApi.GalleryEdit.cs)
+                if (colourOpen && !kbOpen) { e.Handled = true; padHandled = e; ColourPad(button, e); return; }   // (1.1.0) the colour picker (ThemeApi.ColourPicker.cs)
+                if (mediaTileMoving != null) { e.Handled = true; padHandled = e; MediaTileMovePad(button, e); return; }   // (1.1.0) a Media tile picked up
                 TipsAnyKey();   // a first-time tip goes when anything is pressed (the press still counts)
                 bool raised = ReferenceEquals(e, remapRaised);
                 bool pressed = !IsPadRelease(e);
@@ -153,6 +155,8 @@ namespace KippixHelper
                     OpenSearch();
                     return;
                 }
+
+                // (1.0.7) Layout changes WIP: X opens the highlighted screen
 
                 // (1.0.5) Controller buttons: Y on an action turns it off (or back on)
                 if (button == ControllerInput.Y && pressed && openPanel == "options" && optionsPage == "padbuttons" && padCapture == null && !confirmOpen && PadToggleOff()) { e.Handled = true; padHandled = e; return; }
@@ -284,6 +288,7 @@ namespace KippixHelper
         /// <summary>Hold A works on the games (home screen) and on the game page, with nothing open over them.</summary>
         private bool HoldAApplies()
         {
+            if (MediaTileHoldApplies()) return true;   // (1.1.0) Media: hold A on a tile to move it (ThemeApi.MediaTiles.cs)
             if (GalleryHoldApplies()) return true;   // (0.99.54) the gallery: hold A on a photo or video to pick several
             if (openPanel == null && !confirmOpen && !freeMove && !IsMasterMoving && !descReaderOpen && !detailsOpen && HeldPinTile() != null) return true;   // a pinned game: hold A offers Unpin (ThemeApi.PinHold.cs; as its More menu does)
             if (SettingsLockedNow) return false;   // Profiles: a profile whose settings are locked can't edit by holding A
@@ -337,6 +342,7 @@ namespace KippixHelper
         private void StartFreeMoveFromHold()
         {
             if (!HoldAApplies()) return;
+            if (openPanel == "profile" && MediaTileHoldApplies()) { holdAWaiting = false; StartMediaTileMove(holdAFocus); return; }   // (1.1.0)
             if (PinHoldMenu(holdAFocus)) { holdAWaiting = false; return; }   // a pinned game: Unpin / Cancel
             if (openPanel == "gallery") { holdAWaiting = false; GalleryHoldSelect(holdAFocus); return; }   // (0.99.54)
             // (0.99.1) the Board and the Manual board alike: editing it, with the held tile picked up (Start there: precise edit, the pointer)

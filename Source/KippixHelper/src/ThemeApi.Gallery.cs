@@ -133,6 +133,8 @@ namespace KippixHelper
             GalleryCleanDaysCommand = new RelayCommand(_ => { settings.GalleryCleanDays = NextCleanDays(settings.GalleryCleanDays); SaveSettings(); PlaySound("move"); NotifyGalleryClean(); });
             GalleryCleanCommand = new RelayCommand(_ => RunGalleryClean());
             InitGalleryViewer();
+            InitGallery2();   // (1.0.7) the Console design
+            InitGallery2Viewer();
         }
 
         // =====================================================================
@@ -200,6 +202,7 @@ namespace KippixHelper
                                          "GallerySortText", "GalleryShowText", "GalleryFilterText", "GallerySortNewest", "GallerySortOldest", "GalleryShowBoth",
                                          "GalleryShowPhotos", "GalleryShowVideos", "IsGalleryMenuSort", "IsGalleryMenuMore", "GallerySelectMode", "GallerySelectedText", "GalleryStatus", "HasGalleryStatus" })
                 Notify(n);
+            NotifyGallery2();
         }
 
         /// <summary>Top bar / home tile: the gallery, on the view you used last.</summary>
@@ -210,6 +213,8 @@ namespace KippixHelper
             galleryPage = galleryView == "games" ? "games" : "grid";
             gallerySelect = false;
             galleryOpenFile = null;
+            g2Game = null;   // (1.0.7) from the top bar: every game
+            Gallery2Opening();
             NotifyGallery();
             if (galleryFiles.Count == 0 || (DateTime.Now - galleryScannedAt).TotalSeconds > 20) ScanGallery(true);
             else RebuildGallery(true);
@@ -226,6 +231,7 @@ namespace KippixHelper
             gallerySelect = false;
             galleryOpenFile = file;
             galleryViewerFromGamePage = file != null;   // (0.99.56) a picture opened from the game page: B goes back there
+            Gallery2Opening();
             NotifyGallery();
             if (galleryFiles.Count == 0 || (DateTime.Now - galleryScannedAt).TotalSeconds > 20) ScanGallery(true);
             else RebuildGallery(true);
@@ -255,6 +261,7 @@ namespace KippixHelper
             gallerySettingsFromGallery = false;
             foreach (var i in GalleryItems) i.Thumb = null;   // let the pictures go
             GalleryItems.Clear();
+            ForgetGallery2Pictures();
             lock (galleryThumbs) galleryThumbs.Clear();
         }
 
@@ -263,6 +270,7 @@ namespace KippixHelper
         {
             if (galleryEditOpen) { GeAct("b"); return true; }   // (0.99.59)
             if (galleryViewerOpen && galleryMoreOpen) { PlaySound("back"); SetGalleryMore(false); return true; }
+            if (galleryViewerOpen && Gallery2 && !galleryControlsShown) { ToggleViewer2Controls(); return true; }   // (1.0.7) the Console viewer: B brings the controls back first
             if (galleryViewerOpen)
             {
                 if (galleryZoom > 1.01) { SetGalleryZoom(1); return true; }
@@ -278,6 +286,7 @@ namespace KippixHelper
                 CloseGalleryViewer(true);
                 return true;
             }
+            if (Gallery2Back()) return true;   // (1.0.7)
             if (gallerySelect) { SetGallerySelect(false); return true; }
             if (GalleryMoveBack()) return true;
             if (CloseGalleryMenu()) return true;
@@ -784,6 +793,7 @@ namespace KippixHelper
         private void RebuildGallery(bool focusFirst)
         {
             galleryRebuilds++;
+            Gallery2Opening();   // (1.0.7) the Console design has no games page
             int gen = ++galleryGen;
             foreach (var i in GalleryItems) i.Thumb = null;
             GalleryItems.Clear();
@@ -831,14 +841,15 @@ namespace KippixHelper
                 IEnumerable<GalleryFile> src = galleryFiles;
                 if (galleryPage == "game") src = src.Where(f => f.GameId == galleryGameId);
                 else if (galleryView == "favs") src = src.Where(f => favs.Contains(f.Path));
-                galleryList = Shown(src).ToList();
+                galleryList = Gallery2Grid ? Gallery2List(favs) : Shown(src).ToList();
                 galleryShown = 0;
                 AppendGalleryTiles(GalleryPageSize, favs);
                 if (galleryList.Count == 0)
-                    GalleryEmptyText = galleryView == "favs" && galleryPage == "grid" ? Loc("LOC_KX_NoFavourites", "Nothing here yet. Press X on a photo or video to make it a favourite.") : EmptyGalleryText();
+                    GalleryEmptyText = (Gallery2Grid ? g2Tab == "favs" : galleryView == "favs" && galleryPage == "grid") ? Loc("LOC_KX_NoFavourites", "Nothing here yet. Press X on a photo or video to make it a favourite.") : EmptyGalleryText();
                 GallerySubText = CountText(galleryList) + (galleryList.Count > 0 ? "  ·  " + KippixOverlay.Capture.DriveSize(galleryList.Sum(f => f.Size)) : "");
             }
             NotifyGallery();
+            Gallery2Built();
             if (galleryOpenFile != null)
             {
                 string open = galleryOpenFile;
@@ -862,7 +873,8 @@ namespace KippixHelper
             if (openPanel != "gallery") return;
             var first = GalleryItems.FirstOrDefault(i => i.IsTile);
             if ((galleryPage == "games" || galleryPage == "moveto") && GalleryGames.Count > 0) { UiTools.FocusItem("KX_GalleryGameList", GalleryGames[0]); return; }
-            if (first != null) { UiTools.FocusItem("KX_GalleryGrid", first); return; }
+            if (first != null) { UiTools.FocusItem(GalleryGridName, first); return; }
+            if (Gallery2Grid) { UiTools.FocusItem("KX_Gallery2Tabs", Gallery2Tabs.FirstOrDefault(t => t.IsSelected)); return; }
             UiTools.FocusInside("KX_GalleryView");
         }
 
@@ -901,7 +913,8 @@ namespace KippixHelper
             var more = GalleryItems.LastOrDefault();
             if (more != null && more.IsMore) GalleryItems.Remove(more);
             string lastHeader = null;
-            if (galleryView == "dates" && galleryPage == "grid")
+            bool days = (galleryView == "dates" && galleryPage == "grid") || Gallery2Grid;
+            if (days)
             {
                 var h = GalleryItems.LastOrDefault(i => i.IsHeader);
                 lastHeader = h != null ? h.HeaderText : null;
@@ -911,9 +924,9 @@ namespace KippixHelper
             for (int i = galleryShown; i < end; i++)
             {
                 var f = galleryList[i];
-                if (galleryView == "dates" && galleryPage == "grid")
+                if (days)
                 {
-                    string head = DateHeading(f.Date);
+                    string head = Gallery2Grid ? Gallery2Heading(f.Date) : DateHeading(f.Date);
                     if (head != lastHeader) { GalleryItems.Add(new GalleryItem { IsHeader = true, HeaderText = head }); lastHeader = head; }
                 }
                 var item = new GalleryItem
@@ -949,7 +962,7 @@ namespace KippixHelper
             ui.BeginInvoke(new Action(() =>
             {
                 var next = firstNew >= 0 ? GalleryItems.Skip(firstNew).FirstOrDefault(i => i.IsTile) : null;
-                if (next != null) UiTools.FocusItem("KX_GalleryGrid", next);
+                if (next != null) UiTools.FocusItem(GalleryGridName, next);
             }), DispatcherPriority.ContextIdle);
         }
 
@@ -1055,7 +1068,7 @@ namespace KippixHelper
             gallerySelect = on;
             foreach (var i in GalleryItems) { i.SelectMode = on; if (!on) i.IsChecked = false; }
             NotifyGallery();
-            if (on) ui.BeginInvoke(new Action(() => { var f = GalleryItems.FirstOrDefault(i => i.IsTile); if (f != null) UiTools.FocusItem("KX_GalleryGrid", f); }), DispatcherPriority.ContextIdle);
+            if (on) ui.BeginInvoke(new Action(() => { var f = GalleryItems.FirstOrDefault(i => i.IsTile); if (f != null) UiTools.FocusItem(GalleryGridName, f); }), DispatcherPriority.ContextIdle);
             else ui.BeginInvoke(new Action(() => UiTools.FocusByName("KX_GallerySelectChip")), DispatcherPriority.ContextIdle);
         }
 

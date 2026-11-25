@@ -48,7 +48,7 @@ namespace KippixHelper
     {
         private const string GuideUrl = "https://github.com/Kipping0/Kippix/blob/main/docs/GUIDE.md";
 
-        private static readonly string[] WelcomeSteps = { "hello", "look", "style", "gamepage", "stores", "profiles", "done" };   // (0.87: no controller check; 0.89: + card glow & background, game page)
+        private static readonly string[] WelcomeSteps = { "hello", "look", "style", "colour", "gamepage", "stores", "profiles", "done" };   // (1.1.0: Colour, the theme colour)   // (0.87: no controller check; 0.89: + card glow & background, game page)
         private int welcomeStep;
         private string welcomeResume;   // left the tour to pick a picture / sign in: it comes back to this step
         public bool IsWelcomeOpen { get { return openPanel == "welcome"; } }
@@ -326,6 +326,7 @@ namespace KippixHelper
                 case "hello": return Loc("LOC_KX_TourRailHello", "Welcome");
                 case "look": return Loc("LOC_KX_TourRailLook", "Your look");
                 case "style": return Loc("LOC_KX_TourRailStyle", "Style");
+                case "colour": return Loc("LOC_KX_TourRailColour", "Colour");
                 case "gamepage": return Loc("LOC_KX_TourRailGamePage", "Game page");
                 case "stores": return Loc("LOC_KX_TourRailStores", "Stores");
                 case "profiles": return settings.ProfilesEnabled ? Loc("LOC_KX_TourRailProfiles", "Who plays") : Loc("LOC_KX_TourRailYou", "About you");
@@ -651,6 +652,7 @@ namespace KippixHelper
                 case "hello": BuildTourHello(rows); break;
                 case "look": BuildTourLook(rows); break;
                 case "style": BuildTourStyle(rows); break;
+                case "colour": BuildTourColour(rows); break;
                 case "gamepage": BuildTourGamePage(rows); break;
                 case "stores": BuildTourStores(rows); break;
                 case "profiles": BuildTourProfiles(rows); break;
@@ -706,6 +708,7 @@ namespace KippixHelper
             {
                 case "look": BuildTourLook(tmp); break;
                 case "style": BuildTourStyle(tmp); break;
+                case "colour": BuildTourColour(tmp); break;
                 case "gamepage": BuildTourGamePage(tmp); break;
                 case "stores": BuildTourStores(tmp); break;
                 case "profiles": BuildTourProfiles(tmp); break;
@@ -833,6 +836,20 @@ namespace KippixHelper
         }
 
         // ---------------- (0.89) 4. the game page ----------------
+
+        /// <summary>(1.1.0) The theme colour: Kippix purple, or one of your own (the colour picker). It changes as soon as it's picked.</summary>
+        private void BuildTourColour(ObservableCollection<PickRow> rows)
+        {
+            WelcomeKicker = Loc("LOC_KX_TourKickColour", "THEME COLOUR");
+            WelcomeTitle = Loc("LOC_KX_TourColour", "Your colour");
+            WelcomeText = Loc("LOC_KX_TourColourText", "The colour of the highlights, buttons and bars all through Kippix. You can change it any time in Settings › Look and feel.");
+            bool def = IsThemeColourDefault;
+            rows.Add(new PickRow { Key = "tc0", Icon = "colour", Text = Loc("LOC_KX_ThemeColourPurple", "Kippix purple"), IsSelected = def,
+                                   Command = new RelayCommand(_ => { SetThemeColour(KippixPurple); PlaySound("move"); TourRowsAgain("tc0"); }) });
+            rows.Add(new PickRow { Key = "tc1", Icon = "colour", IsSelected = !def,
+                                   Text = def ? Loc("LOC_KX_TourColourPick", "Choose a colour") : string.Format(Loc("LOC_KX_TourColourYours", "Your own: {0}"), ColourToHex(ThemeColourNow)),
+                                   Command = new RelayCommand(_ => PickThemeColour(() => TourRowsAgain("tc1"))) });
+        }
 
         private void BuildTourGamePage(ObservableCollection<PickRow> rows)
         {

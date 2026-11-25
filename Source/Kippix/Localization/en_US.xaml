@@ -376,9 +376,6 @@
     <sys:String x:Key="LOC_KX_StoreUsPrice">US price</sys:String>
     <sys:String x:Key="LOC_KX_StoreLowest">Lowest price ever, any store: ${0} US{1}</sys:String>
     <sys:String x:Key="LOC_KX_StoreOwned">In your library</sys:String>
-    <sys:String x:Key="LOC_KX_StorePrices">Store prices</sys:String>
-    <sys:String x:Key="LOC_KX_StoreChecking">Checking every store…</sys:String>
-    <sys:String x:Key="LOC_KX_StoreBest">Best price</sys:String>
     <sys:String x:Key="LOC_KX_StoreBuyNote">Store pages open in the browser here: sign in and buy without leaving the theme</sys:String>
     <sys:String x:Key="LOC_KX_Select">Select</sys:String>
     <sys:String x:Key="LOC_KX_StoreWebSub">Opens the store in your browser</sys:String>
@@ -410,7 +407,6 @@
     <sys:String x:Key="LOC_KX_LinksInDefault">Default browser</sys:String>
     <sys:String x:Key="LOC_KX_BrowserHelp"></sys:String>
     <sys:String x:Key="LOC_KX_StoreSettings">Store settings</sys:String>
-    <sys:String x:Key="LOC_KX_StoreLoadingMore">Loading more…</sys:String>
     <sys:String x:Key="LOC_KX_StoreMediaHint">Select a picture or trailer to see it full screen</sys:String>
     <sys:String x:Key="LOC_KX_StoreOpenPage">Open the store page</sys:String>
     <sys:String x:Key="LOC_KX_Browser">Browser</sys:String>
@@ -476,7 +472,6 @@
     <sys:String x:Key="LOC_KX_PickerSearch">Search</sys:String>
     <sys:String x:Key="LOC_KX_PickerMore">Search all {0}</sys:String>
     <sys:String x:Key="LOC_KX_PickerSearchPrompt">Search genres and tags</sys:String>
-    <sys:String x:Key="LOC_KX_Reviews">Reviews</sys:String>
     <sys:String x:Key="LOC_KX_AboutGame">About this game</sys:String>
     <sys:String x:Key="LOC_KX_ReviewsLine">{0}% of {1} Steam reviews are positive</sys:String>
     <sys:String x:Key="LOC_KX_ReviewHours">{0} h played</sys:String>
@@ -488,8 +483,6 @@
     <sys:String x:Key="LOC_KX_SortNewSG">Newest (Steam &amp; GOG)</sys:String>
     <sys:String x:Key="LOC_KX_SortRatedSG">Best rated (Steam &amp; GOG)</sys:String>
     <sys:String x:Key="LOC_KX_StoreResellers">Also compare Humble, Fanatical and Green Man Gaming</sys:String>
-    <sys:String x:Key="LOC_KX_Stores">Stores</sys:String>
-    <sys:String x:Key="LOC_KX_InLibrary">In your library</sys:String>
     <sys:String x:Key="LOC_KX_RowFree">Free this week on Epic</sys:String>
     <sys:String x:Key="LOC_KX_RowPopular">Popular right now</sys:String>
     <sys:String x:Key="LOC_KX_RowDeals">Biggest deals today</sys:String>
@@ -528,7 +521,6 @@
     <!-- v0.22 Store -->
     <sys:String x:Key="LOC_KX_Editions">Editions</sys:String>
     <sys:String x:Key="LOC_KX_HideFree">Hide free games</sys:String>
-    <sys:String x:Key="LOC_KX_ReadMore">Read it all</sys:String>
     <sys:String x:Key="LOC_KX_RowRecent">Recently added</sys:String>
     <sys:String x:Key="LOC_KX_RowSoon">Coming soon</sys:String>
     <sys:String x:Key="LOC_KX_SecStoreRows">FRONT PAGE ROWS</sys:String>
@@ -557,7 +549,6 @@
     <sys:String x:Key="LOC_KX_SecStoreTrailers">PICTURES AND TRAILERS</sys:String>
     <sys:String x:Key="LOC_KX_StoreAutoplay">Play the trailer automatically on a game's page</sys:String>
     <sys:String x:Key="LOC_KX_RowsHelp">The rows above the stores on the Store's first page.</sys:String>
-    <sys:String x:Key="LOC_KX_ReviewReadAll">Read it in full, and the other reviews</sys:String>
     <sys:String x:Key="LOC_KX_EditionsCount">Editions ({0})</sys:String>
     <sys:String x:Key="LOC_KX_EditionsOf">Editions of {0}</sys:String>
     <sys:String x:Key="LOC_KX_StoreTilesNone">Only All stores</sys:String>
@@ -572,7 +563,6 @@
     <sys:String x:Key="LOC_KX_MoreLikeThis">More like this</sys:String>
     <sys:String x:Key="LOC_KX_LikeFor">Games like {0}</sys:String>
     <sys:String x:Key="LOC_KX_SortSimilar">Most similar</sys:String>
-    <sys:String x:Key="LOC_KX_WishHint">Wishlist</sys:String>
     <sys:String x:Key="LOC_KX_WishShortOn">Wishlisted</sys:String>
     <sys:String x:Key="LOC_KX_WishShortOff">Wishlist</sys:String>
     <sys:String x:Key="LOC_KX_AlertUnder">Alert under {0}</sys:String>
@@ -894,11 +884,7 @@
     <sys:String x:Key="LOC_KX_ButtonIconsSub">Automatic matches whatever you last used</sys:String>
     <sys:String x:Key="LOC_KX_Change">Change</sys:String>
     <sys:String x:Key="LOC_KX_Checking">Checking…</sys:String>
-    <sys:String x:Key="LOC_KX_CleanAge">How old</sys:String>
-    <sys:String x:Key="LOC_KX_CleanGo">Move them to the Recycle Bin</sys:String>
-    <sys:String x:Key="LOC_KX_CleanNote">You can get them back from the Recycle Bin. Favourites are never cleaned up.</sys:String>
     <sys:String x:Key="LOC_KX_CleanNothing">Nothing that old (favourites are always kept).</sys:String>
-    <sys:String x:Key="LOC_KX_CleanWhat">What</sys:String>
     <sys:String x:Key="LOC_KX_CleanWould">{0}  ·  {1}  (favourites are kept)</sys:String>
     <sys:String x:Key="LOC_KX_ClearRating">No rating</sys:String>
     <sys:String x:Key="LOC_KX_Clip">clip</sys:String>
@@ -955,27 +941,20 @@
     <sys:String x:Key="LOC_KX_FavOn">Added to favourites</sys:String>
     <sys:String x:Key="LOC_KX_FavRemoved">{0} taken out of favourites</sys:String>
     <sys:String x:Key="LOC_KX_Favourite">Favourite</sys:String>
-    <sys:String x:Key="LOC_KX_Favourites">Favourites</sys:String>
     <sys:String x:Key="LOC_KX_FolderMissing">not found</sys:String>
     <sys:String x:Key="LOC_KX_Free">free</sys:String>
     <sys:String x:Key="LOC_KX_FromOverlay">FROM THE OVERLAY (CHANGE THESE IN THE OVERLAY)</sys:String>
     <sys:String x:Key="LOC_KX_Gallery">Gallery</sys:String>
-    <sys:String x:Key="LOC_KX_GalleryAll">Show all</sys:String>
-    <sys:String x:Key="LOC_KX_GalleryByDate">By date</sys:String>
-    <sys:String x:Key="LOC_KX_GalleryByGame">By game</sys:String>
     <sys:String x:Key="LOC_KX_GalleryDetails">DETAILS</sys:String>
     <sys:String x:Key="LOC_KX_GalleryFolders">Gallery settings</sys:String>
     <sys:String x:Key="LOC_KX_GalleryFoldersHelp">The gallery shows photos and videos from these folders. Choose one of your folders to take it off the list (nothing is deleted).</sys:String>
     <sys:String x:Key="LOC_KX_GalleryGamesSub">{0} games  ·  {1}</sys:String>
-    <sys:String x:Key="LOC_KX_GalleryHintOpen">Open</sys:String>
     <sys:String x:Key="LOC_KX_GalleryEdit">Edit</sys:String>
     <sys:String x:Key="LOC_KX_GalleryVolume">Volume</sys:String>
     <sys:String x:Key="LOC_KX_MouseParkOff">Off screen</sys:String>
     <sys:String x:Key="LOC_KX_MouseParkLast">Where it was</sys:String>
     <sys:String x:Key="LOC_KX_MouseParkMiddle">Middle of the screen</sys:String>
     <sys:String x:Key="LOC_KX_SaveFrame">Save this frame as a photo</sys:String>
-    <sys:String x:Key="LOC_KX_GalleryHintHoldA">Hold: select several</sys:String>
-    <sys:String x:Key="LOC_KX_MoveToGame">Move to a game</sys:String>
     <sys:String x:Key="LOC_KX_GalleryNone">No screenshots or clips yet. Take some with the overlay, Steam, NVIDIA or Xbox Game Bar, or add a folder with the gear.</sys:String>
     <sys:String x:Key="LOC_KX_GalleryNoneHere">Nothing to show with these settings.</sys:String>
     <sys:String x:Key="LOC_KX_GallerySteam">Steam screenshots</sys:String>
@@ -1068,7 +1047,6 @@
     <sys:String x:Key="LOC_KX_Photo">photo</sys:String>
     <sys:String x:Key="LOC_KX_PhotosAndVideos">Photos and videos</sys:String>
     <sys:String x:Key="LOC_KX_PhotosOnly">Photos</sys:String>
-    <sys:String x:Key="LOC_KX_PickSeveral">Select</sys:String>
     <sys:String x:Key="LOC_KX_PickerCantOpen">This folder can't be opened.</sys:String>
     <sys:String x:Key="LOC_KX_PickerDrives">DRIVES</sys:String>
     <sys:String x:Key="LOC_KX_PickerFiles">FILES</sys:String>
@@ -1103,7 +1081,6 @@
     <sys:String x:Key="LOC_KX_ScoresFrom">Out of 100, from your Playnite metadata.</sys:String>
     <sys:String x:Key="LOC_KX_SecAchHighlights">ACHIEVEMENTS</sys:String>
     <sys:String x:Key="LOC_KX_SecButtons">BUTTON ICONS</sys:String>
-    <sys:String x:Key="LOC_KX_SecCleanUp">CLEAN UP</sys:String>
     <sys:String x:Key="LOC_KX_SecColour">COLOUR</sys:String>
     <sys:String x:Key="LOC_KX_SecComfort">COMFORT</sys:String>
     <sys:String x:Key="LOC_KX_SecExtraRows">EXTRA ROWS</sys:String>
@@ -1119,7 +1096,6 @@
     <sys:String x:Key="LOC_KX_SecStatusRating">STATUS AND RATING</sys:String>
     <sys:String x:Key="LOC_KX_SecTopOfPage">AT THE TOP</sys:String>
     <sys:String x:Key="LOC_KX_SecYourCaptures">YOUR CAPTURES</sys:String>
-    <sys:String x:Key="LOC_KX_SelectAll">All on screen</sys:String>
     <sys:String x:Key="LOC_KX_SelectSome">Choose photos and videos to select them</sys:String>
     <sys:String x:Key="LOC_KX_SessionReminder">Play-time reminder</sys:String>
     <sys:String x:Key="LOC_KX_SessionReminderSub">A quiet reminder while you play</sys:String>
@@ -1161,7 +1137,6 @@
     <!-- v0.32 -->
     <sys:String x:Key="LOC_KX_GalleryMoreMenu">More</sys:String>
     <sys:String x:Key="LOC_KX_GallerySortFilter">Sort and filter</sys:String>
-    <sys:String x:Key="LOC_KX_GalleryFolderSettings">Gallery settings</sys:String>
     <sys:String x:Key="LOC_KX_ArtBackgroundUndone">{0}'s background is back to how it was</sys:String>
     <sys:String x:Key="LOC_KX_ArtCoverUndone">{0}'s cover is back to how it was</sys:String>
     <sys:String x:Key="LOC_KX_ArtPressAgain">press again to undo</sys:String>
@@ -1233,7 +1208,6 @@
     <sys:String x:Key="LOC_KX_SeeOtherPageSub">Moves the game page between its two pages</sys:String>
     <sys:String x:Key="LOC_KX_PartsHelp"></sys:String>
     <sys:String x:Key="LOC_KX_DetPartHelp">On the game page, press X on a part to come straight here. In Free move, point at it and press X.</sys:String>
-    <sys:String x:Key="LOC_KX_PickProfilePic">Choosing your profile picture: choose a screenshot</sys:String>
     <sys:String x:Key="LOC_KX_ProfileSettings">Your name and picture</sys:String>
     <sys:String x:Key="LOC_KX_Power">Power</sys:String>
     <sys:String x:Key="LOC_KX_ProfileSettingsSub">Your name, picture and what the button shows</sys:String>
@@ -1288,7 +1262,6 @@
     <sys:String x:Key="LOC_KX_WgInteractiveSub">Off: it's just for show and can't be pressed</sys:String>
     <sys:String x:Key="LOC_KX_ShapeLimit">That's the limit: any further and something would be cut off.</sys:String>
     <sys:String x:Key="LOC_KX_SearchPlaceholder">Type a game's name</sys:String>
-    <sys:String x:Key="LOC_KX_RecentSearches">RECENT SEARCHES</sys:String>
     <sys:String x:Key="LOC_KX_KeySpace">Space</sys:String>
     <sys:String x:Key="LOC_KX_KeyBack">Delete</sys:String>
     <sys:String x:Key="LOC_KX_KeyClear">Clear</sys:String>
@@ -4515,7 +4488,6 @@
     <sys:String x:Key="LOC_KX_HubOpenGallery">Open the gallery</sys:String>
     <sys:String x:Key="LOC_KX_HubShelfCapturesMonth">{0} this month</sys:String>
     <sys:String x:Key="LOC_KX_HubShelfWish">WISHLIST</sys:String>
-    <sys:String x:Key="LOC_KX_HubShelfAchs">RECENT ACHIEVEMENTS</sys:String>
     <sys:String x:Key="LOC_KX_HubShelfWishSale">{0} on sale</sys:String>
     <sys:String x:Key="LOC_KX_LibNoneMatch">No games match these filters.</sys:String>
     <sys:String x:Key="LOC_KX_LibShowChip">Show: {0}</sys:String>
@@ -4791,7 +4763,7 @@
     <sys:String x:Key="LOC_KX_SplashSize">Size {0}%</sys:String>
     <sys:String x:Key="LOC_KX_HintPart">Logo / card / "Starting…"</sys:String>
     <sys:String x:Key="LOC_KX_HintPutBack">Put this back</sys:String>
-    <sys:String x:Key="LOC_KX_MediaMenuSub">Your shows &amp; movies, Netflix, YouTube, Prime Video, Crunchyroll</sys:String>
+    <sys:String x:Key="LOC_KX_MediaMenuSub">Your shows &amp; movies, Netflix, YouTube, Disney+ and more</sys:String>
     <sys:String x:Key="LOC_KX_LocalOneFolder">Your own videos, from 1 folder</sys:String>
     <sys:String x:Key="LOC_KX_LocalNFolders">Your own videos, from {0} folders</sys:String>
     <sys:String x:Key="LOC_KX_SecStreaming">STREAMING</sys:String>
@@ -5017,11 +4989,11 @@
     <sys:String x:Key="LOC_KX_PlayniteGameMenuSub">Playnite's own game menu (Menu does something else now)</sys:String>
     <!-- 1.0.4: streaming services, how they open (profile menu > Media > Opens in) -->
     <sys:String x:Key="LOC_KX_StreamOpenRow">Opens in: {0}</sys:String>
-    <sys:String x:Key="LOC_KX_StreamOpenSub">Automatic, full screen in your browser, or a browser window</sys:String>
+    <sys:String x:Key="LOC_KX_StreamOpenSub">Full screen in your browser, or a browser window</sys:String>
     <sys:String x:Key="LOC_KX_StreamOpenAuto">Automatic</sys:String>
     <sys:String x:Key="LOC_KX_StreamOpenFull">Full screen in your browser</sys:String>
     <sys:String x:Key="LOC_KX_StreamOpenWindow">Your browser, in a window</sys:String>
-    <sys:String x:Key="LOC_KX_MediaHelpAuto">Netflix, Prime Video and Crunchyroll open their Windows apps when they're installed, otherwise full screen in your browser, as YouTube does. The controller drives the browser; Guide brings up the overlay to close it.</sys:String>
+    <sys:String x:Key="LOC_KX_MediaHelpAuto">Each service opens its Windows app when it's installed, otherwise full screen in your browser. The controller drives the browser; Guide brings up the overlay to close it.</sys:String>
     <sys:String x:Key="LOC_KX_MediaHelpFull">Every service opens full screen in your browser, like a TV app. The controller drives the browser; Guide brings up the overlay to close it.</sys:String>
     <sys:String x:Key="LOC_KX_MediaHelpWindow">Every service opens its website in your browser, in a normal window.</sys:String>
     <!-- 1.0.4: top bar battery -->
@@ -5032,4 +5004,131 @@
     <sys:String x:Key="LOC_KX_RmFailsafeSub">Hold both sticks in (L3 + R3) for 5 seconds anywhere, or use Reset controller buttons in the add-on's settings in desktop mode</sys:String>
     <sys:String x:Key="LOC_KX_RmResetDone">Controller buttons reset</sys:String>
     <sys:String x:Key="LOC_KX_RmResetDoneLine">Every button does what it did when Kippix was installed</sys:String>
+    <!-- 1.0.6: Media's edit mode -->
+    <!-- 1.0.7 -->
+    <sys:String x:Key="LOC_KX_MediaAddSource">Manually add source</sys:String>
+    <sys:String x:Key="LOC_KX_MediaAddSourceSub">A website of your own: its address, then a name</sys:String>
+    <sys:String x:Key="LOC_KX_MediaAddress">Address</sys:String>
+    <sys:String x:Key="LOC_KX_MediaAskAddress">The website's address</sys:String>
+    <sys:String x:Key="LOC_KX_MediaAskName">Its name</sys:String>
+    <sys:String x:Key="LOC_KX_MediaBadAddress">That isn't a website's address</sys:String>
+    <sys:String x:Key="LOC_KX_MediaHeader">MEDIA</sys:String>
+    <sys:String x:Key="LOC_KX_MediaIcon">Icon</sys:String>
+    <sys:String x:Key="LOC_KX_MediaIconChoose">Choose its icon</sys:String>
+    <sys:String x:Key="LOC_KX_MediaIconDefault">The globe</sys:String>
+    <sys:String x:Key="LOC_KX_MediaIconFailed">That picture couldn't be used</sys:String>
+    <sys:String x:Key="LOC_KX_MediaIconOwn">Your own picture</sys:String>
+    <sys:String x:Key="LOC_KX_MediaIconUseDefault">Use the globe instead</sys:String>
+    <sys:String x:Key="LOC_KX_MediaMoveIt">Move it</sys:String>
+    <sys:String x:Key="LOC_KX_MediaRemove">Remove it</sys:String>
+    <sys:String x:Key="LOC_KX_SecWideBg">WIDE PICTURES</sys:String>
+    <sys:String x:Key="LOC_KX_SgdbHeader">STEAMGRIDDB</sys:String>
+    <sys:String x:Key="LOC_KX_SgdbNextBg">Next background</sys:String>
+    <sys:String x:Key="LOC_KX_SgdbNextBgSub">Swaps it for the next one on SteamGridDB</sys:String>
+    <sys:String x:Key="LOC_KX_SgdbNextCover">Next cover</sys:String>
+    <sys:String x:Key="LOC_KX_SgdbNextCoverSub">Swaps it for the next one on SteamGridDB</sys:String>
+    <sys:String x:Key="LOC_KX_SgdbNoBg">SteamGridDB has no backgrounds for this game</sys:String>
+    <sys:String x:Key="LOC_KX_SgdbNoCover">SteamGridDB has no covers for this game</sys:String>
+    <sys:String x:Key="LOC_KX_SgdbNoKey">Add your free SteamGridDB key in Playnite's add-on settings for Kippix (desktop mode) to swap this game's art here</sys:String>
+    <sys:String x:Key="LOC_KX_SgdbNoKeyShort">No SteamGridDB key</sys:String>
+    <sys:String x:Key="LOC_KX_SgdbNotFound">SteamGridDB doesn't know this game by its name</sys:String>
+    <sys:String x:Key="LOC_KX_SgdbRefused">SteamGridDB didn't accept the key</sys:String>
+    <sys:String x:Key="LOC_KX_SgdbShowing">{0} of {1} from SteamGridDB</sys:String>
+    <sys:String x:Key="LOC_KX_WideBg">Show wide backgrounds whole</sys:String>
+    <sys:String x:Key="LOC_KX_WideBgOff">Wide pictures are zoomed in to fill the screen</sys:String>
+    <sys:String x:Key="LOC_KX_WideBgOn">A wide picture (like SteamGridDB's 3840×1240) sits at the top and fades to black</sys:String>
+    <sys:String x:Key="LOC_KX_SearchRecentRow">Show recent searches</sys:String>
+    <sys:String x:Key="LOC_KX_SearchRecentRowSub">Your last searches, under the search line before you type</sys:String>
+    <sys:String x:Key="LOC_KX_All">All</sys:String>
+    <sys:String x:Key="LOC_KX_HintBack">Back</sys:String>
+    <sys:String x:Key="LOC_KX_HintType">Type</sys:String>
+    <sys:String x:Key="LOC_KX_KeyDoneV2">Done</sys:String>
+    <sys:String x:Key="LOC_KX_KeyOpenStore">Open in store</sys:String>
+    <sys:String x:Key="LOC_KX_SearchSwitchFilter">switch filter</sys:String>
+    <sys:String x:Key="LOC_KX_G2AllGames">All games</sys:String>
+    <sys:String x:Key="LOC_KX_G2Captures">{0} captures</sys:String>
+    <sys:String x:Key="LOC_KX_G2Clip">Clip</sys:String>
+    <sys:String x:Key="LOC_KX_G2Clips">Clips</sys:String>
+    <sys:String x:Key="LOC_KX_G2Favourite">Favourite</sys:String>
+    <sys:String x:Key="LOC_KX_G2Favourites">Favourites</sys:String>
+    <sys:String x:Key="LOC_KX_G2OneCapture">1 capture</sys:String>
+    <sys:String x:Key="LOC_KX_G2Screenshot">Screenshot</sys:String>
+    <sys:String x:Key="LOC_KX_G2Screenshots">Screenshots</sys:String>
+    <sys:String x:Key="LOC_KX_G2SwitchTab">Switch tab</sys:String>
+    <sys:String x:Key="LOC_KX_G2Unfavourite">Unfavourite</sys:String>
+    <sys:String x:Key="LOC_KX_G2View">View</sys:String>
+    <sys:String x:Key="LOC_KX_KeyOK">OK</sys:String>
+    <sys:String x:Key="LOC_KX_Uninstalled">Uninstalled</sys:String>
+    <sys:String x:Key="LOC_KX_G2Copied">Copied: paste it into a chat, a post or a folder</sys:String>
+    <sys:String x:Key="LOC_KX_G2CopyFailed">Couldn't copy it. Try again in a moment.</sys:String>
+    <sys:String x:Key="LOC_KX_G2Delete">Delete</sys:String>
+    <sys:String x:Key="LOC_KX_G2FavouriteBadge">FAVOURITE</sys:String>
+    <sys:String x:Key="LOC_KX_G2Favourited">Favourited</sys:String>
+    <sys:String x:Key="LOC_KX_G2HideControls">Hide controls</sys:String>
+    <sys:String x:Key="LOC_KX_G2Share">Share</sys:String>
+    <sys:String x:Key="LOC_KX_G2ViewButton">View</sys:String>
+    <sys:String x:Key="LOC_KX_C2RecentAchievements">RECENT ACHIEVEMENTS</sys:String>
+    <sys:String x:Key="LOC_KX_C2RightStick">Right stick</sys:String>
+    <sys:String x:Key="LOC_KX_C2LeftStick">Left stick</sys:String>
+    <sys:String x:Key="LOC_KX_C2Triggers">TRIGGERS</sys:String>
+    <sys:String x:Key="LOC_KX_C2StickDrift">STICK DRIFT</sys:String>
+    <sys:String x:Key="LOC_KX_ChStore">Store</sys:String>
+    <sys:String x:Key="LOC_KX_S2About">About</sys:String>
+    <sys:String x:Key="LOC_KX_S2AboutCaps">ABOUT</sys:String>
+    <sys:String x:Key="LOC_KX_S2BestPrice">BEST PRICE</sys:String>
+    <sys:String x:Key="LOC_KX_S2InLibrary">IN LIBRARY</sys:String>
+    <sys:String x:Key="LOC_KX_S2Media">TRAILERS AND SCREENSHOTS</sys:String>
+    <sys:String x:Key="LOC_KX_S2Reviews">REVIEWS</sys:String>
+    <sys:String x:Key="LOC_KX_S2ShopFrom">SHOP FROM</sys:String>
+    <sys:String x:Key="LOC_KX_S2Similar">More like this</sys:String>
+    <sys:String x:Key="LOC_KX_M2BackText">Press the Guide button while an app is open.</sys:String>
+    <sys:String x:Key="LOC_KX_M2BackTitle">Back to Kippix any time</sys:String>
+    <sys:String x:Key="LOC_KX_M2Open">Open</sys:String>
+    <sys:String x:Key="LOC_KX_M2Sub">Watch something without leaving the sofa</sys:String>
+    <!-- 1.0.7: Media's settings (Y) -->
+    <sys:String x:Key="LOC_KX_MediaSettings">Media settings</sys:String>
+    <!-- 1.0.7: recent searches on the Console search -->
+    <sys:String x:Key="LOC_KX_RecentSearches">RECENT SEARCHES</sys:String>
+    <!-- 1.1.0: the theme colour, the colour picker, Media tiles and Media settings -->
+    <sys:String x:Key="LOC_KX_ThemeColour">Theme colour</sys:String>
+    <sys:String x:Key="LOC_KX_ThemeColourSub">Highlights, buttons and bars everywhere (the game tiles have their own glow)</sys:String>
+    <sys:String x:Key="LOC_KX_ThemeColourPurple">Kippix purple</sys:String>
+    <sys:String x:Key="LOC_KX_ColourBrightness">HOW BRIGHT</sys:String>
+    <sys:String x:Key="LOC_KX_ColourPresets">READY-MADE COLOURS</sys:String>
+    <sys:String x:Key="LOC_KX_ColourDarker">Darker</sys:String>
+    <sys:String x:Key="LOC_KX_ColourLighter">Lighter</sys:String>
+    <sys:String x:Key="LOC_KX_ColourNext">Next colour</sys:String>
+    <sys:String x:Key="LOC_KX_ColourTypeHint">Type a #</sys:String>
+    <sys:String x:Key="LOC_KX_ColourDone">Done</sys:String>
+    <sys:String x:Key="LOC_KX_ColourType">A colour's # number (like #9300C5)</sys:String>
+    <sys:String x:Key="LOC_KX_ColourHeader">COLOUR</sys:String>
+    <sys:String x:Key="LOC_KX_ColourBad">That isn't a colour's # number</sys:String>
+    <sys:String x:Key="LOC_KX_TourRailColour">Colour</sys:String>
+    <sys:String x:Key="LOC_KX_TourKickColour">THEME COLOUR</sys:String>
+    <sys:String x:Key="LOC_KX_TourColour">Your colour</sys:String>
+    <sys:String x:Key="LOC_KX_TourColourText">The colour of the highlights, buttons and bars all through Kippix. You can change it any time in Settings › Look and feel.</sys:String>
+    <sys:String x:Key="LOC_KX_TourColourPick">Choose a colour</sys:String>
+    <sys:String x:Key="LOC_KX_TourColourYours">Your own: {0}</sys:String>
+    <sys:String x:Key="LOC_KX_HintEdit">Edit</sys:String>
+    <sys:String x:Key="LOC_KX_MediaTileSize">Tile size</sys:String>
+    <sys:String x:Key="LOC_KX_MediaAddSite">Add your own site</sys:String>
+    <sys:String x:Key="LOC_KX_MediaAddSiteSub">Its address and name, then its icon and background</sys:String>
+    <sys:String x:Key="LOC_KX_MediaIconKippix">Kippix's icon</sys:String>
+    <sys:String x:Key="LOC_KX_MediaIconUseKippix">Use Kippix's icon</sys:String>
+    <sys:String x:Key="LOC_KX_MediaBgColour">Background colour</sys:String>
+    <sys:String x:Key="LOC_KX_MediaBgColourSub">Pick a colour for the tile</sys:String>
+    <sys:String x:Key="LOC_KX_MediaBgPicture">Background picture</sys:String>
+    <sys:String x:Key="LOC_KX_MediaBgPictureSub">A picture of your own for the tile</sys:String>
+    <sys:String x:Key="LOC_KX_MediaBgDefault">Use the default background</sys:String>
+    <sys:String x:Key="LOC_KX_MediaBgChoose">Choose its background</sys:String>
+    <!-- 1.1.0: Media tile names, a tile picked up -->
+    <sys:String x:Key="LOC_KX_MediaTileNames">Tile names</sys:String>
+    <sys:String x:Key="LOC_KX_MediaTileMoving">Move it, then A</sys:String>
+    <!-- 1.1.0: hide / show a Media tile, move it from its page -->
+    <sys:String x:Key="LOC_KX_MediaHideTile">Hide this tile</sys:String>
+    <sys:String x:Key="LOC_KX_MediaHideTileSub">Media settings (Y) lists it to show it again</sys:String>
+    <sys:String x:Key="LOC_KX_MediaShowTile">Show this tile</sys:String>
+    <sys:String x:Key="LOC_KX_MediaHiddenTiles">HIDDEN TILES</sys:String>
+    <sys:String x:Key="LOC_KX_MediaShowTileSub">Hidden: A to show it again</sys:String>
+    <sys:String x:Key="LOC_KX_MediaMoveItSub2">Picked up on the Media page: the D-pad moves it, A puts it down</sys:String>
 </ResourceDictionary>

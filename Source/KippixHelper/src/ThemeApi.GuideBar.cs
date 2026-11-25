@@ -414,6 +414,7 @@ namespace KippixHelper
                 case "youtube": geoKey = "KX_IconVideo"; break;
                 case "prime": geoKey = "KX_IconFilmStrip"; break;
                 case "crunchyroll": geoKey = "KX_IconClapper"; break;
+                case "disney": case "appletv": case "paramount": case "hbo": geoKey = "KX_IconTv"; break;   // (1.0.6)
                 default: geoKey = "KX_IconDots"; break;
             }
             var geo = Application.Current != null ? Application.Current.TryFindResource(geoKey) as Geometry : null;

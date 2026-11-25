@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Threading;
 using Microsoft.Win32;
@@ -43,26 +44,86 @@ namespace KippixHelper
         {
             get
             {
-                switch (settings.StreamOpenIn)
+                switch (settings.StreamOpenIn == 2 ? 2 : 1)
                 {
                     case 1: return Loc("LOC_KX_MediaHelpFull", "Every service opens full screen in your browser, like a TV app. The controller drives the browser; Guide brings up the overlay to close it.");
                     case 2: return Loc("LOC_KX_MediaHelpWindow", "Every service opens its website in your browser, in a normal window.");
                 }
-                return Loc("LOC_KX_MediaHelpAuto", "Netflix, Prime Video and Crunchyroll open their Windows apps when they're installed, otherwise full screen in your browser, as YouTube does. The controller drives the browser; Guide brings up the overlay to close it.");
+                return Loc("LOC_KX_MediaHelpAuto", "Each service opens its Windows app when it's installed, otherwise full screen in your browser. The controller drives the browser; Guide brings up the overlay to close it.");
             }
         }
 
-        /// <summary>The last row on Media: Opens in (A steps through them).</summary>
+        /// <summary>(1.0.7) Y on Media opens its settings (Opens in lives there now, not in the list).</summary>
+        public bool MediaSettingsHint { get { return profilePage == "media" && !IsProfileReorder; } }
+        public ICommand MediaSettingsCommand { get { return new RelayCommand(_ => MediaSettingsKey()); } }
+        public ICommand MediaTileEditCommand { get { return new RelayCommand(_ => MediaTileEditKey()); } }
+
+        private bool MediaSettingsKey()
+        {
+            if (openPanel != "profile" || !MediaSettingsHint) return false;
+            SetProfilePage("mediaset");
+            return true;
+        }
+
+        /// <summary>(1.1.0) Media settings: Opens in, Tile names, Tile size, Add your own site, the hidden tiles.</summary>
+        private void BuildMediaSettingsRows()
+        {
+            AddStreamOpenRow();
+            ProfileRows.Add(new PickRow
+            {
+                Key = "tilenames", Icon = "tag", Text = Loc("LOC_KX_MediaTileNames", "Tile names"), Sub = MediaTileNamesText,
+                Command = new RelayCommand(_ => ToggleMediaTileNames())
+            });
+            ProfileRows.Add(new PickRow
+            {
+                Key = "tilesize", Icon = "sliders", Text = Loc("LOC_KX_MediaTileSize", "Tile size"), Sub = MediaTileSizeName,
+                Command = new RelayCommand(_ => CycleMediaTileSize())
+            });
+            ProfileRows.Add(MediaAddRow());
+            // (1.1.0) the tiles you hid (X on a tile › Hide this tile): A shows one again
+            var hidden = (settings.MediaHidden ?? new List<string>()).Where(IsMediaRowKey).ToList();
+            if (hidden.Count > 0)
+            {
+                ProfileRows.Add(new PickRow { IsHeader = true, Text = Loc("LOC_KX_MediaHiddenTiles", "HIDDEN TILES") });
+                foreach (string k in hidden)
+                {
+                    string key = k;
+                    ProfileRows.Add(new PickRow
+                    {
+                        Key = "hidden:" + key, Icon = "eyeoff", Text = MediaNameNow(key), Sub = Loc("LOC_KX_MediaShowTileSub", "Hidden: A to show it again"),
+                        Command = new RelayCommand(_ =>
+                        {
+                            SetMediaHidden(key, false);
+                            PlaySound("select");
+                            BuildProfileRows();
+                            var next = ProfileRows.FirstOrDefault(r => r.Key != null && r.Key.StartsWith("hidden:", StringComparison.Ordinal));
+                            ProfileFocusKey(next != null ? next.Key : "mediaadd");
+                        })
+                    });
+                }
+            }
+        }
+
+        /// <summary>B in Media's settings: back to Media.</summary>
+        private bool MediaSettingsBack()
+        {
+            if (openPanel != "profile" || profilePage != "mediaset") return false;
+            PlaySound("back");
+            SetProfilePage("media", "mediaset");
+            return true;
+        }
+
+        /// <summary>Media's settings: Opens in (A steps through them).</summary>
         private void AddStreamOpenRow()
         {
             ProfileRows.Add(new PickRow
             {
                 Key = "streamopen", Icon = "tv",
-                Text = string.Format(Loc("LOC_KX_StreamOpenRow", "Opens in: {0}"), StreamOpenText(settings.StreamOpenIn)),
-                Sub = Loc("LOC_KX_StreamOpenSub", "Automatic, full screen in your browser, or a browser window"),
+                Text = string.Format(Loc("LOC_KX_StreamOpenRow", "Opens in: {0}"), StreamOpenText(settings.StreamOpenIn == 2 ? 2 : 1)),
+                Sub = Loc("LOC_KX_StreamOpenSub", "Full screen in your browser, or a browser window"),
                 Command = new RelayCommand(_ =>
                 {
-                    settings.StreamOpenIn = (Math.Max(0, Math.Min(2, settings.StreamOpenIn)) + 1) % 3;
+                    settings.StreamOpenIn = settings.StreamOpenIn == 2 ? 1 : 2;   // (1.1.0: just the two)
                     SaveSettings();
                     PlaySound("move");
                     Notify("MediaHelpText");
@@ -84,15 +145,7 @@ namespace KippixHelper
         /// <summary>How a service opens with the setting: true when it was opened here (full screen or the built-in browser).</summary>
         private bool OpenMediaAsSet(MediaService svc, string app)
         {
-            int mode = Math.Max(0, Math.Min(2, settings.StreamOpenIn));
-            if (mode == 0)
-            {
-                // (YouTube too: full screen in your browser, not the built-in one)
-                if (app != null) return false;   // its app (the caller opens it)
-                ClosePanels();
-                OpenFullScreenBrowser(svc);
-                return true;
-            }
+            int mode = settings.StreamOpenIn == 2 ? 2 : 1;   // (1.1.0) full screen in your browser or a browser window (no apps)
             ClosePanels();
             if (mode == 1) { OpenFullScreenBrowser(svc); return true; }
             try { Process.Start(new ProcessStartInfo(svc.Web) { UseShellExecute = true }); } catch (Exception ex) { logger.Warn("Kippix: media: " + ex.Message); }

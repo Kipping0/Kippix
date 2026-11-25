@@ -547,25 +547,14 @@ namespace KippixHelper
                     if (!InProfile(FieldGroup(f.Name))) f.SetValue(copy, f.GetValue(blank));
                 copy.EditsMerged = true;
                 copy.LayoutHasViews = true;   // (the gallery's and achievements' sort / filter / tab are in it)
+                copy.LayoutHasBackground = true;   // (1.0.6) the home background's video, BackgroundChanger, Same size logos…
                 try { EmbedTileImages(copy); } catch (Exception) { }   // (your own picture tiles go with it)
                 File.WriteAllText(Path.Combine(folder, id + ".json"), js.Serialize(copy), Encoding.UTF8);
             }
             // (1.0.4) extra pictures from an earlier share of the same name go
             for (int i = 2; i <= MaxSharePictures; i++) try { File.Delete(Path.Combine(folder, id + "-" + i + ".jpg")); } catch (Exception) { }
             // a picture of the home screen
-            var win = Application.Current.MainWindow;
-            var root = win != null ? win.Content as FrameworkElement : null;
-            bool pictured = false;
-            if (root != null && root.ActualWidth > 0)
-            {
-                double scale = Math.Min(1.0, 1280.0 / root.ActualWidth);
-                var rtb = new RenderTargetBitmap((int)(root.ActualWidth * scale), (int)(root.ActualHeight * scale), 96 * scale, 96 * scale, PixelFormats.Pbgra32);
-                rtb.Render(root);
-                var enc = new JpegBitmapEncoder { QualityLevel = 88 };
-                enc.Frames.Add(BitmapFrame.Create(rtb));
-                using (var fs = File.Create(Path.Combine(folder, id + ".jpg"))) enc.Save(fs);
-                pictured = true;
-            }
+            bool pictured = SaveHomePicture(Path.Combine(folder, id + ".jpg"));
             // the index entry, filled in (the gallery's folders: layouts/, looks/, widgets/, previews/)
             string sub = kind == "looks" ? "looks" : kind == "widgets" ? "widgets" : kind == "gamepages" ? "gamepages" : "layouts";
             var entry = new Dictionary<string, object>

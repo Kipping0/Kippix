@@ -12,7 +12,7 @@ namespace KippixHelper
     public partial class ThemeApi
     {
         // Home settings › Game cards and layout
-        public string HomeLayoutTextNext { get { return NextText(settings.HomeLayoutMode, (settings.HomeLayoutMode + 1) % 6, v => settings.HomeLayoutMode = v, () => HomeLayoutText); } }
+        public string HomeLayoutTextNext { get { return NextText(settings.HomeLayoutMode, NextHomeLayout(settings.HomeLayoutMode), v => settings.HomeLayoutMode = v, () => HomeLayoutText); } }
         public string RowDesignTextNext { get { return NextText(settings.RowDesign, (settings.RowDesign + 1) % 3, v => settings.RowDesign = v, () => RowDesignText); } }
         public string RowFullCountTextNext { get { int n = Math.Max(FullCountMin, Math.Min(FullCountMax, settings.RowFullCount)); return NextText(settings.RowFullCount, n >= FullCountMax ? FullCountMin : n + 1, v => settings.RowFullCount = v, () => RowFullCountText); } }
         public string RowTallCountTextNext { get { int n = Math.Max(1, Math.Min(10, settings.RowTallCount)); return NextText(settings.RowTallCount, n >= 10 ? 1 : n + 1, v => settings.RowTallCount = v, () => RowTallCountText); } }

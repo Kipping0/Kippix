@@ -24,7 +24,7 @@ namespace KippixHelper
         public bool PinRestart = false;
         public bool PinShutdown = false;
         public List<string> ShortcutOrder;
-        public int StreamOpenIn = 0;               // (1.0.4) Media: 0 Automatic (its app / YouTube here / else full screen), 1 full screen in your browser, 2 a browser window
+        public int StreamOpenIn = 1;               // (1.0.4) Media: 1 full screen in your browser, 2 a browser window (1.1.0: Automatic, 0, was taken out: it counts as 1)
         public int PadStartDoes = 0;               // (1.0.4) Menu (Start) on the home screen / game page: 0 Playnite's game options, 1 Kippix's game options, 2 Search, 3 nothing
         public int PadViewDoes = 0;                // (1.0.4) View (Select) there: 0 Playnite's menu, 1 Kippix's menu (the profile menu), 2 Settings, 3 nothing
         public bool ShortcutsStartTop = false;     // (1.0.4) shortcuts down the side: Up from the games lands on the bottom one (false) or the top one
@@ -164,6 +164,15 @@ namespace KippixHelper
         public int BoardLiveSeconds = 8;           // live tiles change this often
         public int PreviewMode = 0;                // trailer when a card stays selected: 0 off, 1 in the card, 2 in the background
         public int PreviewDelay = 5;               // seconds before it starts
+        public List<string> MediaOrder = new List<string>();    // (1.0.6) the Media page's streaming services in your order (their keys)
+        public bool SearchShowRecent = false;      // (1.0.7) Search: the recent searches under the search line (Settings › General)
+        public Dictionary<string, int> SgdbArtAt = new Dictionary<string, int>();   // (1.0.7) Edit this game › Next background / cover: where each game is up to ("id|hero")
+        public List<MediaSource> MediaCustom = new List<MediaSource>();   // (1.0.7) Media › Manually add source: your own websites (ThemeApi.MediaCustom.cs)
+        public List<MediaSource> MediaLooks = new List<MediaSource>();    // (1.1.0) Media › X: your changes to the built-in tiles (name, address, icon, background)
+        public bool MediaTileNames = true;                                 // (1.1.0) Media settings › Tile names
+        public int MediaTileSize = 1;                                      // (1.1.0) Media settings › Tile size: 0 small, 1 medium, 2 large
+        public string ThemeColour = "#9300C5";                             // (1.1.0) the theme colour (Look and feel, getting started)
+        public List<string> MediaHidden = new List<string>();   // (1.0.6) Media rows hidden with the eye (keys: localmedia, netflix…)
         public List<string> ProfileMenuOrder = new List<string>();   // (0.99.11) the profile menu's rows in your order (their keys)
         public int BgChangeDelay = 150;            // (0.99.7) ms after moving to another game before the home background changes (0–400)
         public bool PreviewSound = false;
@@ -178,6 +187,7 @@ namespace KippixHelper
         public bool MasterHome = false;   // before 0.27: Master edit on for the home screen (set spots were switched off)
         public bool MasterGame = false;
         public bool EditsMerged = false;
+        public bool LayoutHasBackground = false;   // (1.0.6) a layout file with the home background's video / BackgroundChanger / Same size logos… (BackgroundFields)
         public bool LayoutHasViews = false;        // a layout file with the gallery's and achievements' sort / filter / tab (0.71+)
         public bool DebugLogging = false;   // Help › Detailed logging
         public bool OverlayEnabled = true;
@@ -544,6 +554,7 @@ namespace KippixHelper
         public bool SplashShowLogo = false;
         public bool SplashShowCard = false;
         public bool DetBgZoom = true;
+        public bool WideBgFit = false;             // (1.0.7) Background › Show wide backgrounds whole (ThemeApi.WideBg.cs)
         public int DetShade = 0;                   // (1.0.3) Game page: the dark shade over the picture behind the text: 0 normal, 1 light, 2 off, 3 strong              // (1.0.2) Game page › Animation: the background zooms in slowly as the page opens
         public bool SplashShowStatus = true;       // Playnite's "Starting…" words
         public double SplashLogoX = 0, SplashLogoY = 0, SplashLogoSize = 1;
@@ -568,7 +579,8 @@ namespace KippixHelper
         public bool ShowStreaks = true;
         // Profile hub (r9c): the tab it opens on, tabs taken off the strip, the Library tab's sort and filter
         public string ProfileHubTab = "overview";
-        public bool ProfileHubRemember = true;     // the profile opens on the tab you used last (off: always Overview)
+        public bool ProfileHubRemember = false;    // the profile opens on the tab you used last (off: always Overview; 1.0.7: off to start with)
+        public bool HubRememberReset107 = false;   // (1.0.7) turned off once for everyone (the user: the profile should open on Overview)
         public List<string> ProfileHubHidden = new List<string>();
         public int ProfileLibSort = 0;             // 0 name, 1 recently played, 2 most played, 3 recently added
         public int ProfileLibShow = 0;             // 0 every game, 1 installed, 2 not installed
@@ -797,6 +809,13 @@ namespace KippixHelper
     }
 
     /// <summary>A gallery photo made a game's background or cover: what it replaced, so pressing the button again puts that back.</summary>
+    /// <summary>(1.0.7) A website you added to Media yourself (Key "custom:…"; Icon: Kippix's copy of your picture, or "" for the globe).</summary>
+    public class MediaSource
+    {
+        public string Key, Name, Web, Icon;
+        public string Bg;   // (1.1.0) its tile's background: "" Kippix's own, "#RRGGBB" a colour, or a picture (a copy Kippix made)
+    }
+
     public class ArtSwap
     {
         public string GameId;
@@ -875,6 +894,7 @@ namespace KippixHelper
         public bool IsOptions { get { return Key == "options"; } }
         public bool IsBattery { get { return Key == "battery"; } }
         public bool IsClock { get { return Key == "clock"; } }
+        public bool IsCustomMedia { get { return Key != null && Key.StartsWith("custom:"); } }   // (1.0.7) a website you added to Media: the globe
         private System.Windows.Media.ImageSource picture;   // (1.0.1) a streaming service's own icon (from its app or website), over the line icon
         public System.Windows.Media.ImageSource Picture { get { return picture; } set { if (Set(ref picture, value, "Picture")) Notify("HasPicture"); } }
         public bool HasPicture { get { return picture != null; } }

@@ -25,18 +25,26 @@ namespace KippixHelper
         public static FrameworkElement FindByName(DependencyObject root, string name)
         {
             if (root == null) return null;
+            // (1.0.7) a screen's designs can use the same names (each in its own template): the one showing wins, and the first
+            // found when none of them is showing
+            FrameworkElement hidden = null;
             var queue = new Queue<DependencyObject>();
             queue.Enqueue(root);
             while (queue.Count > 0)
             {
                 var d = queue.Dequeue();
                 var fe = d as FrameworkElement;
-                if (fe != null && fe.Name == name) return fe;
+                if (fe != null && fe.Name == name)
+                {
+                    if (fe.IsVisible) return fe;
+                    if (hidden == null) hidden = fe;
+                    continue;   // (nothing inside a hidden one is showing)
+                }
                 int n = 0;
                 try { n = VisualTreeHelper.GetChildrenCount(d); } catch (Exception) { }
                 for (int i = 0; i < n; i++) queue.Enqueue(VisualTreeHelper.GetChild(d, i));
             }
-            return null;
+            return hidden;
         }
 
         /// <summary>Every element of a type under root (visual tree, breadth first).</summary>
@@ -140,6 +148,9 @@ namespace KippixHelper
                 var list = FindByName(MainWindow(), listName) as ItemsControl;
                 if (list == null) return;
                 var container = list.ItemContainerGenerator.ContainerFromItem(item) as DependencyObject;
+                // a row that was moved keeps the highlight, so nothing scrolls by itself: its whole row is brought into view
+                var row = container as FrameworkElement;
+                if (row != null) row.BringIntoView();
                 var part = container != null ? FindByName(container, partName) : null;
                 if (part != null) Keyboard.Focus(part);
             }

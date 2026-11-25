@@ -18,22 +18,24 @@ namespace KippixHelper
         private ICommand profileRefreshCmd, profileEditCmd;
 
         private bool ProfileReorderMoving { get { return openPanel == "profile" && IsProfileReorder && profileMovingKey != null; } }
-        public bool ProfileHeadButtons { get { return profilePage == ""; } }
+        public bool ProfileHeadButtons { get { return profilePage == ""; } }   // (1.1.0: Media's edit button was taken out: hold A / X on its tiles)
         public bool ProfileRefreshShown { get { return profilePage == "" && !profileReorder; } }
-        public bool IsProfileReorder { get { return profileReorder && profilePage == ""; } }
+        public bool IsProfileReorder { get { return profileReorder && (profilePage == "" || profilePage == "media"); } }
         public bool IsNotProfileReorder { get { return !IsProfileReorder; } }
         public ICommand ProfileRefreshCommand { get { return profileRefreshCmd ?? (profileRefreshCmd = new RelayCommand(_ => RefreshGameLibrary())); } }
         public ICommand ProfileEditCommand { get { return profileEditCmd ?? (profileEditCmd = new RelayCommand(_ => ProfileReorderToggle())); } }
 
         private void NotifyProfileHead()
         {
-            foreach (string n in new[] { "ProfileHeadButtons", "ProfileRefreshShown", "IsProfileReorder", "IsNotProfileReorder", "ProfileMenuTitle" }) Notify(n);
+            foreach (string n in new[] { "ProfileHeadButtons", "ProfileRefreshShown", "IsProfileReorder", "IsNotProfileReorder", "ProfileMenuTitle", "MediaSettingsHint" }) Notify(n);
         }
 
         private void ProfileReorderToggle()
         {
+            if (profilePage != "") return;   // (1.1.0) only the main menu has edit mode now (Media: hold A / X on its tiles)
             PlaySound("select");
             profileReorder = !profileReorder;
+            NotifyMediaConsole();
             profileMovingKey = null;
             BuildProfileRows();
             NotifyProfileHead();
@@ -88,7 +90,7 @@ namespace KippixHelper
             if (i < 0) return false;
             int j = i + dir;
             while (j >= 0 && j < ProfileRows.Count && (ProfileRows[j].IsHeader || !ProfileRows[j].IsRow)) j += dir;
-            if (j < 0 || j >= ProfileRows.Count) { PlaySound("back"); return true; }
+            if (j < 0 || j >= ProfileRows.Count || !ProfileRowMovable(ProfileRows[j])) { PlaySound("back"); return true; }
             ProfileRows.Move(i, j);
             PlaySound("move");
             SaveProfileOrder();
@@ -98,12 +100,14 @@ namespace KippixHelper
 
         private void SaveProfileOrder()
         {
+            if (profilePage == "media") { SaveMediaOrder(); return; }   // (1.0.6)
             settings.ProfileMenuOrder = ProfileRows.Where(r => !r.IsHeader && !string.IsNullOrEmpty(r.Key)).Select(r => r.Key).ToList();
             SaveSettings();
         }
 
         private void ProfileFocusKey(string key)
         {
+            if (profilePage == "media" && MediaConsoleShown) { FocusMediaTile(key); return; }   // (1.1.0) the tiles' own list
             ui.BeginInvoke(new Action(() =>
             {
                 var row = ProfileRows.FirstOrDefault(r => r.Key == key);

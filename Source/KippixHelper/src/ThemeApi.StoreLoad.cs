@@ -218,7 +218,7 @@ namespace KippixHelper
                 else
                 {
                     var steam = steamId != null ? L.Steam.Value : null;
-                    if (steam != null && !string.IsNullOrEmpty(steam.Metacritic)) scores = "Metacritic " + steam.Metacritic;
+                    if (steam != null && !string.IsNullOrEmpty(steam.Metacritic)) scores = "Metascore " + steam.Metacritic;
                 }
                 if (reviews == null && scores.Length > 0) reviews = new StoreReviews { Source = "critics", Title = Loc("LOC_KX_CriticScores", "Critic scores") };
                 // (0.99.27) the reviews show as soon as they're here; the Steam Deck badge follows when it comes

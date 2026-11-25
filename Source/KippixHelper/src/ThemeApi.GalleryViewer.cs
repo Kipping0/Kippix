@@ -101,7 +101,7 @@ namespace KippixHelper
             GalleryDetailsCommand = new RelayCommand(_ => ToggleGalleryDetails());
             GalleryDeleteCommand = new RelayCommand(_ => DeleteGalleryCurrent());
             GalleryViewerSlideshowCommand = new RelayCommand(_ => SetSlideshow(!gallerySlideshow));
-            GallerySurfaceCommand = new RelayCommand(_ => { if (Current != null && Current.IsVideo) ToggleGalleryVideo(); else ShowGalleryControls(true); });
+            GallerySurfaceCommand = new RelayCommand(_ => { if (Gallery2) { Viewer2Surface(); return; } if (Current != null && Current.IsVideo) ToggleGalleryVideo(); else ShowGalleryControls(true); });
             EventManager.RegisterClassHandler(typeof(Window), Mouse.PreviewMouseMoveEvent, new MouseEventHandler((s, e) =>
             {
                 if (!galleryViewerOpen) return;
@@ -130,6 +130,7 @@ namespace KippixHelper
                                          "GalleryViewerHasGame", "GalleryDetailsOpen", "GalleryVolume", "GalleryMuted", "GalleryVolumeText", "GalleryControlsShown",
                                          "GallerySlideshowOn", "GalleryZoomText", "GalleryViewerStatus", "HasGalleryViewerStatus" })
                 Notify(n);
+            NotifyViewer2();   // (1.0.7) the Console viewer
         }
 
         // ---------------- open / close / step ----------------
@@ -176,7 +177,7 @@ namespace KippixHelper
             var tile = back != null ? GalleryItems.FirstOrDefault(i => i.File == back) : null;
             ui.BeginInvoke(new Action(() =>
             {
-                if (tile != null) UiTools.FocusItem("KX_GalleryGrid", tile);
+                if (tile != null) UiTools.FocusItem(GalleryGridName, tile);
                 else FocusGalleryStart();
             }), DispatcherPriority.ContextIdle);
         }
@@ -513,6 +514,7 @@ namespace KippixHelper
             if (tile != null) tile.IsFavourite = on;
             ShowGalleryStatus(on ? Loc("LOC_KX_FavOn", "Added to favourites") : Loc("LOC_KX_FavOff", "Taken out of favourites"));
             Notify("GalleryViewerIsFav");
+            Notify("GalleryViewer2FavText");
         }
 
         private void ToggleGalleryDetails()
@@ -656,6 +658,7 @@ namespace KippixHelper
         /// </summary>
         private void HideGalleryControlsSoon()
         {
+            if (Gallery2) { if (galleryHideTimer != null) galleryHideTimer.Stop(); return; }   // (1.0.7) the Console viewer: only A hides them
             if (galleryHideTimer == null)
             {
                 galleryHideTimer = new DispatcherTimer();
@@ -682,7 +685,7 @@ namespace KippixHelper
             if (galleryHideTimer != null) galleryHideTimer.Stop();
             if (!galleryControlsShown) return;
             galleryControlsShown = false;
-            Notify("GalleryControlsShown");
+            Notify("GalleryControlsShown"); NotifyViewer2();
             // the controls are going: keep the highlight on the picture
             var bar = UiTools.FindByName(Application.Current.MainWindow, "KX_GalleryControls");
             var focused = Keyboard.FocusedElement as DependencyObject;
@@ -692,8 +695,9 @@ namespace KippixHelper
         /// <summary>Shows the controls again (true = it was only to show them, so the key does nothing else); the 10 s start again.</summary>
         private bool ShowGalleryControls(bool fromKey)
         {
+            if (Gallery2 && galleryViewerOpen) return false;   // (1.0.7) the Console viewer: only View / B bring the controls back (not play / pause, a clip ending or the mouse)
             bool wasHidden = !galleryControlsShown;
-            if (wasHidden) { galleryControlsShown = true; Notify("GalleryControlsShown"); Dbg("gallery: controls shown (" + (fromKey ? "a button" : "the mouse, a video stopping or the slideshow") + ")"); }
+            if (wasHidden) { galleryControlsShown = true; Notify("GalleryControlsShown"); NotifyViewer2(); Dbg("gallery: controls shown (" + (fromKey ? "a button" : "the mouse, a video stopping or the slideshow") + ")"); }
             HideGalleryControlsSoon();
             return wasHidden && fromKey;
         }
@@ -707,6 +711,7 @@ namespace KippixHelper
             galleryPadAt = DateTime.Now;
             // (0.99.59) the More menu: Up / Down go through it (WPF moves the highlight), Left / Right do nothing there
             if (galleryMoreOpen && FocusInMoreMenu()) { if (galleryHideTimer != null) galleryHideTimer.Stop(); return e.Key == Key.Left || e.Key == Key.Right; }
+            if (Gallery2) return Gallery2ArrowKey(e);   // (1.0.7) the Console viewer
             bool hidden = !galleryControlsShown;
             var focused = Keyboard.FocusedElement as FrameworkElement;
             bool onSurface = focused != null && focused.Name == "KX_GallerySurface";
@@ -769,6 +774,7 @@ namespace KippixHelper
                 btn = b != null ? b.ToString() : null;
                 yPressed = pressed && btn == "Y";
             }
+            if (galleryViewerOpen && Gallery2) { galleryPadAt = DateTime.Now; return Gallery2ViewerPad(btn, pressed, step, pageJump, xPressed, yPressed, e); }   // (1.0.7)
             if (galleryViewerOpen)
             {
                 galleryPadAt = DateTime.Now;
@@ -801,6 +807,7 @@ namespace KippixHelper
                 if (yPressed) { ToggleGalleryDetails(); return true; }
                 return false;
             }
+            if (Gallery2Key(btn, pressed, step, xPressed, yPressed)) return true;   // (1.0.7) the Console design
             if (galleryPage == "storage" || galleryPage == "games") return false;
             // the grid: X favourites the highlighted tile, Y picks several
             var fe = Keyboard.FocusedElement as FrameworkElement;

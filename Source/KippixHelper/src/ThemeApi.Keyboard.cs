@@ -35,6 +35,19 @@ namespace KippixHelper
         public string KeyboardText { get { return kbText.ToString(); } }
         public bool KeyboardHasText { get { return kbText.Length > 0; } }
 
+        // (1.0.7) the half keyboard: Keyboard search's Console design (Settings › Layout changes WIP › Keyboard search, 2 of 2) for
+        // every other box too (the Store's search, the settings' search, names…). ‹ › move the caret, &#? the symbols.
+        private bool kbV2, kbSymbols;
+        private int kbCaret;
+        public bool KbDesign2 { get { return kbV2; } }
+        public bool KbDesignDefault { get { return !kbV2; } }
+        private bool KbIsSearch { get { return kbTitle.StartsWith(Loc("LOC_KX_Search", "Search"), StringComparison.CurrentCultureIgnoreCase); } }
+        public string KbStartHint { get { return KbIsSearch ? Loc("LOC_KX_Search", "Search") : Loc("LOC_KX_KeyDoneV2", "Done"); } }
+        private string KbKeysName { get { return "KX_KbKeys2"; } }   // (the old full keyboard was taken out)
+        private string KbOverlayName { get { return "KX_KbOverlay2"; } }
+        public string KeyboardTextBefore { get { int c = Math.Min(kbCaret, kbText.Length); return kbText.ToString(0, c); } }
+        public string KeyboardTextAfter { get { int c = Math.Min(kbCaret, kbText.Length); return kbText.ToString(c, kbText.Length - c); } }
+
         private void InitKeyboard()
         {
             KbKeyRows = new ObservableCollection<SearchKeyRow>();
@@ -59,6 +72,7 @@ namespace KippixHelper
         private void BuildKbKeys()
         {
             KbKeyRows.Clear();
+            if (kbV2) { BuildKbKeysV2(); return; }
             foreach (string row in new[] { "1234567890", "qwertyuiop", "asdfghjkl'", KbRow4 })
             {
                 var r = new SearchKeyRow();
@@ -76,6 +90,56 @@ namespace KippixHelper
             last.Keys.Add(MakeKbKey(Loc("LOC_KX_KeyClear", "Clear"), "clear", true));
             last.Keys.Add(MakeKbKey(Loc("LOC_KX_KeyFinish", "Done"), "done", true));
             KbKeyRows.Add(last);
+        }
+
+        /// <summary>(1.0.7) The half keyboard's keys: the Console search keyboard's, with Shift (capitals) in the corner.</summary>
+        private void BuildKbKeysV2()
+        {
+            string[] rows = kbSymbols ? new[] { "1234567890", "!@#$%^&*()", "~+=_[]{};'", "\"<>?/|:,.-" } : new[] { "1234567890", "qwertyuiop", "asdfghjkl'", "zxcvbnm,.-" };
+            bool search = KbIsSearch;
+            string[][] side =
+            {
+                new[] { "", "back", "back" },
+                new[] { Loc("LOC_KX_KeyClear", "Clear"), "clear", "action" },
+                new[] { kbSymbols ? "abc" : "&#?", "sym", "action" },
+                new[] { search ? Loc("LOC_KX_Search", "Search") : Loc("LOC_KX_KeyOK", "OK"), "done", search ? "accent" : "accentplain" },
+            };
+            for (int i = 0; i < 4; i++)
+            {
+                var r = new SearchKeyRow();
+                foreach (char c in rows[i])
+                {
+                    string ch = kbShift && !kbSymbols ? KbShifted(c) : c.ToString();
+                    if (kbShift && !kbSymbols && !char.IsLetter(c)) ch = c.ToString();   // (only the letters change: the symbols have their own keys)
+                    r.Keys.Add(MakeKbKeyV2(ch, ch, "char", KeyW));
+                }
+                r.Keys.Add(MakeKbKeyV2(side[i][0], side[i][1], side[i][2], KeyW * 2 + KeyGap));
+                KbKeyRows.Add(r);
+            }
+            var last = new SearchKeyRow();
+            last.Keys.Add(MakeKbKeyV2(kbShift ? Loc("LOC_KX_KeyLower", "abc") : Loc("LOC_KX_KeyShift", "Shift"), "shift", "action", KeyW * 2 + KeyGap));
+            last.Keys.Add(MakeKbKeyV2(Loc("LOC_KX_KeySpace", "Space"), "space", "char", KeyW * 6 + KeyGap * 5));
+            last.Keys.Add(MakeKbKeyV2("\u2039", "left", "char", KeyW));
+            last.Keys.Add(MakeKbKeyV2("\u203A", "right", "char", KeyW));
+            last.Keys.Add(MakeKbKeyV2(Loc("LOC_KX_KeyDoneV2", "Done"), "done", "action", KeyW * 2 + KeyGap));
+            KbKeyRows.Add(last);
+        }
+
+        private SearchKey MakeKbKeyV2(string label, string key, string kind, double width)
+        {
+            bool plain = kind == "accentplain";
+            var k = new SearchKey { Label = label, Key = key, Kind = plain ? "accent" : kind, Width = width, IsWide = width > KeyW, NoIcon = plain };
+            k.Command = new RelayCommand(_ => PressKbKey(key));
+            return k;
+        }
+
+        /// <summary>Typed text goes in where the caret is.</summary>
+        private void KbInsert(string s)
+        {
+            if (kbText.Length + s.Length > kbMax) return;
+            int c = Math.Min(kbCaret, kbText.Length);
+            kbText.Insert(c, s);
+            kbCaret = c + s.Length;
         }
 
         private SearchKey MakeKbKey(string label, string key, bool wide = false)
@@ -102,24 +166,28 @@ namespace KippixHelper
             kbCancel = cancel;
             kbShift = false;
             kbLiveNow = false;
+            kbV2 = SearchV2;
+            kbSymbols = false;
+            kbCaret = kbText.Length;
             BuildKbKeys();
             kbReturnFocus = Keyboard.FocusedElement;
             kbOpen = true;
             HookSearchTyping();
             PlaySound("select");
             NotifyKeyboard();
-            ui.BeginInvoke(new Action(() => FocusKbKey(KbKeyRows.Count > 1 ? KbKeyRows[1].Keys.FirstOrDefault() : null)), DispatcherPriority.ContextIdle);
+            int first = kbV2 ? 2 : 1;   // Q (the half keyboard: A)
+            ui.BeginInvoke(new Action(() => FocusKbKey(KbKeyRows.Count > first ? KbKeyRows[first].Keys.FirstOrDefault() : null)), DispatcherPriority.ContextIdle);
         }
 
         private void NotifyKeyboard()
         {
-            foreach (string n in new[] { "IsKeyboardOpen", "KeyboardTitle", "KeyboardText", "KeyboardHasText", "KbKeyRows" }) Notify(n);
+            foreach (string n in new[] { "IsKeyboardOpen", "KeyboardTitle", "KeyboardText", "KeyboardHasText", "KbKeyRows", "KbDesign2", "KbDesignDefault", "KbStartHint", "KeyboardTextBefore", "KeyboardTextAfter" }) Notify(n);
         }
 
         private void FocusKbKey(SearchKey k)
         {
-            if (k == null) { UiTools.FocusInside("KX_KbOverlay"); return; }
-            FocusKeyIn("KX_KbKeys", KbKeyRows, k);
+            if (k == null) { UiTools.FocusInside(KbOverlayName); return; }
+            FocusKeyIn(KbKeysName, KbKeyRows, k);
         }
 
         /// <summary>Focuses a key on one of the keyboards (the Search page's or this one).</summary>
@@ -143,32 +211,49 @@ namespace KippixHelper
             if (!kbOpen) return;
             switch (key)
             {
-                case "space": if (kbText.Length > 0 && kbText[kbText.Length - 1] != ' ' && kbText.Length < kbMax) kbText.Append(' '); break;
-                case "back": if (kbText.Length > 0) kbText.Length--; else { PlaySound("back"); return; } break;
-                case "clear": kbText.Clear(); break;
+                case "space": { int at = Math.Min(kbCaret, kbText.Length); if (at > 0 && kbText[at - 1] != ' ') KbInsert(" "); } break;
+                case "back":
+                    {
+                        int at = Math.Min(kbCaret, kbText.Length);
+                        if (at > 0) { kbText.Remove(at - 1, 1); kbCaret = at - 1; } else { PlaySound("back"); return; }
+                    }
+                    break;
+                case "clear": kbText.Clear(); kbCaret = 0; break;
                 case "done": FinishKeyboard(); return;
+                case "left": if (kbCaret > 0) kbCaret--; PlaySound("move"); NotifyKbCaret(); return;
+                case "right": if (kbCaret < kbText.Length) kbCaret++; PlaySound("move"); NotifyKbCaret(); return;
+                case "sym": kbSymbols = !kbSymbols; RebuildKbKeysKeepFocus(); return;
                 case "shift":
                     {
                         kbShift = !kbShift;
-                        int ri = -1, ki = -1;
-                        var fe = Keyboard.FocusedElement as FrameworkElement;
-                        var cur = fe != null ? fe.DataContext as SearchKey : null;
-                        for (int i = 0; i < KbKeyRows.Count && ri < 0; i++) { ki = cur != null ? KbKeyRows[i].Keys.IndexOf(cur) : -1; if (ki >= 0) ri = i; }
-                        BuildKbKeys();
-                        PlaySound("move");
-                        if (ri >= 0) { var again = KbKeyRows[ri].Keys[ki]; ui.BeginInvoke(new Action(() => FocusKbKey(again)), DispatcherPriority.ContextIdle); }
+                        RebuildKbKeysKeepFocus();
                         return;
                     }
-                default: if (kbText.Length < kbMax) kbText.Append(key); break;
+                default: KbInsert(key); break;
             }
             PlaySound("move");
             KbChanged();
         }
 
+        /// <summary>Shift or symbols: the keys change, the highlight stays on the same spot.</summary>
+        private void RebuildKbKeysKeepFocus()
+        {
+            int ri = -1, ki = -1;
+            var fe = Keyboard.FocusedElement as FrameworkElement;
+            var cur = fe != null ? fe.DataContext as SearchKey : null;
+            for (int i = 0; i < KbKeyRows.Count && ri < 0; i++) { ki = cur != null ? KbKeyRows[i].Keys.IndexOf(cur) : -1; if (ki >= 0) ri = i; }
+            BuildKbKeys();
+            PlaySound("move");
+            if (ri >= 0 && ri < KbKeyRows.Count && ki < KbKeyRows[ri].Keys.Count) { var again = KbKeyRows[ri].Keys[ki]; ui.BeginInvoke(new Action(() => FocusKbKey(again)), DispatcherPriority.ContextIdle); }
+        }
+
+        private void NotifyKbCaret() { Notify("KeyboardTextBefore"); Notify("KeyboardTextAfter"); }
+
         private void KbChanged()
         {
             Notify("KeyboardText");
             Notify("KeyboardHasText");
+            NotifyKbCaret();
             if (kbLive == null) return;
             if (kbLiveNow) { kbLive(kbText.ToString()); return; }   // shown where it goes, letter by letter
             if (kbLiveTimer == null)
@@ -186,8 +271,8 @@ namespace KippixHelper
             foreach (char c in text)
             {
                 if (char.IsControl(c)) continue;
-                if (c == ' ') { if (kbText.Length > 0 && kbText[kbText.Length - 1] != ' ') kbText.Append(' '); }
-                else if (kbText.Length < kbMax) kbText.Append(c);
+                if (c == ' ') { int at = Math.Min(kbCaret, kbText.Length); if (at > 0 && kbText[at - 1] != ' ') KbInsert(" "); }
+                else KbInsert(c.ToString());
             }
             KbChanged();
         }
@@ -251,13 +336,13 @@ namespace KippixHelper
             if (pad && button == Playnite.SDK.Events.ControllerInput.Start) { FinishKeyboard(); e.Handled = true; return true; }
             if (e.Key == Key.Left || e.Key == Key.Right)
             {
-                if (WrapKeyRow(KbKeyRows, "KX_KbKeys", e.Key == Key.Right)) { e.Handled = true; return true; }
+                if (WrapKeyRow(KbKeyRows, KbKeysName, e.Key == Key.Right)) { e.Handled = true; return true; }
                 return false;   // along the row as usual
             }
             if (e.Key == Key.Up || e.Key == Key.Down)
             {
                 // stay on the keyboard
-                var overlay = UiTools.FindByName(Application.Current.MainWindow, "KX_KbOverlay");
+                var overlay = UiTools.FindByName(Application.Current.MainWindow, KbOverlayName);
                 var f = Keyboard.FocusedElement as UIElement;
                 var next = f != null ? f.PredictFocus(e.Key == Key.Up ? FocusNavigationDirection.Up : FocusNavigationDirection.Down) as DependencyObject : null;
                 if (overlay == null || next == null || !overlay.IsAncestorOf(next)) { e.Handled = true; return true; }

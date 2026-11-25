@@ -97,6 +97,7 @@ namespace KippixHelper
                 default: CtrlBatteryText = string.Format(Loc("LOC_KX_CtrlBattery", "Battery: {0}"), raw); break;
             }
             Notify("CtrlBatteryText");
+            CtrlBatteryLevel(raw);   // (1.0.7) the Console page's bar
         }
 
         private static Thickness DotMargin(short x, short y)
@@ -136,6 +137,7 @@ namespace KippixHelper
                 bool on = b != null && b.TryGetValue(btn.Input, out st) && st == ControllerInputState.Pressed;
                 if (!on && btn.Input == ControllerInput.TriggerLeft) on = lt > 8000;
                 if (!on && btn.Input == ControllerInput.TriggerRight) on = rt > 8000;
+                if (on && !btn.IsOn) CtrlPressedNow(btn.Name);   // (1.0.7) "last pressed"
                 btn.IsOn = on;
                 any |= on;
             }

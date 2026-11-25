@@ -45,17 +45,27 @@ namespace KippixHelper
         /// <summary>A picture in place of the line icon (the media services' own icons).</summary>
         private System.Windows.Media.ImageSource picture;
         public System.Windows.Media.ImageSource Picture { get { return picture; } set { if (Set(ref picture, value, "Picture")) { Notify("HasPicture"); Notify("HasNoPicture"); } } }
+        private System.Windows.Media.Brush tileBrush;
+        public System.Windows.Media.Brush TileBrush { get { return tileBrush; } set { Set(ref tileBrush, value, "TileBrush"); } }   // (1.1.0) a Media tile's background
         public bool HasPicture { get { return picture != null; } }
         public bool HasNoPicture { get { return picture == null; } }
 
         /// <summary>Changes the line under the text (shown at once).</summary>
         public void SetSub(string sub) { Sub = sub; Notify("Sub"); Notify("HasSub"); }
+
+        /// <summary>(1.0.6) An eye at the end of the row (Media's edit mode): 0 none, 1 shown (open eye), 2 hidden (crossed out).</summary>
+        private int eye;
+        public int Eye { get { return eye; } set { if (Set(ref eye, value, "Eye")) { Notify("EyeOpenShown"); Notify("EyeOffShown"); Notify("RowOpacity"); } } }
+        public bool EyeOpenShown { get { return eye == 1; } }
+        public bool EyeOffShown { get { return eye == 2; } }
+        /// <summary>(1.0.6) A hidden row in Media's edit mode shows faded (its icon and name at 40%).</summary>
+        public double RowOpacity { get { return eye == 2 ? 0.4 : 1.0; } }
         public void SetText(string text) { Text = text; Notify("Text"); Notify("IsRow"); Notify("IsHeaderShown"); }
 
         /// <summary>A copy (with no one listening to it yet).</summary>
         public PickRow Clone()
         {
-            return new PickRow { Text = Text, Sub = Sub, Icon = Icon, IsHeader = IsHeader, IsInfo = IsInfo, IsSwitch = IsSwitch, Command = Command, Key = Key, Indent = Indent, isSelected = isSelected, picture = picture };
+            return new PickRow { Text = Text, Sub = Sub, Icon = Icon, IsHeader = IsHeader, IsInfo = IsInfo, IsSwitch = IsSwitch, Command = Command, Key = Key, Indent = Indent, isSelected = isSelected, picture = picture, eye = eye };
         }
 
         /// <summary>
@@ -65,7 +75,7 @@ namespace KippixHelper
         public void BecomeLike(PickRow o)
         {
             Text = o.Text; Sub = o.Sub; Icon = o.Icon; IsHeader = o.IsHeader; IsInfo = o.IsInfo; IsSwitch = o.IsSwitch; Command = o.Command; Key = o.Key; Indent = o.Indent;
-            isSelected = o.isSelected; picture = o.picture; Glyph = o.Glyph;
+            isSelected = o.isSelected; picture = o.picture; Glyph = o.Glyph; eye = o.eye;
             Notify(string.Empty);   // every binding on this row reads again
         }
     }

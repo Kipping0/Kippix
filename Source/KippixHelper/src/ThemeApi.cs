@@ -120,6 +120,7 @@ namespace KippixHelper
             InitPicker();
             InitGallery();
             InitHomeRows();
+            if (settings.HomeLayoutMode == 7) settings.HomeLayoutMode = 0;   // (1.0.7) Games shown as › Console was taken out: back to Row
             InitJustified();
             InitLook();
             InitGamePageMore();
@@ -272,9 +273,12 @@ namespace KippixHelper
         public void Stop()
         {
             if (timer != null) timer.Stop();
-            if (backgroundDirty) SaveSettings();
+            // the last background goes into settings.json too, where an older Kippix looks for it (saveQueued: the flush below
+            // writes it on this thread even if SaveSettings has just handed an earlier copy to a worker)
+            if (backgroundDirty || settings.LastBackground != lastBgInSettings) { SaveSettings(); saveQueued = true; }
             FlushSettings(true);   // (0.93) anything still waiting to be written
             lock (saveLock) { }    // (and a write already under way has finished)
+            SaveLastBackgroundNow();   // (so both files say the same at the next start)
         }
 
         private DateTime tickPutOffSince = DateTime.MinValue;
@@ -300,18 +304,21 @@ namespace KippixHelper
                 if ((DateTime.Now - tickPutOffSince).TotalSeconds < 6) { tickWatch = null; return; }
             }
             tickPutOffSince = DateTime.MinValue;
+            // under the screensaver or behind a game the screen can't be seen: what only keeps it in shape (the home layout, the
+            // cards, the parts' places, the top bar) waits for the first upkeep after that
+            bool unseen = ambientOn || (anyRunning && !playniteActive);
             RefreshDiscord();
             TickTime("discord");
-            ApplyHomeLayout();
+            if (!unseen) ApplyHomeLayout();
             TickTime("home layout");
             HookDetails();
-            ApplyCardLayout();
+            if (!unseen) ApplyCardLayout();
             TickTime("card layout");
             EnsurePreviewTimer();
-            if (settings.MasterOffsets.Count > 0 || masterTransforms.Count > 0 || (settings.MasterSizes != null && settings.MasterSizes.Count > 0) || HasMasterTurns) ApplyMasterOffsets();
+            if (!unseen && (settings.MasterOffsets.Count > 0 || masterTransforms.Count > 0 || (settings.MasterSizes != null && settings.MasterSizes.Count > 0) || HasMasterTurns)) ApplyMasterOffsets();
             TickTime("places");
             if (detailsOpen && settings.DetShowFriends && HasSteamKey && DateTime.Now - friendInfoAt > FriendSummaryAge) UpdateDetFriends();
-            if (settings.AutoHideTopBar || RowFullUnderBar || rowFullBarWas) { rowFullBarWas = RowFullUnderBar; UpdateTopBarFade(); }
+            if (!unseen && (settings.AutoHideTopBar || RowFullUnderBar || rowFullBarWas)) { rowFullBarWas = RowFullUnderBar; UpdateTopBarFade(); }
             RefreshDetailsDate();
             AmbientTick();
             ReminderTick();
@@ -331,6 +338,7 @@ namespace KippixHelper
             TickTime("filter/sort");
             PcStatsTick();
             if (backgroundDirty) { backgroundDirty = false; SaveSettings(); }
+            SaveLastBackground();
             TickTime("save");
             if (ticks % 2 == 1 || openPanel == "downloads") RefreshDownloadsAsync();
             TickTimeEnd();
@@ -407,6 +415,7 @@ namespace KippixHelper
                 // the next save writes the settings as they come over it: a copy of the file that couldn't be read is kept beside it
                 try { File.Copy(SettingsPath, Path.Combine(Path.GetDirectoryName(SettingsPath), "settings.unreadable-" + DateTime.Now.ToString("yyyyMMdd-HHmmss", System.Globalization.CultureInfo.InvariantCulture) + ".json"), true); } catch (Exception) { }
             }
+            LoadLastBackground();
             if (settings.SettingsVersion < 1)
             {
                 // v0.2 had one "game info position" (left / right / hidden) covering the logo and the info line.
@@ -734,12 +743,14 @@ namespace KippixHelper
             {
                 // (a list a background job is changing at that moment fails once: tried again, so the change isn't lost)
                 var js = new JavaScriptSerializer { MaxJsonLength = int.MaxValue };
+                string bg = settings.LastBackground;
                 string json = null;
                 for (int i = 0; json == null; i++)
                 {
                     try { json = js.Serialize(settings); }
                     catch (InvalidOperationException) { if (i >= 2) throw; Thread.Sleep(30); }
                 }
+                lastBgInSettings = bg;
                 string path = SettingsPath;
                 long seq = Interlocked.Increment(ref saveSeq);
                 if (sync) WriteSettingsFile(path, json, seq);
@@ -771,16 +782,75 @@ namespace KippixHelper
             }
         }
 
+        // The last selected game's background (shown at start-up) has a little file of its own, written on a worker when
+        // you stop on a game: saving all the settings for it means turning over 1 MB into text on the UI thread. settings.json
+        // still gets it with the next save and when Playnite closes; at start the little file wins only when it is the newer.
+        private string lastBgInSettings, lastBgInFile;
+        private volatile string lastBgWanted;
+        private readonly object lastBgLock = new object();
+
+        private string LastBackgroundPath
+        {
+            get { return Path.Combine(plugin.GetPluginUserDataPath(), "last-background.txt"); }
+        }
+
+        private void LoadLastBackground()
+        {
+            lastBgInSettings = settings.LastBackground;
+            try
+            {
+                string file = LastBackgroundPath;
+                if (File.Exists(file) && (!File.Exists(SettingsPath) || File.GetLastWriteTimeUtc(file) > File.GetLastWriteTimeUtc(SettingsPath)))
+                {
+                    string path = File.ReadAllText(file).Trim();
+                    if (path.Length > 0 && File.Exists(path)) settings.LastBackground = path;
+                }
+            }
+            catch (Exception ex) { logger.Warn("Kippix: last background: " + ex.Message); }
+            lastBgInFile = settings.LastBackground;
+        }
+
+        private void SaveLastBackground()
+        {
+            string path = settings.LastBackground;
+            if (path == lastBgInFile) return;
+            lastBgInFile = path;
+            lastBgWanted = path;
+            KippixShared.SafeWork.Queue(_ =>
+            {
+                lock (lastBgLock)   // (the newest one is what's written, whichever worker gets here last)
+                {
+                    try { File.WriteAllText(LastBackgroundPath, lastBgWanted ?? ""); }
+                    catch (Exception ex) { logger.Warn("Kippix: last background: " + ex.Message); }
+                }
+            });
+        }
+
+        /// <summary>Playnite closing: the little file is written there and then, with what settings.json now holds.</summary>
+        private void SaveLastBackgroundNow()
+        {
+            try
+            {
+                lock (lastBgLock)
+                {
+                    lastBgWanted = settings.LastBackground;
+                    File.WriteAllText(LastBackgroundPath, lastBgWanted ?? "");
+                    lastBgInFile = lastBgWanted;
+                }
+            }
+            catch (Exception ex) { logger.Warn("Kippix: last background: " + ex.Message); }
+        }
+
         // =====================================================================
         // Top bar shortcuts (pin, order, move)
         // =====================================================================
 
         private static readonly string[] DefaultOrder = { "search", "achievements", "gallery", "store", "discord", "audio", "hibernate", "sleep", "restart", "shutdown", "downloads", "battery",
                                                             "quick", "releases", "wishlist", "news", "friends", "collections", "splitscreen", "pick", "storage", "sortshow", "controller", "bluetooth", "year",
-                                                            "media", "localmedia", "netflix", "youtube", "prime", "crunchyroll", "options", "clock" };
+                                                            "media", "localmedia", "netflix", "youtube", "prime", "crunchyroll", "disney", "appletv", "paramount", "hbo", "options", "clock" };
         /// <summary>(1.0.1) Media, Shows &amp; movies and each streaming service: off until you switch them on (kept with ExtraPins).</summary>
-        internal static readonly string[] MediaShortcutKeys = { "media", "localmedia", "netflix", "youtube", "prime", "crunchyroll" };
-        private static bool IsExtraPinKey(string key) { return PageKeys.Contains(key) || MediaShortcutKeys.Contains(key) || key == "sortshow"; }
+        internal static readonly string[] MediaShortcutKeys = { "media", "localmedia", "netflix", "youtube", "prime", "crunchyroll", "disney", "appletv", "paramount", "hbo" };   // (1.0.6: + Disney+, Apple TV, Paramount+, HBO Max)
+        private static bool IsExtraPinKey(string key) { return PageKeys.Contains(key) || MediaShortcutKeys.Contains(key) || key == "sortshow" || IsCustomMediaKey(key); }
 
         public ObservableCollection<ShortcutItem> Shortcuts { get; private set; }
 
@@ -859,10 +929,10 @@ namespace KippixHelper
             switch (key)
             {
                 case "media": return Loc("LOC_KX_Media", "Media");
-                case "localmedia": return Loc("LOC_KX_LocalMedia", "Shows & movies");
+                case "localmedia": return MediaLookName("localmedia") ?? Loc("LOC_KX_LocalMedia", "Shows & movies");
                 case "sortshow": return Loc("LOC_KX_SortShow", "Sort and show");
             }
-            var svc = MediaServices.FirstOrDefault(m => m.Key == key);
+            var svc = AllMediaServices.FirstOrDefault(m => m.Key == key);
             if (svc != null) return svc.Name;
             return key;
         }
@@ -888,7 +958,7 @@ namespace KippixHelper
             if (key == "media") return new RelayCommand(_ => { PlaySound("select"); OpenMediaMenu(); });
             if (key == "localmedia") return new RelayCommand(_ => { PlaySound("select"); OpenLocalMedia(false); });
             if (key == "sortshow") return new RelayCommand(_ => OpenSortShow());   // (ThemeApi.SortShow.cs)
-            if (MediaServices.Any(m => m.Key == key)) { string k = key; return new RelayCommand(_ => OpenMediaByKey(k)); }
+            if (AllMediaServices.Any(m => m.Key == key)) { string k = key; return new RelayCommand(_ => OpenMediaByKey(k)); }
             return null;
         }
 
@@ -903,7 +973,7 @@ namespace KippixHelper
             }
             if (settings.ShortcutOrder != null)
                 foreach (string k in settings.ShortcutOrder)
-                    if (DefaultOrder.Contains(k) && !order.Contains(k)) order.Add(k);
+                    if ((DefaultOrder.Contains(k) || CustomSource(k) != null) && !order.Contains(k)) order.Add(k);
             // a shortcut added in a later version goes where it sits by default (after the one before it), not at the end
             for (int d = 0; d < DefaultOrder.Length; d++)
             {
@@ -912,6 +982,14 @@ namespace KippixHelper
                 int at = -1;
                 for (int b = d - 1; b >= 0 && at < 0; b--) at = order.IndexOf(DefaultOrder[b]);
                 order.Insert(at + 1, k);
+            }
+            // (1.0.7) the websites you added to Media: new ones after the streaming services (off until you switch them on)
+            foreach (var c in MediaCustom)
+            {
+                if (c == null || !IsCustomMediaKey(c.Key) || order.Contains(c.Key)) continue;
+                int after = -1;
+                for (int i = 0; i < order.Count; i++) if (MediaShortcutKeys.Contains(order[i]) || IsCustomMediaKey(order[i])) after = i;
+                order.Insert(after + 1, c.Key);
             }
 
             Shortcuts.Clear();
@@ -933,8 +1011,32 @@ namespace KippixHelper
         private void LoadShortcutPicture(ShortcutItem item)
         {
             if (item == null || item.Picture != null) return;
-            var svc = MediaServices.FirstOrDefault(m => m.Key == item.Key);
+            // (1.1.0) Media › X › Icon: a picture of your own for one of the Media tiles (Shows & movies, the services)
+            try
+            {
+                var look = MediaLook(item.Key, false);
+                if (look != null && !IsCustomMediaKey(item.Key) && !string.IsNullOrEmpty(look.Icon) && File.Exists(look.Icon))
+                {
+                    var mineIcon = Images.Load(look.Icon, 256);
+                    if (mineIcon != null) { item.Picture = mineIcon; return; }
+                }
+            }
+            catch (Exception) { }
+            // (1.0.7) the user's own white icons for the built-in shortcuts (Images/TopBar/<key>.png), in the top bar and its settings
+            try
+            {
+                string mine = Path.Combine(ThemeDir, "Images", "TopBar", item.Key + ".png");
+                if (File.Exists(mine)) { var pic = Images.Load(mine, 256); if (pic != null) { item.Picture = pic; return; } }
+            }
+            catch (Exception) { }
+            var svc = AllMediaServices.FirstOrDefault(m => m.Key == item.Key);
             if (svc == null) return;
+            if (svc.Custom)
+            {
+                // (1.0.7) one of your own: your picture, or the globe (the line icon)
+                try { if (!string.IsNullOrEmpty(svc.Icon) && File.Exists(svc.Icon)) item.Picture = Images.Load(svc.Icon, 240); } catch (Exception) { }
+                return;
+            }
             // (1.0.4) the top bar's own white icons (Images/Streaming), to match its other icons; the service's own colour icon otherwise
             // (fetched only once it's in the top bar)
             try
@@ -942,7 +1044,7 @@ namespace KippixHelper
                 string own = Path.Combine(ThemeDir, "Images", "Streaming", svc.Key + ".png");
                 if (File.Exists(own))
                 {
-                    var img = Images.Load(own, 64);
+                    var img = Images.Load(own, 256);   // (1.0.6: wide ones decoded big enough to stay sharp)
                     if (img != null) { item.Picture = img; return; }
                 }
             }
@@ -1164,6 +1266,9 @@ namespace KippixHelper
                 if (guideBarOpen && IsMainWindow(sender)) { GuideBarKey(e); return; }   // (0.99.46) the quick bar takes every key (ThemeApi.GuideBar.cs)
                 if (galleryEditOpen && IsMainWindow(sender)) { GalleryEditKey(e); return; }   // (0.99.59) the gallery's Edit takes every key (ThemeApi.GalleryEdit.cs)
                 if (kbOpen && IsMainWindow(sender)) { KeyboardKey(e); return; }   // the keyboard takes every key while it's up
+                if (colourOpen && IsMainWindow(sender)) { ColourKey(e); return; }   // (1.1.0) the colour picker takes every key (ThemeApi.ColourPicker.cs)
+                if (mediaTileMoving != null && IsMainWindow(sender)) { MediaTileMoveKey(e); return; }   // (1.1.0) a Media tile picked up (ThemeApi.MediaTiles.cs)
+                if (IsMainWindow(sender) && MediaTileArrow(e)) return;   // (1.1.0) the arrows on the Media tiles: straight to the next one
                 if (descReaderOpen && IsMainWindow(sender) && DescReaderKey(e)) return;
                 if (openPanel == null && !e.Handled && IsMainWindow(sender) && detailsOpen && GamePageKey(e)) { lastPanelKey = e; return; }
                 if (confirmOpen && IsMainWindow(sender) && !e.Handled)
@@ -1486,6 +1591,8 @@ namespace KippixHelper
                 // Look packs / Theme Studio: X, Y, LB / RB, LT / RT and B in a colour (ThemeApi.LookPacks.cs / ThemeStudio.cs)
                 if (openPanel == "options" && !kbOpen && LookPanelKey(e, step, pageJump, xPressed, yPressed, back)) { e.Handled = true; return true; }
                 if (yPressed && !kbOpen && YSearch()) { e.Handled = true; return true; }
+                if (yPressed && !kbOpen && MediaSettingsKey()) { e.Handled = true; return true; }   // (1.0.7) Media: Y settings
+                if (xPressed && !kbOpen && MediaTileEditKey()) { e.Handled = true; return true; }   // (1.1.0) Media: X edits the tile
 
                 // Game page › Play time and game info: X picks up a line, Up / Down move it, A puts it down
                 if (openPanel == "options" && DetInfoMoveKey(e, xPressed, back)) { e.Handled = true; return true; }
@@ -1601,6 +1708,7 @@ namespace KippixHelper
             Notify("IsBrowserOpen");
             Notify("IsGalleryOpen");
             Notify("IsProfileOpen");
+            NotifyMediaConsole();   // (1.0.7)
             Notify("IsSearchOpen");
             Notify("IsPageOpen");
             Notify("IsQuickOpen");
@@ -1649,7 +1757,7 @@ namespace KippixHelper
             if (openPanel == "page" && name != "page") LeavePages();
 
             if (name == "audio") RefreshAudio();
-            if (name == "downloads") RefreshDownloadsAsync();
+            if (name == "downloads") RefreshDownloadsAsync(true);   // (openPanel isn't set yet: the panel is about to show)
             if (name == "discord") { SetDiscordPage("main"); RefreshDiscord(); }
             if (name == "options") SetOptionsPage("", false);
 
@@ -1657,6 +1765,7 @@ namespace KippixHelper
             NotifyPanels();
             FocusPanelSoon();
             UpdateTopBarFade();
+            if (name == "search" || name == "gallery" || name == "store") LabApplySoon();   // (1.0.7) Layout changes WIP (ThemeApi.LayoutLab.cs)
         }
 
         /// <summary>A panel opening / closing while something is being placed: undo the move and let go (nothing stays stuck).</summary>

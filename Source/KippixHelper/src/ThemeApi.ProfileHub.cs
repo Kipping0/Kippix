@@ -177,6 +177,7 @@ namespace KippixHelper
         {
             PlaySound("select");
             ClosePanels();
+            if (!settings.HubRememberReset107) { settings.HubRememberReset107 = true; settings.ProfileHubRemember = false; SaveSettings(); }
             string tab = settings.ProfileHubRemember ? settings.ProfileHubTab : "overview";
             if (tab == "wishlist" && !HubWishlistAllowed) tab = "overview";
             if (tab != "overview" && tab != null && settings.ProfileHubHidden != null && settings.ProfileHubHidden.Contains(tab)) tab = "overview";
@@ -256,8 +257,33 @@ namespace KippixHelper
             FocusHubTabSoon();
         }
 
+        private bool hubTabsHooked;
+
+        /// <summary>(1.0.7) Coming back to the tabs from the page (up, middle or bottom): onto the tab you're on, not the one level with you.</summary>
+        private void HookHubTabFocus()
+        {
+            if (hubTabsHooked) return;
+            hubTabsHooked = true;
+            EventManager.RegisterClassHandler(typeof(Window), Keyboard.GotKeyboardFocusEvent, new KeyboardFocusChangedEventHandler((s, e) =>
+            {
+                try
+                {
+                    if (!IsProfileHub || HubTabs == null) return;
+                    var nf = e.NewFocus as FrameworkElement;
+                    var tab = nf != null ? nf.DataContext as PickRow : null;
+                    if (tab == null || tab.IsSelected || !HubTabs.Contains(tab)) return;
+                    var of = e.OldFocus as FrameworkElement;
+                    var was = of != null ? of.DataContext as PickRow : null;
+                    if (was != null && HubTabs.Contains(was)) return;   // moving along the tabs: as it is
+                    ui.BeginInvoke(new Action(FocusHubTabNow), DispatcherPriority.Input);
+                }
+                catch (Exception) { }
+            }), true);
+        }
+
         private void FocusHubTabSoon()
         {
+            HookHubTabFocus();
             int gen = pageGen;
             ui.BeginInvoke(new Action(() =>
             {

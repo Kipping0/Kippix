@@ -123,6 +123,19 @@
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                             <FadeImage x:Name="PART_ImageBackground" Stretch="UniformToFill"
                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <!-- (1.0.7) Background › Show wide backgrounds whole: a picture much wider than the screen (SteamGridDB's 3840×1240, say)
+                                 shown as wide as the screen at the top, fading to black under it, instead of zoomed into its middle (ThemeApi.WideBg.cs) -->
+                            <Grid x:Name="KX_WideBg" IsHitTestVisible="False" Background="#FF000000" Visibility="{PluginSettings Plugin=Kippix, Path=WideBgPage, FallbackValue=Collapsed}">
+                                <Image Source="{PluginSettings Plugin=Kippix, Path=WideBgImage}" Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Top" RenderOptions.BitmapScalingMode="Fant">
+                                    <Image.OpacityMask>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="#FF000000" Offset="0" />
+                                            <GradientStop Color="#FF000000" Offset="0.55" />
+                                            <GradientStop Color="#00000000" Offset="1" />
+                                        </LinearGradientBrush>
+                                    </Image.OpacityMask>
+                                </Image>
+                            </Grid>
                             <!-- (0.98) BackgroundChanger's background for the game (Settings › Home settings › Background › BackgroundChanger) -->
                             <ContentControl x:Name="BackgroundChanger_PluginBackgroundImage" Focusable="False" IsHitTestVisible="False" ClipToBounds="True"
                                             HorizontalAlignment="Center" VerticalAlignment="Center"

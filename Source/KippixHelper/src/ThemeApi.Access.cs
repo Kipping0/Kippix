@@ -67,6 +67,7 @@ namespace KippixHelper
             ReduceMotionNow = settings.ReduceMotion;
             try { ApplyTextSize(); } catch (Exception ex) { logger.Warn("Kippix: text size: " + ex.Message); }
             try { ApplyContrast(); } catch (Exception ex) { logger.Warn("Kippix: high contrast: " + ex.Message); }
+            try { ApplyThemeColour(); } catch (Exception ex) { logger.Warn("Kippix: theme colour: " + ex.Message); }   // (1.1.0)
             if (ReduceMotionNow) HookStillZooms();
             try { ApplyBackgroundMotion(); } catch (Exception) { }
         }

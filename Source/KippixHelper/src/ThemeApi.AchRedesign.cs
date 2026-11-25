@@ -22,8 +22,9 @@ namespace KippixHelper
     /// </summary>
     public partial class ThemeApi
     {
-        private int AchGamesDesign { get { return Math.Max(0, Math.Min(4, settings.AchRedesign)); } }
-        private int AchItemsDesign { get { return settings.AchItemRedesign < 0 ? AchGamesDesign : Math.Max(0, Math.Min(4, settings.AchItemRedesign)); } }
+        // (a design past the last one, e.g. the removed 1.0.7 test design 5, is Classic)
+        private int AchGamesDesign { get { return settings.AchRedesign > 4 ? 0 : Math.Max(0, settings.AchRedesign); } }
+        private int AchItemsDesign { get { return settings.AchItemRedesign < 0 ? AchGamesDesign : settings.AchItemRedesign > 4 ? 0 : settings.AchItemRedesign; } }
         private bool achDesignSub;     // the Layout (this page) list is open in the settings dropdown
 
         // the choices in Layout (this page): 0-2 Classic grid / list / centred, 3-6 the designs 1-4

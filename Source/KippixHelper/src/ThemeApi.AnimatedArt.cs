@@ -125,6 +125,8 @@ namespace KippixHelper
         {
             var rows = BgAnimRows;
             rows.Clear();
+            rows.Add(new PickRow { IsHeader = true, Text = Loc("LOC_KX_SecWideBg", "WIDE PICTURES") });
+            rows.Add(WideBgRow());   // (1.0.7: ThemeApi.WideBg.cs)
             rows.Add(new PickRow { IsHeader = true, Text = Loc("LOC_KX_SecAnimArt", "ANIMATED ART") });
             // 0.81: only the slow zoom on the highlighted cover (no animated art fetched or saved, nothing on the background)
             rows.Add(BoardSwitch("filmstrip", "animmode", Loc("LOC_KX_AnimCovers", "Animated covers"), settings.AnimArtMode != 0,
@@ -170,6 +172,7 @@ namespace KippixHelper
             settings.AnimArtAllCards = d.AnimArtAllCards;
             settings.AnimArtHero = d.AnimArtHero;
             settings.AnimArtNoArt = d.AnimArtNoArt;
+            settings.WideBgFit = d.WideBgFit; NotifyWideBg();
             AnimArtStopAll();
             SetHomeBgMode(d.HomeBgMode);   // (saves; gives the trailer preview its own place back)
             NotifyLook();

@@ -269,6 +269,7 @@ namespace KippixHelper
         private void PickAlert()
         {
             var w = CurrentWish();
+            if (w == null && storeGame != null) { ToggleWish(); w = CurrentWish(); NotifyStore(); }   // (1.0.7) not on your wishlist yet: it goes on it, then the alert
             if (w == null) return;
             var best = StorePrices.Where(p => p.Amount >= 0 && p.Currency == CurrencyCode).OrderBy(p => p.Amount).FirstOrDefault();
             decimal now = best != null ? best.Amount : -1;

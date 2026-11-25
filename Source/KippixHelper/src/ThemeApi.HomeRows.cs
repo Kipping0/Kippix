@@ -86,7 +86,7 @@ namespace KippixHelper
             {
                 if (boardEditing) BoardEndEdit(false);
                 libraryOpen = false;   // (the library view was over the old layout)
-                settings.HomeLayoutMode = (settings.HomeLayoutMode + 1) % 6;   // row, grid, list, board, manual, folder (Mosaic taken out in 1.0.3)
+                settings.HomeLayoutMode = NextHomeLayout(settings.HomeLayoutMode);   // row, grid, list, board, manual, folder, Console (Mosaic taken out in 1.0.3)
                 carWhy = "Games shown as changed";
                 if (settings.HomeLayoutMode != 0) LeaveExtraRows(false);
                 SaveSettings(); PlaySound("move"); HomeModeChanged();
@@ -142,6 +142,9 @@ namespace KippixHelper
         public string ListSideText { get { return settings.ListSide == 0 ? Loc("LOC_KX_Left", "Left") : Loc("LOC_KX_Right", "Right"); } }
 
         /// <summary>Row / grid / list (or their sizes) changed: lay everything out again.</summary>
+        /// <summary>The layout after this one: Row, Grid, List, Board, Manual Board, Folder, Row…</summary>
+        private static int NextHomeLayout(int m) { return m >= 5 || m < 0 ? 0 : m + 1; }
+
         private void HomeModeChanged()
         {
             FolderApplyMode();

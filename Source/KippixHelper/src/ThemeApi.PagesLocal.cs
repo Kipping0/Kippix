@@ -465,6 +465,7 @@ namespace KippixHelper
             int total = pool.Count > 1 ? 18 : 1;
             HasPageHero = true;
             Notify("HasPageHero");
+            NotifyPagesConsole();
             StopRoll();
             rolling = true;
             var timer = new DispatcherTimer(DispatcherPriority.Render, ui) { Interval = TimeSpan.FromMilliseconds(55) };
@@ -495,6 +496,7 @@ namespace KippixHelper
         {
             pageHeroGame = final ? g.Id : Guid.Empty;
             pageHeroCover = Images.Load(CoverOf(g.Id), 360);
+            PickHeroArt(g);   // (1.0.7) the Console design: its background in the middle, its logo under it
             PageHeroTitle = g.Name;
             PageHeroSub = final
                 ? (g.Playtime > 0 ? string.Format(Loc("LOC_KX_PlayedFor", "Played {0}"), HoursShort(g.Playtime / 3600.0)) + (g.LastActivity.HasValue ? "   ·   " + AgoText(g.LastActivity.Value) : "")

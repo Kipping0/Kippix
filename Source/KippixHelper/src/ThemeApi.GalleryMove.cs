@@ -34,7 +34,7 @@ namespace KippixHelper
         /// <summary>Hold A on a tile in the grid: picking several starts with that one picked.</summary>
         private bool GalleryHoldApplies()
         {
-            if (openPanel != "gallery" || galleryViewerOpen || gallerySelect || confirmOpen) return false;
+            if (openPanel != "gallery" || galleryViewerOpen || gallerySelect || confirmOpen || Gallery2Grid) return false;   // (1.0.7: the Console design's A is View)
             if (galleryPage != "grid" && galleryPage != "game") return false;
             var fe = Keyboard.FocusedElement as System.Windows.FrameworkElement;
             var it = fe != null ? fe.DataContext as GalleryItem : null;
@@ -50,7 +50,7 @@ namespace KippixHelper
             foreach (var i in GalleryItems) i.SelectMode = true;
             if (it != null) it.IsChecked = true;
             NotifyGallery();
-            if (it != null) ui.BeginInvoke(new Action(() => UiTools.FocusItem("KX_GalleryGrid", it)), DispatcherPriority.ContextIdle);
+            if (it != null) ui.BeginInvoke(new Action(() => UiTools.FocusItem(GalleryGridName, it)), DispatcherPriority.ContextIdle);
         }
 
         private void StartGalleryMove()

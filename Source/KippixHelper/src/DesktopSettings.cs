@@ -49,6 +49,7 @@ namespace KippixHelper
         }
 
         public bool HasKey { get { return theme.HasSteamKey; } }
+        public bool HasSgdbKey { get { return theme.HasSgdbKey; } }
         internal ThemeApi Theme { get { return theme; } }
 
         public void BeginEdit()
@@ -158,7 +159,31 @@ namespace KippixHelper
             friends.Add(SettingsUi.Row("New key", help, keyRow));
             page.Add(friends.Card);
 
-            // (0.81: no SteamGridDB key any more: Animated covers is only a zoom, nothing is fetched)
+            // (1.0.7) the SteamGridDB key is back: Edit this game › Next background / Next cover (ThemeApi.SgdbArt.cs)
+            var art = SettingsUi.Card("SteamGridDB",
+                "In the theme, Edit this game (the game page's More menu) can swap a game's background or cover for the next one on SteamGridDB, one press at a time.");
+            var sgPill = SettingsUi.Pill("");
+            Action sgRefresh = () =>
+            {
+                SettingsUi.SetPill(sgPill, s.RemoveSgdbKey ? "Will be removed when you save" : s.HasSgdbKey ? "Saved" : "Not set",
+                                   s.RemoveSgdbKey ? SettingsUi.Warn : s.HasSgdbKey ? SettingsUi.Good : null);
+            };
+            sgRefresh();
+            art.Add(SettingsUi.Row("SteamGridDB API key", null, sgPill));
+            TextBox sgBox;
+            var sgSecret = SettingsUi.Secret("", v => { s.NewSgdbKey = v; if (v.Length > 0 && s.RemoveSgdbKey) { s.RemoveSgdbKey = false; sgRefresh(); } }, 340, out sgBox,
+                                             s.HasSgdbKey ? "Paste a new key to replace the saved one" : "Paste your key here");
+            var sgRemove = SettingsUi.MakeButton("Remove saved key", () => { s.RemoveSgdbKey = true; s.NewSgdbKey = ""; sgBox.Text = ""; sgRefresh(); });
+            sgRemove.Margin = new Thickness(8, 0, 0, 0);
+            var sgRow = new StackPanel { Orientation = Orientation.Horizontal };
+            sgRow.Children.Add(sgSecret);
+            sgRow.Children.Add(sgRemove);
+            var sgHelp = SettingsUi.Help("");
+            sgHelp.Inlines.Add(new Run("Free with a SteamGridDB account: "));
+            sgHelp.Inlines.Add(SettingsUi.MakeLink("steamgriddb.com/profile/preferences/api", "https://www.steamgriddb.com/profile/preferences/api"));
+            sgHelp.Inlines.Add(new Run(". It's kept encrypted for your Windows account on this PC; the saved key is never shown here."));
+            art.Add(SettingsUi.Row("New key", sgHelp, sgRow));
+            page.Add(art.Card);
 
             // Layouts: reset, with undo
             var layouts = SettingsUi.Card("Layouts",

@@ -196,10 +196,23 @@ namespace KippixHelper
             }
         }
 
+        /// <summary>A window of Playnite's Full Screen mode (not Desktop mode's: the menu sounds are Full Screen's only).</summary>
+        private bool FullscreenWindow(object sender)
+        {
+            try
+            {
+                if (api.ApplicationInfo.Mode != Playnite.SDK.ApplicationMode.Fullscreen) return false;
+                var t = sender != null ? sender.GetType().FullName ?? "" : "";
+                return t.IndexOf("DesktopApp", StringComparison.OrdinalIgnoreCase) < 0;
+            }
+            catch (Exception) { return true; }
+        }
+
         private void PlaySound(string kind)
         {
             try
             {
+                if (api.ApplicationInfo.Mode != Playnite.SDK.ApplicationMode.Fullscreen) return;   // (never in Desktop mode)
                 if (!settings.SoundEffects || gameRunningNow || muteTourSounds > 0) return;   // (0.97: not for the starting look's previews)
                 // one press, one sound: the same sound asked for twice at once (the button's own click sound and the
                 // action's, or a press that arrived twice) plays once; a select / back also covers a move right after it
@@ -228,7 +241,7 @@ namespace KippixHelper
         {
             LoadSoundPack();
             EventManager.RegisterClassHandler(typeof(Window), Keyboard.GotKeyboardFocusEvent, new KeyboardFocusChangedEventHandler(OnAnyFocusSound), true);
-            EventManager.RegisterClassHandler(typeof(Window), ButtonBase.ClickEvent, new RoutedEventHandler((s, e) => PlaySound("select")), true);
+            EventManager.RegisterClassHandler(typeof(Window), ButtonBase.ClickEvent, new RoutedEventHandler((s, e) => { if (FullscreenWindow(s)) PlaySound("select"); }), true);
             EventManager.RegisterClassHandler(typeof(FrameworkElement), FrameworkElement.ToolTipOpeningEvent, new ToolTipEventHandler(OnToolTipOpening), true);
             StartMusic();
         }
@@ -236,6 +249,7 @@ namespace KippixHelper
         /// <summary>Every focus move in Playnite's windows (ours and its menus) gets the "move" sound.</summary>
         private void OnAnyFocusSound(object sender, KeyboardFocusChangedEventArgs e)
         {
+            if (!FullscreenWindow(sender)) return;   // (issue: Desktop mode's windows clicked away with menu sounds after switching from Full Screen)
             if (e.NewFocus == null || ReferenceEquals(e.NewFocus, lastFocused)) return;
             lastFocused = e.NewFocus;
             if ((DateTime.Now - lastMoveSound).TotalMilliseconds < 45) return;
@@ -248,6 +262,43 @@ namespace KippixHelper
         private void OnToolTipOpening(object sender, ToolTipEventArgs e)
         {
             if (!settings.ShowTooltips) e.Handled = true;   // labels on icons switched off in General settings
+            else if (ambientOn) e.Handled = true;           // none over the screensaver
+        }
+
+        /// <summary>
+        /// Takes down any label (tooltip) that's up. Each one is a small window of its own over Playnite's, so the
+        /// screensaver, which is drawn in the main window, comes up under it and the label stays on the screen.
+        /// </summary>
+        private static void CloseLabels()
+        {
+            var open = new List<ToolTip>();   // (all found first: closing one takes its window away)
+            try
+            {
+                foreach (PresentationSource source in PresentationSource.CurrentSources)
+                {
+                    if (source == null || !source.CheckAccess()) continue;   // (a window on another thread, the overlay's)
+                    var tip = FindLabel(source.RootVisual, 4);
+                    if (tip != null && tip.IsOpen) open.Add(tip);
+                }
+            }
+            catch (Exception) { }
+            foreach (var tip in open)
+                try { tip.IsOpen = false; } catch (Exception) { }
+        }
+
+        /// <summary>The label at the top of a popup's window (popup root, its decorators, then the ToolTip).</summary>
+        private static ToolTip FindLabel(DependencyObject d, int depth)
+        {
+            if (d == null) return null;
+            var tip = d as ToolTip;
+            if (tip != null) return tip;
+            if (depth == 0 || !(d is Visual)) return null;
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(d); i++)
+            {
+                tip = FindLabel(VisualTreeHelper.GetChild(d, i), depth - 1);
+                if (tip != null) return tip;
+            }
+            return null;
         }
 
         // ---------------- music ----------------

@@ -59,11 +59,14 @@ namespace KippixHelper
             "WeatherTown", "WeatherLat", "WeatherLon", "WeatherFahrenheit", "RecordSessions", "EditsMerged", "MasterHome", "MasterGame",
             "CurrentLayout", "GalleryFolders", "GalleryFavourites", "ArtSwaps", "PinnedGames", "ProfileNameOverride", "ProfilePicturePath", "RecentSearches", "WishImportAt", "WishDismissed", "Collections",
             "GameReset094", "LookReset096", "Profiles", "CurrentProfile", "ProfilesEnabled", "AskWhoAtStart", "SyncLayouts", "ProfilesPin", "WelcomeDone", "WelcomeOnBoot", "WelcomeSkippable", "UpsMet", "BcBgModeWas", "BcOffOnce", "CommunityRepo", "CommunityBranch", "SlotPins",
-            "LayoutHasViews", "CompletionBeaten", "Completion100", "CompletionDropped",
+            "LayoutHasViews", "LayoutHasBackground", "CompletionBeaten", "Completion100", "CompletionDropped",
             "TipsSeen", "SafeMode", "SafeModeSaved", "HandheldSaved",   // (r12 G: state, not a layout)
             "Folders",  // your folders are your own things, like collections: a reset or a layout never takes them away
             "UpNext",   // the Up next queue (each profile's own)
-            "LocalMediaFolders", "LocalMediaKinds", "LocalMediaSort"   // (1.0.1) Shows & movies: your folders
+            "LocalMediaFolders", "LocalMediaKinds", "LocalMediaSort",   // (1.0.1) Shows & movies: your folders
+            "MediaCustom",   // (1.0.7) Media: the websites you added yourself
+            "MediaLooks",    // (1.1.0) Media: your changes to the tiles (their pictures are copies Kippix keeps)
+            "SgdbArtAt"      // (1.0.7) Edit this game: SteamGridDB art each game is up to
         };
 
         // what "layout" means, screen by screen (placement, size and on / off of what's shown)
@@ -75,6 +78,11 @@ namespace KippixHelper
             "HomeTilesMode", "HomeTileStore", "HomeTileAch", "HomeTileRandom", "HomeTileUpNext", "HomeTileLibrary",
             "HomeLayoutMode", "GridRows", "GridColumns", "JustRows", "LibraryDownOpens", "ListRows", "ListTileH", "ListTileW", "ListInfoShare", "ListInfoItems", "ListShowInfo", "ListShowName", "HomeBgMode", "HomeBgColor", "HomeBgImage", "BgPerLayout", "BgLayoutKey", "HomePlacePerLayout", "HomeTileBgScale", "HomeBgOffsetX", "HomeBgOffsetY", "HomeFadeDir", "HomeFadeReach", "ListSide", "ExtraRows", "ExtraRowKeys", "BadgeInstalled", "BadgeNew", "BadgeAch", "BadgeHltb", "BadgeFeatures", "BadgeFeatHide", "BadgeStore",
             "AccentFromGame", "AccentStrength", "BackgroundMotion", "MotionSpeed", "MotionAmount", "DepthMode", "LiveSlideWeb",
+            // (1.0.6) the rest of the home screen's background and look, so a shared layout looks like its picture: the gameplay
+            // video, BackgroundChanger's backgrounds / covers and Shuffle covers, Same size logos, animated covers, the background's
+            // change speed, story progress under the info
+            "HomeVideo", "HomeVideoMode", "HomeVideoDelayMs", "HomeVideoDownload", "HomeVideoSkipSeconds", "UseBcBackgrounds", "UseBcCovers",
+            "ShuffleCovers", "ShuffleCoversEvery", "LogoBalance", "AnimArtMode", "AnimArtAllCards", "AnimArtHero", "AnimArtNoArt", "BgChangeDelay", "HomeProgress",
             "Look", "LookPack",   // the look (Look packs / Theme Studio): in saved, community and profile layouts
             "TriArrange", "TriSpacing", "TriAlternate", "BoardSeeded", "ManualCards", "ManualGroups", "ManualPlacement", "FreeCards", "ManualPages", "FreePages", "CardSpacing", "ManualCols", "ManualRows", "ManualSnap", "BoardPresets", "BoardCards", "BoardCols", "BoardRows", "BoardSnap", "BoardPageAxis", "BoardSlideOne", "BoardKeepSpot", "BoardIndicator", "BoardLiveSeconds", "Presets", "PresetBase", "PresetOnScreen"
         };
@@ -85,7 +93,7 @@ namespace KippixHelper
             "DetMoreSections", "DetSecHistory", "DetSecHltb", "DetSecCaptures", "DetSecAch", "DetSecStatus", "DetSecNotes", "DetSecScores", "DetSecSimilar",
             "DetShowMoreButton", "DetShowDlcWarning", "DetLower", "DetNoInteract", "DetDescSource", "DetCardLooks", "DetCardColors", "DetInfoOff",
             "DetSecSaves", "DetShowFriends", "DetBlackBackground", "DetInfoOrder", "DetShowHints", "DetSimilarShape", "DetSecNews", "DetSecMods", "DetNewsButton",
-            "GamePreset", "ShowNexusLink"   // (r15) the game page's Nexus Mods button (its switch moved from Add-ons to Game page › Buttons and extras)
+            "GamePreset", "ShowNexusLink", "DetBgZoom"   // (r15) the game page's Nexus Mods button (its switch moved from Add-ons to Game page › Buttons and extras)
         };
         private static readonly HashSet<string> TopBarFields = new HashSet<string>
         {
@@ -104,6 +112,13 @@ namespace KippixHelper
             if (f == "Widgets" || f == "WidgetsOn") return "widgets";
             return "other";   // behaviour and the rest (sounds, music, store, trailers, previews...): only "everything" resets them
         }
+
+        // (1.0.6) home background settings layouts carry from 1.0.6 (LayoutHasBackground): a file from before leaves yours as they are
+        private static readonly HashSet<string> BackgroundFields = new HashSet<string>
+        {
+            "HomeVideo", "HomeVideoMode", "HomeVideoDelayMs", "HomeVideoDownload", "HomeVideoSkipSeconds", "UseBcBackgrounds", "UseBcCovers",
+            "ShuffleCovers", "ShuffleCoversEvery", "LogoBalance", "AnimArtMode", "AnimArtAllCards", "AnimArtHero", "AnimArtNoArt", "BgChangeDelay", "HomeProgress", "DetBgZoom", "WideBgFit"
+        };
 
         // how the achievements and gallery pages are sorted, filtered and which tab they open on: kept with the achievements view (0.71).
         // A layout file from before 0.71 has them blank (LayoutHasViews false), so loading one leaves yours as they are.
@@ -360,6 +375,7 @@ namespace KippixHelper
                     if (!InProfile(FieldGroup(f.Name))) f.SetValue(copy, f.GetValue(blank));
                 copy.EditsMerged = true;   // marks a 0.27+ layout (older ones are converted when loaded)
             copy.LayoutHasViews = true;   // has the gallery's and achievements' sort / filter / tab (0.71+)
+            copy.LayoutHasBackground = true;   // (1.0.6) and the home background's video, BackgroundChanger, Same size logos…
                 EmbedTileImages(copy);   // picture tiles: the pictures go inside the file (so a copy of it works on another PC)
                 Directory.CreateDirectory(LayoutsFolder);
                 // Overwrite on an uploaded layout writes over that one (not a new copy in the saved folder)
@@ -385,7 +401,7 @@ namespace KippixHelper
             BackupForUndo();
             bool trailerWas = settings.HomeBgMode == 2;
             foreach (var f in typeof(HelperSettings).GetFields(BindingFlags.Public | BindingFlags.Instance))
-                if (InProfile(FieldGroup(f.Name)) && (loaded.LayoutHasViews || !ViewFields.Contains(f.Name))
+                if (InProfile(FieldGroup(f.Name)) && (loaded.LayoutHasViews || !ViewFields.Contains(f.Name)) && (loaded.LayoutHasBackground || !BackgroundFields.Contains(f.Name))
                     && !((f.Name == "Look" || f.Name == "LookPack") && loaded.Look == null)) f.SetValue(settings, f.GetValue(loaded));   // (a layout from before look packs keeps your look)
             // a layout with the game's art (all from before 0.41) keeps the trailer you had playing over it
             if (trailerWas && settings.HomeBgMode == 0) settings.HomeBgMode = 2;

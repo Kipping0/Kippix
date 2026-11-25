@@ -33,6 +33,8 @@ namespace KippixHelper
                 switch (profilePage)
                 {
                     case "media": return Loc("LOC_KX_Media", "Media");
+                    case "mediasrc": return MediaSourceTitle;
+                    case "mediaset": return Loc("LOC_KX_MediaSettings", "Media settings");
                     case "me": return Loc("LOC_KX_ProfileSettings", "Your name and picture");
                     case "power": return Loc("LOC_KX_Power", "Power");
                     case "pages": return Loc("LOC_KX_MorePages", "More pages");
@@ -113,7 +115,7 @@ namespace KippixHelper
             BuildProfileRows();
             TogglePanel("profile");
             NotifyProfileHead();
-            Notify("IsProfileMedia"); Notify("IsProfileMediaPage");
+            Notify("IsProfileMedia"); Notify("IsProfileMediaPage"); Notify("MediaSettingsHint");
             Notify("ProfileMenuTitle");
             // the highlight starts on Profile (Refresh game library sits above it, one press up)
             if (openPanel == "profile")
@@ -127,7 +129,9 @@ namespace KippixHelper
         private void BuildProfileRows()
         {
             ProfileRows.Clear();
-            if (profilePage == "media") { BuildMediaRows(); return; }
+            if (profilePage == "media") { BuildMediaRows(); SyncMediaTiles(); return; }   // (1.1.0) the tiles: their own list
+            if (profilePage == "mediasrc") { BuildMediaSourceRows(); RefreshMediaTiles(); return; }   // (1.1.0) over the tiles
+            if (profilePage == "mediaset") { BuildMediaSettingsRows(); RefreshMediaTiles(); return; }   // (1.0.7) Media's settings (Y)   // (1.0.7) one of your own
             if (profilePage == "me") { BuildMeRows(); return; }
             if (profilePage == "power") { BuildPowerRows(); return; }
             if (profilePage == "pages") { BuildPageMenuRows(); return; }
@@ -138,7 +142,7 @@ namespace KippixHelper
             ProfileRows.Add(new PickRow { Text = Loc("LOC_KX_Achievements", "Achievements"), Sub = Loc("LOC_KX_AchMenuSub", "Every game's achievements and your progress"), Icon = "trophy", Key = "achievements", Command = new RelayCommand(_ => { ClosePanels(); OpenAchievementsView(); }) });
             ProfileRows.Add(new PickRow { Text = Loc("LOC_KX_Store", "Store"), Sub = Loc("LOC_KX_StoreMenuSub", "Deals, new games and your wishlist"), Icon = "store", Key = "store", Command = new RelayCommand(_ => { ClosePanels(); OpenStore(); }) });
             ProfileRows.Add(new PickRow { Text = Loc("LOC_KX_Gallery", "Gallery"), Sub = Loc("LOC_KX_GalleryMenuSub", "Your screenshots and clips"), Icon = "gallery", Key = "gallery", Command = new RelayCommand(_ => { ClosePanels(); OpenGallery(); }) });
-            ProfileRows.Add(new PickRow { Text = Loc("LOC_KX_Media", "Media"), Sub = Loc("LOC_KX_MediaMenuSub", "Your shows & movies, Netflix, YouTube, Prime Video, Crunchyroll"), Icon = "media", Key = "media", Command = new RelayCommand(_ => SetProfilePage("media")) });
+            ProfileRows.Add(new PickRow { Text = Loc("LOC_KX_Media", "Media"), Sub = Loc("LOC_KX_MediaMenuSub", "Your shows & movies, Netflix, YouTube, Disney+ and more"), Icon = "media", Key = "media", Command = new RelayCommand(_ => SetProfilePage("media")) });
             AddProfileExtraRows();
             ApplyProfileOrder();   // (0.99.11) your order (and order mode)
         }
@@ -148,15 +152,18 @@ namespace KippixHelper
         private void SetProfilePage(string page, string backFrom)
         {
             if (backFrom == null) PlaySound("select");
+            if (page != profilePage) { profileReorder = false; profileMovingKey = null; }   // (1.0.6) edit mode is the page's own
             string from = backFrom ?? profilePage;
             hubMeReturn = false;   // (the profile's Name and picture button sets it again, right after)
             profilePage = page;
             BuildProfileRows();
             NotifyProfileHead();
-            Notify("IsProfileMedia"); Notify("IsProfileMediaPage");
+            Notify("IsProfileMedia"); Notify("IsProfileMediaPage"); Notify("MediaSettingsHint");
             Notify("ProfileMenuTitle");
+            NotifyMediaConsole();   // (1.0.7) Media › Console: its own full screen
             ui.BeginInvoke(new Action(() =>
             {
+                if (MediaConsoleActive) { FocusMediaTile(null); return; }   // (1.1.0: the tiles' own list)
                 var back = page == "" ? ProfileRows.FirstOrDefault(r => r.Key == from) : null;
                 if (back != null) UiTools.FocusItem("KX_ProfileList", back);
                 else UiTools.FocusInside("KX_ProfilePanel");
@@ -167,6 +174,8 @@ namespace KippixHelper
         private bool ProfileBack()
         {
             if (ProfileReorderBack()) return true;   // (0.99.11)
+            if (MediaSourceBack()) return true;      // (1.0.7) one of your own: back to Media's edit mode
+            if (MediaSettingsBack()) return true;    // (1.0.7) Media's settings: back to Media
             if (openPanel != "profile" || profilePage == "") return false;
             if (BackFromMeToHub()) return true;   // Name and picture from the profile's Overview: back there
             SetProfilePage("", profilePage);
@@ -180,6 +189,8 @@ namespace KippixHelper
         {
             public string Key, Name, Package, Web;
             public bool InTheme;   // plays in the theme's own browser (no copy protection needed)
+            public bool Custom;    // (1.0.7) one you added yourself (ThemeApi.MediaCustom.cs)
+            public string Icon;    // its picture (yours), or null / "" for the globe
         }
 
         private static readonly MediaService[] MediaServices =
@@ -187,7 +198,12 @@ namespace KippixHelper
             new MediaService { Key = "netflix", Name = "Netflix", Package = "Netflix", Web = "https://www.netflix.com/" },
             new MediaService { Key = "youtube", Name = "YouTube", Package = null, Web = "https://www.youtube.com/", InTheme = true },
             new MediaService { Key = "prime", Name = "Prime Video", Package = "PrimeVideo", Web = "https://www.primevideo.com/" },
-            new MediaService { Key = "crunchyroll", Name = "Crunchyroll", Package = "Crunchyroll", Web = "https://www.crunchyroll.com/" }
+            new MediaService { Key = "crunchyroll", Name = "Crunchyroll", Package = "Crunchyroll", Web = "https://www.crunchyroll.com/" },
+            // (1.0.6) more services (their app's part of a Microsoft Store package name, when they have one)
+            new MediaService { Key = "disney", Name = "Disney+", Package = "Disney", Web = "https://www.disneyplus.com/" },
+            new MediaService { Key = "appletv", Name = "Apple TV", Package = "AppleTV", Web = "https://tv.apple.com/" },
+            new MediaService { Key = "paramount", Name = "Paramount+", Package = "Paramount", Web = "https://www.paramountplus.com/" },
+            new MediaService { Key = "hbo", Name = "HBO Max", Package = "HBOMax", Web = "https://www.hbomax.com/" }
         };
 
         private void BuildMediaRows()
@@ -196,21 +212,23 @@ namespace KippixHelper
             int n = LocalFolders().Count;
             ProfileRows.Add(new PickRow
             {
-                Text = Loc("LOC_KX_LocalMedia", "Shows & movies"), Icon = "localmedia", Key = "localmedia",
+                Text = MediaLookName("localmedia") ?? Loc("LOC_KX_LocalMedia", "Shows & movies"), Icon = "localmedia", Key = "localmedia", TileBrush = MediaTileBrush("localmedia", 0),
                 Sub = n == 0 ? Loc("LOC_KX_LocalSub", "Your own videos, from folders on this PC") : n == 1 ? Loc("LOC_KX_LocalOneFolder", "Your own videos, from 1 folder") : string.Format(Loc("LOC_KX_LocalNFolders", "Your own videos, from {0} folders"), n),
                 Command = new RelayCommand(_ => { PlaySound("select"); OpenLocalMedia(true); })
             });
             ProfileRows.Add(new PickRow { IsHeader = true, Text = Loc("LOC_KX_SecStreaming", "STREAMING") });
-            foreach (var m in MediaServices)
+            int tile = 1;
+            foreach (var m in MediaServicesInOrder())   // (1.0.6) your order (the edit button)
             {
                 var svc = m;
-                string app = svc.Package != null ? FindStoreApp(svc.Package) : null;
+                string app = svc.Package != null && !MediaWebChanged(svc.Key) ? FindStoreApp(svc.Package) : null;   // (1.1.0: an address of your own opens that)
                 // no line under each one: the note at the bottom of the menu says how they open
-                var row = new PickRow { Text = svc.Name, Icon = svc.Key, Key = svc.Key, Command = new RelayCommand(_ => OpenMedia(svc, app)) };
+                var row = new PickRow { Text = svc.Name, Icon = svc.Custom ? "globe" : svc.Key, Key = svc.Key, Command = new RelayCommand(_ => OpenMedia(svc, app)), TileBrush = MediaTileBrush(svc.Key, tile++) };
                 ProfileRows.Add(row);
                 LoadMediaIcon(svc, row);
             }
-            AddStreamOpenRow();   // (1.0.4) Opens in: Automatic / full screen in your browser / a browser window (ThemeApi.StreamOpen.cs)
+            // (1.0.7) Opens in moved to Media's settings (Y): ThemeApi.StreamOpen.cs
+            ApplyMediaEdit();     // (1.0.6) hidden rows out (or, editing, an eye on each)
         }
 
         /// <summary>
@@ -224,6 +242,18 @@ namespace KippixHelper
 
         private void LoadMediaIcon(MediaService svc, Action<ImageSource> show)
         {
+            if (svc.Custom)
+            {
+                // (1.0.7) one of your own: your picture, or the globe (nothing is fetched for it)
+                string own = svc.Icon;
+                if (string.IsNullOrEmpty(own)) return;
+                KippixShared.SafeWork.Queue(_ =>
+                {
+                    try { if (File.Exists(own)) { var pic = Images.Load(own, 64); if (pic != null) OnUi(() => show(pic)); } }
+                    catch (Exception ex) { logger.Info("Kippix: media icon: " + ex.Message); }
+                });
+                return;
+            }
             string dir = Path.Combine(plugin.GetPluginUserDataPath(), "MediaIcons");
             string cached = Path.Combine(dir, svc.Key + ".png");
             KippixShared.SafeWork.Queue(_ =>
@@ -294,9 +324,9 @@ namespace KippixHelper
         /// <summary>(1.0.1) A top bar / quick bar shortcut to one service: whether its app is installed is looked up as it's pressed.</summary>
         private void OpenMediaByKey(string key)
         {
-            var svc = MediaServices.FirstOrDefault(m => m.Key == key);
+            var svc = AllMediaServices.FirstOrDefault(m => m.Key == key);
             if (svc == null) return;
-            OpenMedia(svc, svc.Package != null ? FindStoreApp(svc.Package) : null);
+            OpenMedia(svc, svc.Package != null && !MediaWebChanged(svc.Key) ? FindStoreApp(svc.Package) : null);
         }
 
         /// <summary>(1.0.1) The Media shortcut: the profile menu, open on Media.</summary>
