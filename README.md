@@ -8,9 +8,6 @@
   Controller first, highly customisable, with its own in-game overlay.
 </p>
 
-> [!CAUTION]
-> **This is a WIP Fullscreen, please bear with me while we fix any bugs/issues in this new release**
-
 <p align="center">
   <a href="../../releases/latest"><b>Download</b></a> ·
   <a href="docs/GUIDE.md">User guide</a> ·
