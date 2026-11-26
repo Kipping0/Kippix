@@ -187,6 +187,7 @@ namespace KippixHelper
                 ApplyMasterSizes();
                 SyncFreeGaps();   // parts deleted in Free move keep their room
                 ApplyMasterExtras();   // layers and opacity (Free move › Menu)
+                LayoutFitSoon();   // (1.1.0) after using a layout from another screen size: anything off the screen brought on
             }
             catch (Exception ex) { logger.Warn(ex, "Kippix: master edit offsets failed"); }
         }

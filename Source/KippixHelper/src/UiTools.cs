@@ -22,9 +22,37 @@ namespace KippixHelper
             return Application.Current != null ? Application.Current.MainWindow : null;
         }
 
+        // (1.1.1) the last element found by each name while it was showing: the theme looks parts up by name hundreds of times
+        // a second (every move, every page), and each look walked Playnite's whole window from the top. A part that's still there
+        // and still showing is handed back straight away; anything else is looked for as before.
+        private static readonly Dictionary<string, WeakReference> foundShowing = new Dictionary<string, WeakReference>();
+
         public static FrameworkElement FindByName(DependencyObject root, string name)
         {
             if (root == null) return null;
+            if (name != null)
+            {
+                WeakReference wr;
+                bool had;
+                lock (foundShowing) had = foundShowing.TryGetValue(name, out wr);
+                if (had)
+                {
+                    var known = wr.Target as FrameworkElement;
+                    try
+                    {
+                        if (known != null && known.Name == name && known.IsVisible && known.CheckAccess() && (ReferenceEquals(known, root) || known.IsDescendantOf(root))) return known;
+                    }
+                    catch (Exception) { }
+                    lock (foundShowing) foundShowing.Remove(name);
+                }
+            }
+            var fe0 = FindByNameWalk(root, name);
+            if (fe0 != null && name != null && fe0.IsVisible) lock (foundShowing) foundShowing[name] = new WeakReference(fe0);
+            return fe0;
+        }
+
+        private static FrameworkElement FindByNameWalk(DependencyObject root, string name)
+        {
             // (1.0.7) a screen's designs can use the same names (each in its own template): the one showing wins, and the first
             // found when none of them is showing
             FrameworkElement hidden = null;

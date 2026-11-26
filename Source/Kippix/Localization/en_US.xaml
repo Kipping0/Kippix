@@ -5131,4 +5131,9 @@
     <sys:String x:Key="LOC_KX_MediaHiddenTiles">HIDDEN TILES</sys:String>
     <sys:String x:Key="LOC_KX_MediaShowTileSub">Hidden: A to show it again</sys:String>
     <sys:String x:Key="LOC_KX_MediaMoveItSub2">Picked up on the Media page: the D-pad moves it, A puts it down</sys:String>
+    <!-- 1.1.0: no desktop between Kippix and the game (issues #79 / #80) -->
+    <sys:String x:Key="LOC_KX_LaunchCover">Hide the desktop until the game's up</sys:String>
+    <sys:String x:Key="LOC_KX_LaunchCoverOn">The splash screen stays until the game fills the screen (no taskbar, emulator or launcher windows)</sys:String>
+    <sys:String x:Key="LOC_KX_LaunchCoverWait">Wait for the game: up to {0} seconds</sys:String>
+    <sys:String x:Key="LOC_KX_LaunchCoverWaitSub">For a slow emulator or launcher. A game in a window shows after 10 seconds in front</sys:String>
 </ResourceDictionary>

@@ -49,6 +49,7 @@ namespace KippixHelper
             copy.MasterLayers = (settings.MasterLayers ?? new Dictionary<string, int>()).Where(p => IsGameKey(p.Key)).ToDictionary(p => p.Key, p => p.Value);
             copy.MasterOpacity = (settings.MasterOpacity ?? new Dictionary<string, double>()).Where(p => IsGameKey(p.Key)).ToDictionary(p => p.Key, p => p.Value);
             copy.EditsMerged = true;
+            StampLayoutSize(copy);   // (1.1.0) the screen it's made on (ThemeApi.LayoutFit.cs)
             return copy;
         }
 
@@ -93,6 +94,7 @@ namespace KippixHelper
             ReplaceGameKeys(settings.MasterLayers, src.MasterLayers);
             ReplaceGameKeys(settings.MasterOpacity, src.MasterOpacity);
             NormalizeSettings();
+            settings.LayoutFitPending = new List<string> { "game" };   // (1.1.0) made on another screen: anything off it brought on (ThemeApi.LayoutFit.cs)
             ApplyAllSettings();
             SaveSettings();
             try { ApplyDetPlacement(); } catch (Exception) { }

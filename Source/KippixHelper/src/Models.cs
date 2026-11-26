@@ -187,6 +187,8 @@ namespace KippixHelper
         public bool MasterHome = false;   // before 0.27: Master edit on for the home screen (set spots were switched off)
         public bool MasterGame = false;
         public bool EditsMerged = false;
+        public double LayoutDesignW = 0, LayoutDesignH = 0;   // (1.1.0) a layout file: the screen it was made on, in the theme's units (0: not known)
+        public List<string> LayoutFitPending = new List<string>();   // (1.1.0) screens to check for parts off the screen after using a layout (ThemeApi.LayoutFit.cs)
         public bool LayoutHasBackground = false;   // (1.0.6) a layout file with the home background's video / BackgroundChanger / Same size logos… (BackgroundFields)
         public bool LayoutHasViews = false;        // a layout file with the gallery's and achievements' sort / filter / tab (0.71+)
         public bool DebugLogging = false;   // Help › Detailed logging
@@ -540,6 +542,8 @@ namespace KippixHelper
         public bool ShowEngine = true;
         public bool ShowFreestyle = true;
         public bool SplashStandAside = true;
+        public bool LaunchCover = true;            // (1.1.0, issues #79 / #80) no desktop between Kippix and the game (ThemeApi.LaunchCover.cs)
+        public int LaunchCoverWait = 20;           // the longest it waits for the game to fill the screen (10, 20, 30, 60 seconds)
 
         // ---- 1.0.1 ----
         // Media › Shows & movies: folders of your own videos (ThemeApi.LocalMedia.cs)

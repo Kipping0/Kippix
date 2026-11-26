@@ -376,6 +376,7 @@ namespace KippixHelper
                 copy.EditsMerged = true;   // marks a 0.27+ layout (older ones are converted when loaded)
             copy.LayoutHasViews = true;   // has the gallery's and achievements' sort / filter / tab (0.71+)
             copy.LayoutHasBackground = true;   // (1.0.6) and the home background's video, BackgroundChanger, Same size logos…
+                StampLayoutSize(copy);   // (1.1.0) the screen it's made on (ThemeApi.LayoutFit.cs)
                 EmbedTileImages(copy);   // picture tiles: the pictures go inside the file (so a copy of it works on another PC)
                 Directory.CreateDirectory(LayoutsFolder);
                 // Overwrite on an uploaded layout writes over that one (not a new copy in the saved folder)
@@ -407,6 +408,7 @@ namespace KippixHelper
             if (trailerWas && settings.HomeBgMode == 0) settings.HomeBgMode = 2;
             RestoreTileImages();   // picture tiles carried in the file: written back to the tiles folder
             NormalizeSettings();   // a shared file may have values this version doesn't take
+            StartLayoutFit(loaded);   // (1.1.0) made on another screen size: widgets in proportion, anything off the screen brought on
             settings.CurrentLayout = id;
             ApplyAllSettings();
             return true;

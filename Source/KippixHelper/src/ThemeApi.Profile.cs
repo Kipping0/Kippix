@@ -221,11 +221,10 @@ namespace KippixHelper
             foreach (var m in MediaServicesInOrder())   // (1.0.6) your order (the edit button)
             {
                 var svc = m;
-                string app = svc.Package != null && !MediaWebChanged(svc.Key) ? FindStoreApp(svc.Package) : null;   // (1.1.0: an address of your own opens that)
-                // no line under each one: the note at the bottom of the menu says how they open
-                var row = new PickRow { Text = svc.Name, Icon = svc.Custom ? "globe" : svc.Key, Key = svc.Key, Command = new RelayCommand(_ => OpenMedia(svc, app)), TileBrush = MediaTileBrush(svc.Key, tile++) };
+                // (1.1.1) no looking through Windows' apps or fetching icons each time Media is built: it opens in the browser now
+                // (Opens in), and the tiles show their own pictures (that made opening Media slow)
+                var row = new PickRow { Text = svc.Name, Icon = svc.Custom ? "globe" : svc.Key, Key = svc.Key, Command = new RelayCommand(_ => OpenMedia(svc, null)), TileBrush = MediaTileBrush(svc.Key, tile++) };
                 ProfileRows.Add(row);
-                LoadMediaIcon(svc, row);
             }
             // (1.0.7) Opens in moved to Media's settings (Y): ThemeApi.StreamOpen.cs
             ApplyMediaEdit();     // (1.0.6) hidden rows out (or, editing, an eye on each)
@@ -326,7 +325,7 @@ namespace KippixHelper
         {
             var svc = AllMediaServices.FirstOrDefault(m => m.Key == key);
             if (svc == null) return;
-            OpenMedia(svc, svc.Package != null && !MediaWebChanged(svc.Key) ? FindStoreApp(svc.Package) : null);
+            OpenMedia(svc, null);   // (1.1.1: always the browser now: Opens in)
         }
 
         /// <summary>(1.0.1) The Media shortcut: the profile menu, open on Media.</summary>

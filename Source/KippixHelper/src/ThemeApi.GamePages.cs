@@ -1239,7 +1239,15 @@ namespace KippixHelper
             else if (page == "detpart" || page == "gamemedia" || page == "gamefriends") { BuildDetPartRows(); Notify("DetPartTitle"); ShowPartPage(); }
             else if (page == "gameextras") ShowPartPage();
             else if (page == "dethistory") BuildDetHistoryRows();
-            else if (detailsOpen && detMoreDown && !xOpening && (page == "gamepage" || page == "")) DetailsScrollTo(false, true);
+            else if (detailsOpen && detMoreDown && !xOpening && (page == "gamepage" || page == ""))
+            {
+                // (1.1.1) only when Settings itself was opened: a part of the lower page (Save backups, a widget) opens Settings and then
+                // its own page straight after, and the game page stays on the lower page behind it (it used to jump up, then back)
+                ui.BeginInvoke(new Action(() =>
+                {
+                    if (detailsOpen && detMoreDown && openPanel == "options" && (optionsPage == "gamepage" || optionsPage == "")) DetailsScrollTo(false, true);
+                }), DispatcherPriority.Loaded);
+            }
             Notify("IsOptionsDetHistory");
             Notify("IsOptionsDetPart");
         }

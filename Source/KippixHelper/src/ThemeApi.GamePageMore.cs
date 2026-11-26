@@ -385,6 +385,7 @@ namespace KippixHelper
             FillSavesCard(g);
             FillGameExtras(g, gen);   // (r12) News, Mods, players online now, feature badges
             bool stayDown = false;
+            bool fresh = g.Id != detGameId;   // (1.1.1) the page just opened (or another game on it)
             if (g.Id != detGameId)
             {
                 // LB / RB (or a game from More like this) on the lower page: the next game opens at its top, on Play
@@ -395,8 +396,21 @@ namespace KippixHelper
                 LoadDescription(g);
             }
             FillStatusAndNotes(g);
-            FillAchHighlights(g);
-            FillCaptures(g, gen);
+            if (fresh)
+            {
+                // (1.1.1) the page opens first: the lower page's achievements and captures fill in just after its first frame
+                var gg = g;
+                ui.BeginInvoke(new Action(() =>
+                {
+                    if (gen != detMoreGen || !detailsOpen) return;
+                    try { FillAchHighlights(gg); FillCaptures(gg, gen); NotifyDetMore(); } catch (Exception ex) { logger.Warn("Kippix: game page lower parts: " + ex.Message); }
+                }), DispatcherPriority.Background);
+            }
+            else
+            {
+                FillAchHighlights(g);
+                FillCaptures(g, gen);
+            }
             var game = g;
             var shown = GamesInView();
             KippixShared.SafeWork.Queue(_ =>

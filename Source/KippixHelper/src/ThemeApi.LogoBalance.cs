@@ -112,6 +112,22 @@ namespace KippixHelper
             return new Size(Math.Round(fit.W * scale), Math.Round(fit.H * scale));
         }
 
+        // (1.1.1) the logo boxes found last time, kept while they're still on screen and the same pages are up: finding them walked
+        // Playnite's whole window on every move along the row
+        private List<ContentControl> logoFound;
+        private string logoFoundFor;
+
+        private List<ContentControl> LogoControlsNow(Window win)
+        {
+            string key = detailsOpen + "|" + (openPanel ?? "") + "|" + LayoutNow;
+            if (logoFound != null && logoFoundFor == key && logoFound.Count > 0 && logoFound.TrueForAll(c => c.IsLoaded && PresentationSource.FromVisual(c) != null)) return logoFound;
+            var found = new List<ContentControl>();
+            LogoControls(win, found);
+            logoFound = found;
+            logoFoundFor = key;
+            return found;
+        }
+
         private static void LogoControls(DependencyObject root, List<ContentControl> found)
         {
             if (root == null) return;
@@ -139,8 +155,7 @@ namespace KippixHelper
             if (!logoWarmed && settings.LogoBalance) { logoWarmed = true; LogoWarm(); }
             Game game = null;
             try { game = SelectedGameNow(); } catch (Exception) { }
-            var found = new List<ContentControl>();
-            LogoControls(win, found);
+            var found = LogoControlsNow(win);
             if (found.Count == 0) return;
             Guid id = game != null ? game.Id : Guid.Empty;
             LogoFit fit = settings.LogoBalance && id != Guid.Empty ? LogoFitOf(id, false) : null;

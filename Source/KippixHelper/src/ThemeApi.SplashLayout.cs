@@ -45,6 +45,23 @@ namespace KippixHelper
             var rows = SplashRows;
             rows.Clear();
             rows.Add(new PickRow { IsHeader = true, Text = Loc("LOC_KX_SecSplashShows", "WHILE A GAME STARTS") });
+            // (1.1.0, issues #79 / #80) no desktop, taskbar, emulator or launcher windows before the game's up (ThemeApi.LaunchCover.cs)
+            rows.Add(BoardSwitch("desktop", "launchcover", Loc("LOC_KX_LaunchCover", "Hide the desktop until the game's up"), settings.LaunchCover,
+                                 Loc("LOC_KX_LaunchCoverOn", "The splash screen stays until the game fills the screen (no taskbar, emulator or launcher windows)"), Loc("LOC_KX_Off", "Off"),
+                                 () => { settings.LaunchCover = !settings.LaunchCover; SplashChanged("launchcover"); }));
+            if (settings.LaunchCover)
+                rows.Add(new PickRow
+                {
+                    Icon = "clock", Key = "launchwait", Text = string.Format(Loc("LOC_KX_LaunchCoverWait", "Wait for the game: up to {0} seconds"), LaunchCoverWaitSeconds),
+                    Sub = Loc("LOC_KX_LaunchCoverWaitSub", "For a slow emulator or launcher. A game in a window shows after 10 seconds in front"),
+                    Command = new RelayCommand(_ =>
+                    {
+                        int[] steps = { 10, 20, 30, 60 };
+                        int i = Array.IndexOf(steps, LaunchCoverWaitSeconds);
+                        settings.LaunchCoverWait = steps[(i + 1) % steps.Length];
+                        SplashChanged("launchwait");
+                    })
+                });
             rows.Add(new PickRow { IsInfo = true, Icon = "picture", Key = "splashpic", Text = Loc("LOC_KX_SplashPicture2", "The game's picture"), Sub = Loc("LOC_KX_SplashPictureSub", "Always there") });
             rows.Add(BoardSwitch("note", "splashstatus", Loc("LOC_KX_SplashStatusRow", "\"Starting…\" message"), settings.SplashShowStatus,
                                  Loc("LOC_KX_SplashStatusOn", "Playnite's words while the game starts"), Loc("LOC_KX_Off", "Off"),

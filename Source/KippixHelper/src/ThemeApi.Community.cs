@@ -548,6 +548,7 @@ namespace KippixHelper
                 copy.EditsMerged = true;
                 copy.LayoutHasViews = true;   // (the gallery's and achievements' sort / filter / tab are in it)
                 copy.LayoutHasBackground = true;   // (1.0.6) the home background's video, BackgroundChanger, Same size logos…
+                StampLayoutSize(copy);   // (1.1.0) the screen it's made on (ThemeApi.LayoutFit.cs)
                 try { EmbedTileImages(copy); } catch (Exception) { }   // (your own picture tiles go with it)
                 File.WriteAllText(Path.Combine(folder, id + ".json"), js.Serialize(copy), Encoding.UTF8);
             }
